@@ -15,4 +15,4 @@ readme = "README.md"
 
 [dependencies]
 sodiumoxide = "~0.0.9"
-rust-base58 = "*"
+rustc-serialize = "*"

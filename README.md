@@ -18,9 +18,10 @@ multihash = "*"
 ```rust
 crate extern multihash
 
-use multihash::{Multihash, HashType};
+use multihash::{encode, decode, HashType};
 
-let hash = Multihash::new(HashTpype:SHA2256, "my hash").unwrap()
+let hash = encode(HashTpype:SHA2256, "my hash").unwrap();
+let multi = decode(&hash).unwrap();
 ```
 
 ## Supported Hash Types

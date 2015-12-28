@@ -20,75 +20,112 @@ missing_debug_implementations)]
 /// Representation of a Multiaddr.
 
 extern crate sodiumoxide;
-extern crate rust_base58;
+extern crate rustc_serialize;
+
+use rustc_serialize::hex::FromHex;
 
 use sodiumoxide::crypto::hash::{sha256, sha512};
 use std::io;
-use rust_base58::ToBase58;
 
 pub use self::hashes::*;
 pub mod hashes;
 
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub struct Multihash {
-    bytes: Vec<u8>
+
+/// Encode a string into a multihash
+///
+/// # Examples
+///
+/// Simple construction
+///
+/// ```
+/// use multihash::{encode, HashTypes};
+///
+/// assert_eq!(
+///     encode(HashTypes::SHA2256, "hello world").unwrap(),
+///     "1220b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+/// );
+/// ```
+///
+pub fn encode(wanttype: HashTypes, input: &str) -> io::Result<String> {
+    let digest = match wanttype {
+        HashTypes::SHA2256 => dig_to_vec(&(sha256::hash(input.as_bytes())[..])),
+        HashTypes::SHA2512 => dig_to_vec(&(sha512::hash(input.as_bytes())[..])),
+        _ => None,
+    };
+
+    match digest {
+        Some(digest) => {
+            let mut bytes = Vec::new();
+
+            bytes.push(wanttype.code());
+            bytes.push(digest.len() as u8);
+            bytes.extend(digest);
+
+            Ok(to_hex(bytes))
+        },
+        None => Err(io::Error::new(io::ErrorKind::Other, "Unsupported hash type"))
+    }
 }
 
-impl Multihash {
-    /// Create a new multihash
-    ///
-    /// # Examples
-    ///
-    /// Simple construction
-    ///
-    /// ```
-    /// use multihash::{Multihash, HashTypes};
-    ///
-    /// assert_eq!(
-    ///     Multihash::new(HashTypes::SHA2256, "hello world").unwrap().to_str(),
-    ///     "1220b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
-    /// );
-    /// ```
-    ///
-    pub fn new(wanttype: HashTypes, input: &str) -> io::Result<Multihash> {
-        let digest = match wanttype {
-            HashTypes::SHA2256 => dig_to_vec(&(sha256::hash(input.as_bytes())[..])),
-            HashTypes::SHA2512 => dig_to_vec(&(sha512::hash(input.as_bytes())[..])),
-            _ => None,
-        };
+/// Encode a string into a multihash
+///
+/// # Examples
+///
+/// Simple construction
+///
+/// ```
+/// use multihash::{decode, HashTypes, Multihash};
+///
+/// assert_eq!(
+///     decode("1220b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9").unwrap(),
+///     Multihash {
+///         alg: HashTypes::SHA2256,
+///         digest: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+///     }
+/// );
+/// ```
+///
+pub fn decode(input: &str) -> io::Result<Multihash> {
+    if input.len() > 129 {
+        return Err(io::Error::new(io::ErrorKind::Other, "Too long"));
+    }
 
-        match digest {
-            Some(digest) => {
-                let mut bytes = Vec::new();
+    if input.len() < 3 {
+        return Err(io::Error::new(io::ErrorKind::Other, "Too short"));
+    }
 
-                bytes.push(wanttype.to_u8());
-                bytes.push(digest.len() as u8);
-                bytes.extend(digest);
+    let hex_input = input.from_hex();
 
-                Ok(Multihash {
-                    bytes: bytes,
-                })
-            },
-            None => Err(io::Error::new(io::ErrorKind::Other, "Unsupported hash type"))
+    if hex_input.is_err() {
+        return Err(io::Error::new(io::ErrorKind::Other, "Failed to parse hex string"));
+    }
+
+    let code = hex_input.unwrap()[0];
+
+    match HashTypes::from_code(code) {
+        Some(alg) => {
+            Ok(Multihash {
+                alg: alg,
+                digest: &input[4..],
+            })
+        },
+        None => {
+            Err(io::Error::new(io::ErrorKind::Other, format!("Unkown code {:?}", code)))
         }
     }
+}
 
-    /// Return a copy to disallow changing the bytes directly
-    pub fn to_bytes(&self) -> Vec<u8> {
-        self.bytes.to_owned()
-    }
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct Multihash<'a> {
+    pub alg: HashTypes,
+    pub digest: &'a str,
+}
 
-    /// Convert bytes to a hex representation
-    pub fn to_str(&self) -> String {
-        self.bytes.iter().rev().map(|x| {
-            format!("{:02x}", x)
-        }).rev().collect()
-    }
-
-    pub fn to_base58(&self) -> String {
-        let bytes = self.to_bytes();
-        (&bytes[..]).to_base58()
-    }
+/// Convert bytes to a hex representation
+fn to_hex(bytes: Vec<u8>) -> String {
+    bytes.iter().rev().map(|x| {
+        format!("{:02x}", x)
+    }).rev().collect()
 }
 
 
