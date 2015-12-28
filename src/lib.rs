@@ -22,7 +22,7 @@ missing_debug_implementations)]
 extern crate sodiumoxide;
 extern crate rust_base58;
 
-use sodiumoxide::crypto::hash::sha256;
+use sodiumoxide::crypto::hash::{sha256, sha512};
 use std::io;
 use rust_base58::ToBase58;
 
@@ -42,33 +42,35 @@ impl Multihash {
     /// Simple construction
     ///
     /// ```
-    /// use multihash::Multihash;
+    /// use multihash::{Multihash, HashTypes};
     ///
     /// assert_eq!(
-    ///     Multihash::new("helloworld").unwrap().to_str(),
-    ///     "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af"
-    /// );
-    /// assert_eq!(
-    ///     Multihash::new("beep boop").unwrap().to_str(),
-    ///     "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c"
-    /// );
-    /// assert_eq!(
-    ///     Multihash::new("hello world").unwrap().to_str(),
+    ///     Multihash::new(HashTypes::SHA2256, "hello world").unwrap().to_str(),
     ///     "1220b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
     /// );
     /// ```
     ///
-    pub fn new(input: &str) -> io::Result<Multihash> {
-        let mut bytes = Vec::new();
-        let digest = sha256::hash(input.as_bytes());
+    pub fn new(wanttype: HashTypes, input: &str) -> io::Result<Multihash> {
+        let digest = match wanttype {
+            HashTypes::SHA2256 => dig_to_vec(&(sha256::hash(input.as_bytes())[..])),
+            HashTypes::SHA2512 => dig_to_vec(&(sha512::hash(input.as_bytes())[..])),
+            _ => None,
+        };
 
-        bytes.push(HashTypes::SHA2256.to_u8());
-        bytes.push(sha256::DIGESTBYTES as u8);
-        bytes.extend(&digest[..]);
-        println!("cur {:?}", bytes);
-        Ok(Multihash {
-            bytes: bytes,
-        })
+        match digest {
+            Some(digest) => {
+                let mut bytes = Vec::new();
+
+                bytes.push(wanttype.to_u8());
+                bytes.push(digest.len() as u8);
+                bytes.extend(digest);
+
+                Ok(Multihash {
+                    bytes: bytes,
+                })
+            },
+            None => Err(io::Error::new(io::ErrorKind::Other, "Unsupported hash type"))
+        }
     }
 
     /// Return a copy to disallow changing the bytes directly
@@ -87,4 +89,11 @@ impl Multihash {
         let bytes = self.to_bytes();
         (&bytes[..]).to_base58()
     }
+}
+
+
+fn dig_to_vec (input: &[u8]) -> Option<Vec<u8>> {
+    let mut bytes = Vec::new();
+    bytes.extend(&input[..]);
+    Some(bytes)
 }

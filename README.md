@@ -21,9 +21,18 @@ crate extern multihash
 use multihash::{Multihash, HashType};
 
 let hash = Multihash::new(HashTpype:SHA2256, "my hash").unwrap()
-
 ```
 
+## Supported Hash Types
+
+* `SHA2 256`
+* `SHA2 512`
+
+
+## Notes
+
+This uses [libsodium](https://github.com/jedisct1/libsodium) and [sodiumoxide](https://github.com/dnaq/sodiumoxide)
+for the hashing so it depends on libsodium being installed.
 
 ## License
 
