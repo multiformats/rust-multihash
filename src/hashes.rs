@@ -23,7 +23,7 @@ impl HashTypes {
     }
 
     /// Get the hash length in bytes
-    pub fn len(&self) -> u8 {
+    pub fn size(&self) -> u8 {
         match *self {
 	    HashTypes::SHA1     => 20,
 	    HashTypes::SHA2256  => 32,

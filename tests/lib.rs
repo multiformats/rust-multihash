@@ -27,3 +27,9 @@ fn multihash_decode () {
         HashTypes::SHA2256
     )
 }
+
+#[test]
+fn hash_types () {
+    assert_eq!(HashTypes::SHA2256.size(), 32);
+    assert_eq!(HashTypes::SHA2256.name(), "SHA2-256");
+}
