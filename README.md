@@ -1,6 +1,6 @@
 # rust-multihash
 
-[![Build Status](https://img.shields.io/travis/Dignifiedquire/rust-multihash/master.svg?style=flat-square)](https://travis-ci.org/Dignifiedquire/rust-multihash)
+[![Build Status](https://img.shields.io/travis/multiformats/rust-multihash/master.svg?style=flat-square)](https://travis-ci.org/multiformats/rust-multihash)
 [![](https://img.shields.io/badge/rust-docs-blue.svg?style=flat-square)](http://dignifiedquire.github.io/rust-multihash/multihash/struct.Multihash.html)
 [![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
 [![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](http://github.com/multiformats/multiformats)
