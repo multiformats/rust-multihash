@@ -29,11 +29,17 @@ pub use hashes::*;
 
 
 
-/// Encods data into a multihash
+/// Encodes data into a multihash.  
+///
+/// The returned data is raw bytes.  To make is more human-friendly, you can encode it (hex,
+/// base58, base64, etc).  
+///
+/// # Errors
+///
+/// Will return an error if the specified hash type is not supported.  See the docs for `HashTypes`
+/// to see what is supported.
 ///
 /// # Examples
-///
-/// Simple construction
 ///
 /// ```
 /// use multihash::{encode, HashTypes};
@@ -61,11 +67,13 @@ pub fn encode(wanttype: HashTypes, input: &[u8]) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
-/// Encode a string into a multihash
+/// Decodes bytes into a multihash
+///
+/// # Errors
+///
+/// Returns an error if the bytes are not a valid multihash.
 ///
 /// # Examples
-///
-/// Simple construction
 ///
 /// ```
 /// use multihash::{decode, HashTypes, Multihash};
@@ -106,6 +114,7 @@ pub fn decode(input: &[u8]) -> io::Result<Multihash> {
     }
 }
 
+/// Represents a valid multihash, by associating the hash algorithm with the data
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Multihash<'a> {
     pub alg: HashTypes,

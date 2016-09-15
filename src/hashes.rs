@@ -1,12 +1,20 @@
-// List of types currently supported in Multihash.
+/// List of types currently supported in the multihash spec.
+///
+/// Not all hash types are supported by this library.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum HashTypes {
-    SHA1, // unsupported
+    /// Encoding unsupported
+    SHA1,
+    /// SHA-256 (32-byte hash size)
     SHA2256,
-    SHA2512, // unsupported
-    SHA3, // unsupported
-    Blake2b, // unsupported
-    Blake2s // unsupported
+    /// SHA-512 (64-byte hash size)
+    SHA2512,
+    /// Encoding unsupported
+    SHA3,
+    /// Encoding unsupported
+    Blake2b,
+    /// Encoding unsupported
+    Blake2s
 }
 
 impl HashTypes {
