@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `encode` fn in crate `multihash`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, encode">
+
+    <title>multihash::encode - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>multihash</a></p><script>window.sidebarCurrent = {name: 'encode', ty: 'fn', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content fn">
+<h1 class='fqn'><span class='in-band'>Function <a href='index.html'>multihash</a>::<wbr><a class='fn' href=''>encode</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-47' class='srclink' href='../src/multihash/src/lib.rs.html#54-68' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn encode(wanttype: <a class='enum' href='../multihash/enum.HashTypes.html' title='multihash::HashTypes'>HashTypes</a>, input: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/std/io/error/type.Result.html' title='std::io::error::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;&gt;</pre><div class='docblock'><p>Encodes data into a multihash.</p>
+
+<p>The returned data is raw bytes.  To make is more human-friendly, you can encode it (hex,
+base58, base64, etc).  </p>
+
+<h1 id='errors' class='section-header'><a href='#errors'>Errors</a></h1>
+<p>Will return an error if the specified hash type is not supported.  See the docs for <code>HashTypes</code>
+to see what is supported.</p>
+
+<h1 id='examples' class='section-header'><a href='#examples'>Examples</a></h1>
+<pre class='rust rust-example-rendered'>
+<span class='kw'>use</span> <span class='ident'>multihash</span>::{<span class='ident'>encode</span>, <span class='ident'>HashTypes</span>};
+
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(
+    <span class='ident'>encode</span>(<span class='ident'>HashTypes</span>::<span class='ident'>SHA2256</span>, <span class='string'>&quot;hello world&quot;</span>.<span class='ident'>as_bytes</span>()).<span class='ident'>unwrap</span>(),
+    <span class='macro'>vec</span><span class='macro'>!</span>[<span class='number'>18</span>, <span class='number'>32</span>, <span class='number'>185</span>, <span class='number'>77</span>, <span class='number'>39</span>, <span class='number'>185</span>, <span class='number'>147</span>, <span class='number'>77</span>, <span class='number'>62</span>, <span class='number'>8</span>, <span class='number'>165</span>, <span class='number'>46</span>, <span class='number'>82</span>, <span class='number'>215</span>, <span class='number'>218</span>, <span class='number'>125</span>, <span class='number'>171</span>, <span class='number'>250</span>, <span class='number'>196</span>,
+    <span class='number'>132</span>, <span class='number'>239</span>, <span class='number'>227</span>, <span class='number'>122</span>, <span class='number'>83</span>, <span class='number'>128</span>, <span class='number'>238</span>, <span class='number'>144</span>, <span class='number'>136</span>, <span class='number'>247</span>, <span class='number'>172</span>, <span class='number'>226</span>, <span class='number'>239</span>, <span class='number'>205</span>, <span class='number'>233</span>]
+);</pre>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "multihash";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>
