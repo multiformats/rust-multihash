@@ -8,17 +8,15 @@ addons:
     - libdw-dev
     - binutils-dev
 rust:
-# - nightly # enable when passing
 - beta
 - stable
-
 install:
-  - wget https://github.com/jedisct1/libsodium/releases/download/1.0.6/libsodium-1.0.6.tar.gz
-  - tar xvfz libsodium-1.0.6.tar.gz
-  - cd libsodium-1.0.6 && ./configure --prefix=$HOME/installed_libsodium && make && make install && cd ..
-  - export PKG_CONFIG_PATH=$HOME/installed_libsodium/lib/pkgconfig:$PKG_CONFIG_PATH
-  - export LD_LIBRARY_PATH=$HOME/installed_libsodium/lib:$LD_LIBRARY_PATH
-
+- wget https://github.com/jedisct1/libsodium/releases/download/1.0.6/libsodium-1.0.6.tar.gz
+- tar xvfz libsodium-1.0.6.tar.gz
+- cd libsodium-1.0.6 && ./configure --prefix=$HOME/installed_libsodium && make &&
+  make install && cd ..
+- export PKG_CONFIG_PATH=$HOME/installed_libsodium/lib/pkgconfig:$PKG_CONFIG_PATH
+- export LD_LIBRARY_PATH=$HOME/installed_libsodium/lib:$LD_LIBRARY_PATH
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
@@ -35,4 +33,4 @@ after_success:
 env:
   global:
   - TRAVIS_CARGO_NIGHTLY_FEATURE=nightly
-  - secure: f/VDWCDpQazAB1TX4QlwGDumT7ft4uip5isALquR3TUT/WyKScnXe9JCAMp5/kJaVzSUeQgbqbBXsNmkzMpqBGj5Cu8GqUDIPf2TbqfFJ/wNzzQXrvwB2n3fA5affbSLBvLBw1R9Jonv14tPduYgnfkGDi89UbxMhXDRhpmwrFlKxHLcbz36+pYG5Qg3ftAGDrNDWprh5W0J1RgwyXGj56fUKLcHDzZoyvNEEzkSM3WV4OdWixCDESrS3SZLaYCjLNHLbCsbaa6AWUlGZMJXj5mrNDDxeCFU6Z9euUWG9ypJkiRA6eMo1zqXZrHYvPJM2ivqWqEYUXtKGHpugH2Sa34C/PvXOiuYkC2yXLO6TmSaAYWo5x6z1I2WrgMKSbhpqsrV0ZRKywCBuMooyQw85tQJRFPqSxbaJYPjsVhZ4yZEDnbsCvr8puhKtWAYOhz/0d15Pyom+yJ3roT4eSt4VyPVifEFAKC4/tLxbXkzB44PvOg0Ur+HxUUoAxi0dgrb1MTOwgkDxUl3iIdQtn6bAjM2D84ciCtYvlcTQAp7Rohgoda3FU99Hoxujj7YJ3eRLfBpLOclXTqUFBU0JFRDlec1xcD4MnwsLz9oWdw/hIhyh4PGfm6wuvfBKkJdQ4JhzIS7UcDCUdrsTx7LqMtA5M1CkN53mw+HNXfUncOOyLw=
+  - secure: GUc+UHxYyfXimut0P0YqwxGiXsGt6GD8SKHQg/+7DeTZpc82KOxzXrBX/fNDK4vXlwPSNxf+V2lvSAbLUljWD91WUCnZMtNyPLLqpfphjBnTbILJNJbf0l6PMcMyhIzbYQO1L9uEn8rnn8d71oqQOZJ57+I2cTArlapBrMix0pl2uhy71Nldx7K0IHWLEbjLF3BycqIKlbGSBjcmF9oTMGq86XEaY+iZ98Itjxmnuw4MAv/tk03YvHcVD5nyhxpgW+qfwkPKKDMwRS7SVgQroOuSYVX0JOBhq+gJ4DOpwwXb+2ynCalmAGJI0n38tdx3oezwEaKEa5rHN5BdF7gpNgq4s3Z/m4f38P+38BmIBzMGPS5cI1Qv3qk/8wHUGSoUurEgS1x84THUwjn3egYJeltQnJDviVPOGffDKgqWh2btTqscT+lHQj3xuo7jQYqwDu+nP0dCygZYXwQ4xfXM9Esv9YCqY8Bny6wdnp18eU9QRlVGb7kTHPTB35gPHhX/HGBYT4tAYNnL7DG+7tM6Vc27qKGVAS4KORY90OT4D5RnWRdZFRO3jhSgB1VE7ZdvD2CxSA4KxjlzYyDoTlFfjkml5fJWyppmvdt2fCvqJ9uWAQ7Nz4G54o5Myn3vdT+PmOJ7BqRaoCIu4Cdb9LVNhHys/cianflzCJ4zdwMY8Fc=
