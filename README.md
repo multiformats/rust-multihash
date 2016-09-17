@@ -1,10 +1,12 @@
 # rust-multihash
 
-[![Build Status](https://img.shields.io/travis/multiformats/rust-multihash/master.svg?style=flat-square)](https://travis-ci.org/multiformats/rust-multihash)
-[![](https://img.shields.io/badge/rust-docs-blue.svg?style=flat-square)](http://multiformats.github.io/rust-multihash/multihash/struct.Multihash.html)
 [![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
 [![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](http://github.com/multiformats/multiformats)
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
+[![Build Status](https://img.shields.io/travis/multiformats/rust-multihash/master.svg?style=flat-square)](https://travis-ci.org/multiformats/rust-multihash)
+[![Coverage Status](https://coveralls.io/repos/multiformats/rust-multihash/badge.svg?style=flat-square&branch=master)](https://coveralls.io/r/multiformats/rust-multihash?branch=master)
+[![](https://img.shields.io/badge/rust-docs-blue.svg?style=flat-square)](http://multiformats.github.io/rust-multihash/multihash/struct.Multihash.html)
+[![crates.io](http://meritbadge.herokuapp.com/multihash?style=flat-square)](https://crates.io/crates/multihash)
 
 > [multihash](https://github.com/multiformats/multihash) implementation in Rust.
 
