@@ -19,9 +19,16 @@ missing_debug_implementations)]
 ///! in Rust.
 /// Representation of a Multiaddr.
 
-extern crate sodiumoxide;
+extern crate crypto;
 
-use sodiumoxide::crypto::hash::{sha256, sha512};
+use crypto::digest::Digest;
+
+use crypto::sha1::Sha1;
+use crypto::sha2::{Sha256, Sha512};
+use crypto::sha3::Sha3;
+use crypto::blake2b::Blake2b;
+use crypto::blake2s::Blake2s;
+
 use std::io;
 
 mod hashes;
@@ -29,10 +36,10 @@ pub use hashes::*;
 
 
 
-/// Encodes data into a multihash.  
+/// Encodes data into a multihash.
 ///
 /// The returned data is raw bytes.  To make is more human-friendly, you can encode it (hex,
-/// base58, base64, etc).  
+/// base58, base64, etc).
 ///
 /// # Errors
 ///
@@ -53,10 +60,90 @@ pub use hashes::*;
 ///
 pub fn encode(wanttype: HashTypes, input: &[u8]) -> io::Result<Vec<u8>> {
     let digest: Vec<u8> = match wanttype {
-        HashTypes::SHA2256 => sha256::hash(input).as_ref().to_owned(),
-        HashTypes::SHA2512 => sha512::hash(input).as_ref().to_owned(),
+
+        HashTypes::SHA1 => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Sha1::new();
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::SHA2256  => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Sha256::new();
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::SHA2512  => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Sha512::new();
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::SHA3512  => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Sha3::sha3_512();
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::SHA3384  => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Sha3::sha3_384();
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::SHA3224  => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Sha3::sha3_224();
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::SHAKE128 => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Sha3::shake_128();
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::SHAKE256 => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Sha3::shake_256();
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::Blake2b  => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Blake2b::new(64);
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
+        HashTypes::Blake2s  => {
+            let mut buf : Vec<u8> = Vec::new();
+            let mut hasher = Blake2s::new(32);
+            hasher.input(input);
+            hasher.result(&mut buf);
+            buf
+        },
+
         _ => return Err(io::Error::new(io::ErrorKind::Other, "Unsupported hash type"))
     };
+
 
     let mut bytes = Vec::with_capacity(digest.len() + 2);
 
@@ -127,5 +214,3 @@ pub fn to_hex(bytes: &[u8]) -> String {
         format!("{:02x}", x)
     }).collect()
 }
-
-
