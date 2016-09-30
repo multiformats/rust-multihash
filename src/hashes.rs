@@ -9,6 +9,8 @@ pub enum HashTypes {
     SHA2256,
     /// SHA2-512 (64-byte hash size)
     SHA2512,
+    /// SHA3-512 (64-byte hash size)
+    SHA3512,
     /// SHA3-384 (48-byte hash size)
     SHA3384,
     /// SHA3-256 (32-byte hash size)
@@ -53,6 +55,8 @@ impl HashTypes {
         HashTypes::SHA3384  => 48,
         HashTypes::SHA3256  => 32,
         HashTypes::SHA3224  => 28,
+        HashTypes::SHAKE128 => 16,
+        HashTypes::SHAKE256 => 32,
 	    HashTypes::Blake2b  => 64,
 	    HashTypes::Blake2s  => 32,
         }
