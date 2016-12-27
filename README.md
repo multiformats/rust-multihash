@@ -1,12 +1,13 @@
 # rust-multihash
 
 [![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
-[![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](http://github.com/multiformats/multiformats)
-[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
-[![Build Status](https://img.shields.io/travis/multiformats/rust-multihash/master.svg?style=flat-square)](https://travis-ci.org/multiformats/rust-multihash)
-[![Coverage Status](https://coveralls.io/repos/multiformats/rust-multihash/badge.svg?style=flat-square&branch=master)](https://coveralls.io/r/multiformats/rust-multihash?branch=master)
-[![](https://img.shields.io/badge/rust-docs-blue.svg?style=flat-square)](http://multiformats.github.io/rust-multihash/multihash/struct.Multihash.html)
-[![crates.io](http://meritbadge.herokuapp.com/multihash?style=flat-square)](https://crates.io/crates/multihash)
+[![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](https://github.com/multiformats/multiformats)
+[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
+[![Travis CI](https://img.shields.io/travis/multiformats/rust-multihash.svg?style=flat-square&branch=master)](https://travis-ci.org/multiformats/rust-multihash)
+[![codecov.io](https://img.shields.io/codecov/c/github/multiformats/rust-multihash.svg?style=flat-square&branch=master)](https://codecov.io/github/multiformats/rust-multihash?branch=master)
+[![](https://img.shields.io/badge/rust-docs-blue.svg?style=flat-square)](http://multiformats.github.io/rust-multihash/multihash/struct.Multiaddr.html)
+[![crates.io](https://img.shields.io/badge/crates.io-v0.1.0-orange.svg?style=flat-square )](https://crates.io/crates/multihash)
+[![](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
 > [multihash](https://github.com/multiformats/multihash) implementation in Rust.
 
@@ -22,9 +23,14 @@
 
 ## Install
 
+First add this to your `Cargo.toml`
+
+```toml
+[dependencies]
+multihash = "*"
 ```
-TODO
-```
+
+Then run `cargo build`.
 
 ## Usage
 
@@ -65,9 +71,8 @@ Contributions welcome. Please check out [the issues](https://github.com/multifor
 
 Check out our [contributing document](https://github.com/multiformats/multiformats/blob/master/contributing.md) for more information on how we work, and about contributing in general. Please be aware that all interactions related to multiformats are subject to the IPFS [Code of Conduct](https://github.com/ipfs/community/blob/master/code-of-conduct.md).
 
-Small note: If editing the Readme, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
-
+Small note: If editing the README, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2015-2016 Friedel Ziegelmeyer
