@@ -14,4 +14,4 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
-sodiumoxide = "~0.0.9"
+ring = "~0.6.2"
