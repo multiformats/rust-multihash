@@ -5,7 +5,7 @@
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
 [![Travis CI](https://img.shields.io/travis/multiformats/rust-multihash.svg?style=flat-square&branch=master)](https://travis-ci.org/multiformats/rust-multihash)
 [![codecov.io](https://img.shields.io/codecov/c/github/multiformats/rust-multihash.svg?style=flat-square&branch=master)](https://codecov.io/github/multiformats/rust-multihash?branch=master)
-[![](https://img.shields.io/badge/rust-docs-blue.svg?style=flat-square)](http://multiformats.github.io/rust-multihash/multihash/struct.Multiaddr.html)
+[![](https://img.shields.io/badge/rust-docs-blue.svg?style=flat-square)](https://multiformats.github.io/rust-multihash/multihash/struct.Multihash.html)
 [![crates.io](https://img.shields.io/badge/crates.io-v0.1.0-orange.svg?style=flat-square )](https://crates.io/crates/multihash)
 [![](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
