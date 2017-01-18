@@ -1,6 +1,6 @@
 /// ! # multihash
 /// !
-/// ! Implementation of [multihash](https://github.com/jbenet/multihash)
+/// ! Implementation of [multihash](https://github.com/multiformats/multihash)
 /// ! in Rust.
 /// Representation of a Multiaddr.
 
@@ -36,11 +36,11 @@ pub use hashes::*;
 ///
 pub fn encode(wanttype: HashTypes, input: &[u8]) -> io::Result<Vec<u8>> {
     let digest: Vec<u8> = match wanttype {
-        // Test is failing, not sure why :/
-        // HashTypes::SHA1 => {
-        //     digest::digest(&digest::SHA256, input)
-        //         .as_ref().to_owned()
-        // }
+        HashTypes::SHA1 => {
+            digest::digest(&digest::SHA1, input)
+                .as_ref()
+                .to_owned()
+        }
         HashTypes::SHA2256 => {
             digest::digest(&digest::SHA256, input)
                 .as_ref()
