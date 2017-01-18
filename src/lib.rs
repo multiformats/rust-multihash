@@ -1,38 +1,21 @@
-// For explanation of lint checks, run `rustc -W help`
-// This is adapted from
-// https://github.com/maidsafe/QA/blob/master/Documentation/Rust%20Lint%20Checks.md
-#![forbid(bad_style, exceeding_bitshifts, mutable_transmutes, no_mangle_const_items,
-unknown_crate_types, warnings)]
-#![deny(deprecated, improper_ctypes, //missing_docs,
-non_shorthand_field_patterns, overflowing_literals, plugin_as_library,
-private_no_mangle_fns, private_no_mangle_statics, stable_features, unconditional_recursion,
-unknown_lints, unsafe_code, unused, unused_allocation, unused_attributes,
-unused_comparisons, unused_features, unused_parens, while_true)]
-#![warn(trivial_casts, unused_extern_crates, unused_import_braces,
-unused_qualifications, unused_results, variant_size_differences)]
-#![allow(box_pointers, fat_ptr_transmutes, missing_copy_implementations,
-missing_debug_implementations)]
-
-///! # multihash
-///!
-///! Implementation of [multihash](https://github.com/jbenet/multihash)
-///! in Rust.
+/// ! # multihash
+/// !
+/// ! Implementation of [multihash](https://github.com/multiformats/multihash)
+/// ! in Rust.
 /// Representation of a Multiaddr.
 
-extern crate sodiumoxide;
+extern crate ring;
 
-use sodiumoxide::crypto::hash::{sha256, sha512};
+use ring::digest;
 use std::io;
 
 mod hashes;
 pub use hashes::*;
 
-
-
-/// Encodes data into a multihash.  
+/// Encodes data into a multihash.
 ///
 /// The returned data is raw bytes.  To make is more human-friendly, you can encode it (hex,
-/// base58, base64, etc).  
+/// base58, base64, etc).
 ///
 /// # Errors
 ///
@@ -53,9 +36,22 @@ pub use hashes::*;
 ///
 pub fn encode(wanttype: HashTypes, input: &[u8]) -> io::Result<Vec<u8>> {
     let digest: Vec<u8> = match wanttype {
-        HashTypes::SHA2256 => sha256::hash(input).as_ref().to_owned(),
-        HashTypes::SHA2512 => sha512::hash(input).as_ref().to_owned(),
-        _ => return Err(io::Error::new(io::ErrorKind::Other, "Unsupported hash type"))
+        HashTypes::SHA1 => {
+            digest::digest(&digest::SHA1, input)
+                .as_ref()
+                .to_owned()
+        }
+        HashTypes::SHA2256 => {
+            digest::digest(&digest::SHA256, input)
+                .as_ref()
+                .to_owned()
+        }
+        HashTypes::SHA2512 => {
+            digest::digest(&digest::SHA512, input)
+                .as_ref()
+                .to_owned()
+        }
+        _ => return Err(io::Error::new(io::ErrorKind::Other, "Unsupported hash type")),
     };
 
     let mut bytes = Vec::with_capacity(digest.len() + 2);
@@ -100,17 +96,18 @@ pub fn decode(input: &[u8]) -> io::Result<Multihash> {
             let hash_len = alg.size() as usize;
             // length of input should be exactly hash_len + 2
             if input.len() != hash_len + 2 {
-                Err(io::Error::new(io::ErrorKind::Other, format!("Bad input length.  Expected {}, found {}", hash_len + 2, input.len())))
+                Err(io::Error::new(io::ErrorKind::Other,
+                                   format!("Bad input length.  Expected {}, found {}",
+                                           hash_len + 2,
+                                           input.len())))
             } else {
                 Ok(Multihash {
                     alg: alg,
                     digest: &input[2..],
                 })
             }
-        },
-        None => {
-            Err(io::Error::new(io::ErrorKind::Other, format!("Unkown code {:?}", code)))
         }
+        None => Err(io::Error::new(io::ErrorKind::Other, format!("Unkown code {:?}", code))),
     }
 }
 
@@ -118,14 +115,12 @@ pub fn decode(input: &[u8]) -> io::Result<Multihash> {
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Multihash<'a> {
     pub alg: HashTypes,
-    pub digest: &'a [u8]
+    pub digest: &'a [u8],
 }
 
 /// Convert bytes to a hex representation
 pub fn to_hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|x| {
-        format!("{:02x}", x)
-    }).collect()
+    bytes.iter()
+        .map(|x| format!("{:02x}", x))
+        .collect()
 }
-
-

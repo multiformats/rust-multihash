@@ -17,6 +17,10 @@ fn hex_to_bytes(s: &str) -> Vec<u8> {
 #[test]
 fn multihash_encode () {
     assert_eq!(
+        encode(HashTypes::SHA1, "beep boop".as_bytes()).unwrap(),
+        hex_to_bytes("11147c8357577f51d4f0a8d393aa1aaafb28863d9421")
+    );
+    assert_eq!(
         encode(HashTypes::SHA2256, "helloworld".as_bytes()).unwrap(),
         hex_to_bytes("1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af")
     );
@@ -33,11 +37,23 @@ fn multihash_encode () {
 
 #[test]
 fn multihash_decode () {
+    let hash: Vec<u8> = encode(HashTypes::SHA1, "helloworld".as_bytes()).unwrap();
+    assert_eq!(
+        decode(&hash).unwrap().alg,
+        HashTypes::SHA1
+    );
+
     let hash: Vec<u8> = encode(HashTypes::SHA2256, "helloworld".as_bytes()).unwrap();
     assert_eq!(
         decode(&hash).unwrap().alg,
         HashTypes::SHA2256
-    )
+    );
+
+    let hash: Vec<u8> = encode(HashTypes::SHA2512, "helloworld".as_bytes()).unwrap();
+    assert_eq!(
+        decode(&hash).unwrap().alg,
+        HashTypes::SHA2512
+    );
 }
 
 #[test]
