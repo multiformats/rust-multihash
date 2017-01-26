@@ -19,34 +19,34 @@ pub use hashes::*;
 ///
 /// # Errors
 ///
-/// Will return an error if the specified hash type is not supported.  See the docs for `HashTypes`
+/// Will return an error if the specified hash type is not supported.  See the docs for `Hash`
 /// to see what is supported.
 ///
 /// # Examples
 ///
 /// ```
-/// use multihash::{encode, HashTypes};
+/// use multihash::{encode, Hash};
 ///
 /// assert_eq!(
-///     encode(HashTypes::SHA2256, "hello world".as_bytes()).unwrap(),
+///     encode(Hash::SHA2256, "hello world".as_bytes()).unwrap(),
 ///     vec![18, 32, 185, 77, 39, 185, 147, 77, 62, 8, 165, 46, 82, 215, 218, 125, 171, 250, 196,
 ///     132, 239, 227, 122, 83, 128, 238, 144, 136, 247, 172, 226, 239, 205, 233]
 /// );
 /// ```
 ///
-pub fn encode(wanttype: HashTypes, input: &[u8]) -> io::Result<Vec<u8>> {
+pub fn encode(wanttype: Hash, input: &[u8]) -> io::Result<Vec<u8>> {
     let digest: Vec<u8> = match wanttype {
-        HashTypes::SHA1 => {
+        Hash::SHA1 => {
             digest::digest(&digest::SHA1, input)
                 .as_ref()
                 .to_owned()
         }
-        HashTypes::SHA2256 => {
+        Hash::SHA2256 => {
             digest::digest(&digest::SHA256, input)
                 .as_ref()
                 .to_owned()
         }
-        HashTypes::SHA2512 => {
+        Hash::SHA2512 => {
             digest::digest(&digest::SHA512, input)
                 .as_ref()
                 .to_owned()
@@ -72,7 +72,7 @@ pub fn encode(wanttype: HashTypes, input: &[u8]) -> io::Result<Vec<u8>> {
 /// # Examples
 ///
 /// ```
-/// use multihash::{decode, HashTypes, Multihash};
+/// use multihash::{decode, Hash, Multihash};
 ///
 /// // use the data from the `encode` example
 /// let data = vec![18, 32, 185, 77, 39, 185, 147, 77, 62, 8, 165, 46, 82, 215, 218,
@@ -81,7 +81,7 @@ pub fn encode(wanttype: HashTypes, input: &[u8]) -> io::Result<Vec<u8>> {
 /// assert_eq!(
 ///     decode(&data).unwrap(),
 ///     Multihash {
-///         alg: HashTypes::SHA2256,
+///         alg: Hash::SHA2256,
 ///         digest: &data[2..]
 ///     }
 /// );
@@ -91,7 +91,7 @@ pub fn decode(input: &[u8]) -> io::Result<Multihash> {
 
     let code = input[0];
 
-    match HashTypes::from_code(code) {
+    match Hash::from_code(code) {
         Some(alg) => {
             let hash_len = alg.size() as usize;
             // length of input should be exactly hash_len + 2
@@ -114,7 +114,7 @@ pub fn decode(input: &[u8]) -> io::Result<Multihash> {
 /// Represents a valid multihash, by associating the hash algorithm with the data
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Multihash<'a> {
-    pub alg: HashTypes,
+    pub alg: Hash,
     pub digest: &'a [u8],
 }
 

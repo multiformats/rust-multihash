@@ -37,9 +37,9 @@ Then run `cargo build`.
 ```rust
 extern crate multihash;
 
-use multihash::{encode, decode, HashTypes};
+use multihash::{encode, decode, Hash};
 
-let hash = encode(HashTypes::SHA2256, "my hash".as_bytes()).unwrap();
+let hash = encode(Hash::SHA2256, "my hash".as_bytes()).unwrap();
 let multi = decode(&hash).unwrap();
 ```
 
