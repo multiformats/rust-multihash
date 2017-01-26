@@ -39,7 +39,7 @@ extern crate multihash;
 
 use multihash::{encode, decode, HashTypes};
 
-let hash = encode(HashTypes::SHA2256, "my hash").unwrap();
+let hash = encode(HashTypes::SHA2256, "my hash".as_bytes()).unwrap();
 let multi = decode(&hash).unwrap();
 ```
 
