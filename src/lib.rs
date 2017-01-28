@@ -28,7 +28,7 @@ pub use hashes::*;
 /// use multihash::{encode, Hash};
 ///
 /// assert_eq!(
-///     encode(Hash::SHA2256, "hello world".as_bytes()).unwrap(),
+///     encode(Hash::SHA2256, b"hello world").unwrap(),
 ///     vec![18, 32, 185, 77, 39, 185, 147, 77, 62, 8, 165, 46, 82, 215, 218, 125, 171, 250, 196,
 ///     132, 239, 227, 122, 83, 128, 238, 144, 136, 247, 172, 226, 239, 205, 233]
 /// );
@@ -88,7 +88,6 @@ pub fn encode(wanttype: Hash, input: &[u8]) -> io::Result<Vec<u8>> {
 /// ```
 ///
 pub fn decode(input: &[u8]) -> io::Result<Multihash> {
-
     let code = input[0];
 
     match Hash::from_code(code) {
