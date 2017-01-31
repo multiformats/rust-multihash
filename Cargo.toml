@@ -14,4 +14,4 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
-ring = "~0.6.3"
+ring = "~0.6.2"
