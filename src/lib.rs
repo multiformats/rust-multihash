@@ -7,10 +7,12 @@
 extern crate ring;
 
 use ring::digest;
-use std::io;
 
 mod hashes;
 pub use hashes::*;
+
+mod errors;
+pub use errors::*;
 
 /// Encodes data into a multihash.
 ///
@@ -34,33 +36,26 @@ pub use hashes::*;
 /// );
 /// ```
 ///
-pub fn encode(wanttype: Hash, input: &[u8]) -> io::Result<Vec<u8>> {
-    let digest: Vec<u8> = match wanttype {
-        Hash::SHA1 => {
-            digest::digest(&digest::SHA1, input)
-                .as_ref()
-                .to_owned()
-        }
-        Hash::SHA2256 => {
-            digest::digest(&digest::SHA256, input)
-                .as_ref()
-                .to_owned()
-        }
-        Hash::SHA2512 => {
-            digest::digest(&digest::SHA512, input)
-                .as_ref()
-                .to_owned()
-        }
-        _ => return Err(io::Error::new(io::ErrorKind::Other, "Unsupported hash type")),
-    };
-
-    let mut bytes = Vec::with_capacity(digest.len() + 2);
+pub fn encode(wanttype: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
+    let encoded = encode_digest(wanttype, input)?;
+    let mut bytes = Vec::with_capacity(encoded.len() + 2);
 
     bytes.push(wanttype.code());
-    bytes.push(digest.len() as u8);
-    bytes.extend(digest);
+    bytes.push(encoded.len() as u8);
+    bytes.extend(encoded);
 
     Ok(bytes)
+}
+
+fn encode_digest(wanttype: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
+    let digest_type = match wanttype {
+        Hash::SHA1 => &digest::SHA1,
+        Hash::SHA2256 => &digest::SHA256,
+        Hash::SHA2512 => &digest::SHA512,
+        _ => return Err(Error::UnsupportedType),
+    };
+
+    Ok(digest::digest(digest_type, input).as_ref().to_owned())
 }
 
 /// Decodes bytes into a multihash
@@ -87,31 +82,25 @@ pub fn encode(wanttype: Hash, input: &[u8]) -> io::Result<Vec<u8>> {
 /// );
 /// ```
 ///
-pub fn decode(input: &[u8]) -> io::Result<Multihash> {
+pub fn decode(input: &[u8]) -> Result<Multihash, Error> {
     let code = input[0];
 
-    match Hash::from_code(code) {
-        Some(alg) => {
-            let hash_len = alg.size() as usize;
-            // length of input should be exactly hash_len + 2
-            if input.len() != hash_len + 2 {
-                Err(io::Error::new(io::ErrorKind::Other,
-                                   format!("Bad input length.  Expected {}, found {}",
-                                           hash_len + 2,
-                                           input.len())))
-            } else {
-                Ok(Multihash {
-                    alg: alg,
-                    digest: &input[2..],
-                })
-            }
-        }
-        None => Err(io::Error::new(io::ErrorKind::Other, format!("Unkown code {:?}", code))),
+    let alg = Hash::from_code(code)?;
+    let hash_len = alg.size() as usize;
+
+    // length of input should be exactly hash_len + 2
+    if input.len() != hash_len + 2 {
+        return Err(Error::BadInputLength);
     }
+
+    Ok(Multihash {
+        alg: alg,
+        digest: &input[2..],
+    })
 }
 
 /// Represents a valid multihash, by associating the hash algorithm with the data
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Multihash<'a> {
     pub alg: Hash,
     pub digest: &'a [u8],
