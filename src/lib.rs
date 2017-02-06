@@ -7,6 +7,8 @@
 extern crate ring;
 extern crate tiny_keccak;
 
+use std::fmt::Write;
+
 use tiny_keccak::Keccak;
 use ring::digest;
 
@@ -142,7 +144,11 @@ pub struct Multihash<'a> {
 
 /// Convert bytes to a hex representation
 pub fn to_hex(bytes: &[u8]) -> String {
-    bytes.iter()
-        .map(|x| format!("{:02x}", x))
-        .collect()
+    let mut hex = String::with_capacity(bytes.len() * 2);
+
+    for byte in bytes {
+        write!(hex, "{:02x}", byte).expect("Can't fail on writing to string");
+    }
+
+    hex
 }

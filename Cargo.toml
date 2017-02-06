@@ -5,7 +5,7 @@ homepage = "https://github.com/multiformats/rust-multihash"
 
 keywords = ["multihash", "ipfs"]
 
-version = "0.4.3"
+version = "0.4.2"
 
 authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
 
