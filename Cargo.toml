@@ -5,7 +5,7 @@ homepage = "https://github.com/multiformats/rust-multihash"
 
 keywords = ["multihash", "ipfs"]
 
-version = "0.4.2"
+version = "0.4.3"
 
 authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
 
@@ -14,4 +14,5 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
+tiny-keccak = "~1.0.5"
 ring = "~0.6.2"
