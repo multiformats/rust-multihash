@@ -5,7 +5,11 @@
 /// Representation of a Multiaddr.
 
 extern crate ring;
+extern crate tiny_keccak;
 
+use std::fmt::Write;
+
+use tiny_keccak::Keccak;
 use ring::digest;
 
 mod hashes;
@@ -13,6 +17,36 @@ pub use hashes::*;
 
 mod errors;
 pub use errors::*;
+
+// Helper macro for encoding input into output using either ring or tiny_keccak
+macro_rules! encode {
+    (ring, $algorithm:ident, $input:expr, $output:expr) => ({
+        let result = digest::digest(&digest::$algorithm, $input);
+        debug_assert!($output.len() == result.as_ref().len());
+        $output.copy_from_slice(result.as_ref());
+    });
+    (tiny, $constructor:ident, $input:expr, $output:expr) => ({
+        let mut kec = Keccak::$constructor();
+        kec.update($input);
+        kec.finalize($output);
+    })
+}
+
+// And another one to keep the matching DRY
+macro_rules! match_encoder {
+    ($hash:ident for ($input:expr, $output:expr) {
+        $( $hashtype:ident => $lib:ident :: $method:ident, )*
+    }) => ({
+        match $hash {
+            $(
+                Hash::$hashtype => encode!($lib, $method, $input, $output),
+            )*
+
+            _ => return Err(Error::UnsupportedType)
+        }
+    })
+}
+
 
 /// Encodes data into a multihash.
 ///
@@ -36,26 +70,28 @@ pub use errors::*;
 /// );
 /// ```
 ///
-pub fn encode(wanttype: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
-    let encoded = encode_digest(wanttype, input)?;
-    let mut bytes = Vec::with_capacity(encoded.len() + 2);
+pub fn encode(hash: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
+    let size = hash.size();
+    let mut output = Vec::new();
+    output.resize(2 + size as usize, 0);
+    output[0] = hash.code();
+    output[1] = size;
 
-    bytes.push(wanttype.code());
-    bytes.push(encoded.len() as u8);
-    bytes.extend(encoded);
+    match_encoder!(hash for (input, &mut output[2..]) {
+        SHA1 => ring::SHA1,
+        SHA2256 => ring::SHA256,
+        SHA2512 => ring::SHA512,
+        SHA3224 => tiny::new_sha3_224,
+        SHA3256 => tiny::new_sha3_256,
+        SHA3384 => tiny::new_sha3_384,
+        SHA3512 => tiny::new_sha3_512,
+        Keccak224 => tiny::new_keccak224,
+        Keccak256 => tiny::new_keccak256,
+        Keccak384 => tiny::new_keccak384,
+        Keccak512 => tiny::new_keccak512,
+    });
 
-    Ok(bytes)
-}
-
-fn encode_digest(wanttype: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
-    let digest_type = match wanttype {
-        Hash::SHA1 => &digest::SHA1,
-        Hash::SHA2256 => &digest::SHA256,
-        Hash::SHA2512 => &digest::SHA512,
-        _ => return Err(Error::UnsupportedType),
-    };
-
-    Ok(digest::digest(digest_type, input).as_ref().to_owned())
+    Ok(output)
 }
 
 /// Decodes bytes into a multihash
@@ -108,7 +144,11 @@ pub struct Multihash<'a> {
 
 /// Convert bytes to a hex representation
 pub fn to_hex(bytes: &[u8]) -> String {
-    bytes.iter()
-        .map(|x| format!("{:02x}", x))
-        .collect()
+    let mut hex = String::with_capacity(bytes.len() * 2);
+
+    for byte in bytes {
+        write!(hex, "{:02x}", byte).expect("Can't fail on writing to string");
+    }
+
+    hex
 }
