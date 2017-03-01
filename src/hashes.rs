@@ -5,7 +5,7 @@ use errors::Error;
 /// Not all hash types are supported by this library.
 #[derive(PartialEq, Eq, Clone, Debug, Copy)]
 pub enum Hash {
-    /// Encoding unsupported
+    /// SHA-1 (20-byte hash size)
     SHA1,
     /// SHA-256 (32-byte hash size)
     SHA2256,
@@ -19,13 +19,13 @@ pub enum Hash {
     SHA3256,
     /// SHA3-224 (28-byte hash size)
     SHA3224,
-    // Keccak-224 (28-byte hash size)
+    /// Keccak-224 (28-byte hash size)
     Keccak224,
-    // Keccak-256 (32-byte hash size)
+    /// Keccak-256 (32-byte hash size)
     Keccak256,
-    // Keccak-384 (48-byte hash size)
+    /// Keccak-384 (48-byte hash size)
     Keccak384,
-    // Keccak-512 (64-byte hash size)
+    /// Keccak-512 (64-byte hash size)
     Keccak512,
     /// Encoding unsupported
     Blake2b,
