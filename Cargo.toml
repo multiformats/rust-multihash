@@ -17,4 +17,4 @@ documentation = "https://docs.rs/multihash/"
 
 [dependencies]
 tiny-keccak = "1.2"
-ring = "~0.7.1"
+ring = "0.7.4"
