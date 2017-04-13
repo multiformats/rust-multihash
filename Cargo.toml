@@ -1,7 +1,7 @@
 [package]
 name = "multihash"
 description = "Implementation of the multihash format"
-homepage = "https://github.com/multiformats/rust-multihash"
+repository = "https://github.com/multiformats/rust-multihash"
 
 keywords = ["multihash", "ipfs"]
 
