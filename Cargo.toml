@@ -5,7 +5,7 @@ repository = "https://github.com/multiformats/rust-multihash"
 
 keywords = ["multihash", "ipfs"]
 
-version = "0.6.0"
+version = "0.7.0"
 
 authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
 
