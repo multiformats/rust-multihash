@@ -3,7 +3,7 @@ use errors::Error;
 /// List of types currently supported in the multihash spec.
 ///
 /// Not all hash types are supported by this library.
-#[derive(PartialEq, Eq, Clone, Debug, Copy)]
+#[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
 pub enum Hash {
     /// SHA-1 (20-byte hash size)
     SHA1,
