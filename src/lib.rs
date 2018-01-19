@@ -119,6 +119,10 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
 /// ```
 ///
 pub fn decode(input: &[u8]) -> Result<Multihash, Error> {
+    if input.is_empty() {
+        return Err(Error::BadInputLength);
+    }
+
     let code = input[0];
 
     let alg = Hash::from_code(code)?;
