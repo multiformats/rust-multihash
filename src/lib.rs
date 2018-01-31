@@ -4,13 +4,13 @@
 /// ! in Rust.
 /// Representation of a Multiaddr.
 
-extern crate ring;
+extern crate sha1;
+extern crate sha2;
 extern crate tiny_keccak;
 
 use std::fmt::Write;
-
+use sha2::Digest;
 use tiny_keccak::Keccak;
-use ring::digest;
 
 mod hashes;
 pub use hashes::*;
@@ -18,18 +18,23 @@ pub use hashes::*;
 mod errors;
 pub use errors::*;
 
-// Helper macro for encoding input into output using either ring or tiny_keccak
+// Helper macro for encoding input into output using sha1, sha2 or tiny_keccak
 macro_rules! encode {
-    (ring, $algorithm:ident, $input:expr, $output:expr) => ({
-        let result = digest::digest(&digest::$algorithm, $input);
-        debug_assert!($output.len() == result.as_ref().len());
-        $output.copy_from_slice(result.as_ref());
+    (sha1, Sha1, $input:expr, $output:expr) => ({
+        let mut hasher = sha1::Sha1::new();
+        hasher.update($input);
+        $output.copy_from_slice(&hasher.digest().bytes());
+    });
+    (sha2, $algorithm:ident, $input:expr, $output:expr) => ({
+        let mut hasher = sha2::$algorithm::default();
+        hasher.input($input);
+        $output.copy_from_slice(hasher.result().as_ref());
     });
     (tiny, $constructor:ident, $input:expr, $output:expr) => ({
         let mut kec = Keccak::$constructor();
         kec.update($input);
         kec.finalize($output);
-    })
+    });
 }
 
 // And another one to keep the matching DRY
@@ -78,9 +83,9 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
     output[1] = size;
 
     match_encoder!(hash for (input, &mut output[2..]) {
-        SHA1 => ring::SHA1,
-        SHA2256 => ring::SHA256,
-        SHA2512 => ring::SHA512,
+        SHA1 => sha1::Sha1,
+        SHA2256 => sha2::Sha256,
+        SHA2512 => sha2::Sha512,
         SHA3224 => tiny::new_sha3_224,
         SHA3256 => tiny::new_sha3_256,
         SHA3384 => tiny::new_sha3_384,
