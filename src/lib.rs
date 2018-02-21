@@ -61,16 +61,16 @@ macro_rules! match_encoder {
 /// # Examples
 ///
 /// ```
-/// use multihash::{encode, Hash};
+/// use multihash::{sum, Hash};
 ///
 /// assert_eq!(
-///     encode(Hash::SHA2256, b"hello world").unwrap(),
+///     sum(Hash::SHA2256, b"hello world").unwrap(),
 ///     vec![18, 32, 185, 77, 39, 185, 147, 77, 62, 8, 165, 46, 82, 215, 218, 125, 171, 250, 196,
 ///     132, 239, 227, 122, 83, 128, 238, 144, 136, 247, 172, 226, 239, 205, 233]
 /// );
 /// ```
 ///
-pub fn encode(hash: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
+pub fn sum(hash: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
     let size = hash.size();
     let mut output = Vec::new();
     output.resize(2 + size as usize, 0);
@@ -91,6 +91,18 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
         Keccak512 => tiny::new_keccak512,
     });
 
+    Ok(output)
+}
+
+pub fn encode(hash: Hash, digest: &[u8]) -> Result<Vec<u8>, Error> {
+    let size = hash.size();
+    if digest.len() != size as usize {
+        return Err(Error::BadInputLength);
+    }
+    let mut output = Vec::with_capacity(2 + size as usize);
+    output.push(hash.code());
+    output.push(size);
+    output.extend_from_slice(digest);
     Ok(output)
 }
 

@@ -14,21 +14,21 @@ fn hex_to_bytes(s: &str) -> Vec<u8> {
 
 }
 
-macro_rules! assert_encode {
+macro_rules! assert_sum {
     {$( $alg:ident, $data:expr, $expect:expr; )*} => {
         $(
             assert_eq!(
-                encode(Hash::$alg, $data).expect("Must be supported"),
+                sum(Hash::$alg, $data).expect("Must be supported"),
                 hex_to_bytes($expect),
-                "{} encodes correctly", Hash::$alg.name()
+                "{} sums correctly", Hash::$alg.name()
             );
         )*
     }
 }
 
 #[test]
-fn multihash_encode() {
-    assert_encode! {
+fn multihash_sum() {
+    assert_sum! {
         SHA1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         SHA2256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         SHA2256, b"beep boop", "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -79,7 +79,7 @@ macro_rules! assert_roundtrip {
     ($( $alg:ident ),*) => {
         $(
             {
-                let hash: Vec<u8> = encode(Hash::$alg, b"helloworld").unwrap();
+                let hash: Vec<u8> = sum(Hash::$alg, b"helloworld").unwrap();
                 assert_eq!(
                     decode(&hash).unwrap().alg,
                     Hash::$alg
@@ -101,4 +101,13 @@ fn assert_roundtrip() {
 fn hash_types() {
     assert_eq!(Hash::SHA2256.size(), 32);
     assert_eq!(Hash::SHA2256.name(), "SHA2-256");
+}
+
+#[test]
+fn multihash_encode() {
+    // TODO: test other hash functions
+    let sha1_digest = hex_to_bytes("7c8357577f51d4f0a8d393aa1aaafb28863d9421");
+    let encode_result = encode(Hash::SHA1, &sha1_digest[..]);
+    assert_eq!(&encode_result.unwrap(),
+               &hex_to_bytes("11147c8357577f51d4f0a8d393aa1aaafb28863d9421"));
 }
