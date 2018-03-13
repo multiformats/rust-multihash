@@ -115,7 +115,7 @@ impl Hash {
             0x1D => Keccak512,
             0x40 => Blake2b,
             0x41 => Blake2s,
-            _ => return Err(Error::UnkownCode),
+            _ => return Err(Error::UnknownCode),
         })
     }
 }

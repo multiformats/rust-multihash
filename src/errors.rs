@@ -4,7 +4,7 @@ use std::{fmt, error};
 pub enum Error {
     UnsupportedType,
     BadInputLength,
-    UnkownCode,
+    UnknownCode,
 }
 
 impl fmt::Display for Error {
@@ -18,7 +18,7 @@ impl error::Error for Error {
         match *self {
             Error::UnsupportedType => "This type is not supported yet",
             Error::BadInputLength => "Not matching input length",
-            Error::UnkownCode => "Found unkown code",
+            Error::UnknownCode => "Found unknown code",
         }
     }
 }
