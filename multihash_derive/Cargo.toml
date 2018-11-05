@@ -1,0 +1,12 @@
+[package]
+name = "multihash_derive"
+version = "0.1.0"
+authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "0.15", features = ["full", "extra-traits", "parsing"] }
+quote = "0.6"
+proc-macro2 = "0.4"
