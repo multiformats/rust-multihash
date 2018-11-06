@@ -1,24 +1,11 @@
-use std::{fmt, error};
-
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 pub enum Error {
-    UnsupportedType,
+    #[fail(display = "This type is not supported yet")]
+    UnsupportedTpye,
+    #[fail(display = "Not matching input length")]
     BadInputLength,
-    UnknownCode,
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(error::Error::description(self))
-    }
-}
-
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::UnsupportedType => "This type is not supported yet",
-            Error::BadInputLength => "Not matching input length",
-            Error::UnknownCode => "Found unknown code",
-        }
-    }
+    #[fail(display = "Found unknown code: {}", _0)]
+    UnknownCode(u32),
+    #[fail(display = "Invalid multihash")]
+    Invalid,
 }

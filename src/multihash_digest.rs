@@ -1,17 +1,31 @@
-use digest::Digest;
-use generic_array::ArrayLength;
+use digest::{BlockInput, Input, Reset};
+
+use digests::{Code, Multihash};
 
 /// The `MultihashDigest` trait specifies an interface common for
 /// all multihash functions. It is heavily based on the `digest::Digest` trait.
-pub trait MultihashDigest: ::std::fmt::Debug + Digest {
-    type RawSize: ArrayLength<u8>;
+pub trait MultihashDigest:
+    ::std::fmt::Debug + BlockInput + Input + Reset + Clone + Default
+{
+    /// Creates a new hasher, that can be used for streaming inputs.
+    fn new() -> Self;
 
+    /// Returns the default size for this hash (the raw hash, not the multihash).
     fn size() -> usize;
-    fn name() -> &'static str;
-    fn code() -> u8;
+    /// Returns a string representation of the hashing algorithm.
+    fn to_string() -> &'static str;
+    /// Returns the multihash code for this algorithm based on [this table](https://github.com/multiformats/multicodec/blob/master/table.csv).
+    fn code() -> Code;
 
-    /// Wraps a raw digest, into its multihash version.
-    fn wrap(
-        &generic_array::GenericArray<u8, Self::RawSize>,
-    ) -> generic_array::GenericArray<u8, Self::OutputSize>;
+    /// Convenience method to immediately hash some input and return the digest.
+    fn digest(data: &[u8]) -> Multihash;
+
+    /// Wraps a raw hash, into its multihash version.
+    fn wrap(&[u8]) -> Multihash;
+
+    /// Finishes the hashing and returns the result. The hasher can not be used afterwards.
+    fn result(self) -> Multihash;
+
+    /// Finishes the hashing and resets the internal hasher, so it can be reused.
+    fn result_reset(&mut self) -> Multihash;
 }
