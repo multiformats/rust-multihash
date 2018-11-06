@@ -16,12 +16,6 @@ addons:
     sources:
       - kalakris-cmake
 
-# run builds for all the trains (and more)
-rust:
-  - nightly
-  - beta
-  - stable
-
 before_script:
   - export PATH=$HOME/.cargo/bin:$PATH
   - cargo install cargo-update || echo "cargo-update already installed"
