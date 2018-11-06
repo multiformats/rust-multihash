@@ -14,10 +14,17 @@ sha-1 ={ version = "0.8", default-features = false }
 sha2 = { version = "0.8", default-features = false }
 blake2 = { version = "0.8", default-features = false }
 sha3 = { version = "0.8", default-features = false }
-digest = "0.8"
-integer-encoding = "1.0.5"
-failure = "0.1.3"
+digest = { version = "0.8", default-features = false }
+integer-encoding = { version = "1.0.5", default-features = false }
+failure = { version = "0.1.3", default-features = false }
 multihash_derive = { path = "./multihash_derive" }
 
 [dev-dependencies]
 hex = "0.3"
+
+[features]
+default = ["std", "derive"]
+derive = ["failure/derive"]
+std = ["sha-1/std", "blake2/std", "sha3/std", "sha2/std", "failure/std", "digest/std"]
+simd = ["blake2/simd_opt"]
+asm = ["sha2/asm", "blake2/simd_asm"]

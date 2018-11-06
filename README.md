@@ -34,14 +34,7 @@ Then run `cargo build`.
 
 ## Usage
 
-```rust
-extern crate multihash;
-
-use multihash::{encode, decode, Hash};
-
-let hash = encode(Hash::SHA2256, b"my hash").unwrap();
-let multi = decode(&hash).unwrap();
-```
+See [the docs](https://docs.rs/multihash).
 
 ## Supported Hash Types
 
@@ -49,6 +42,8 @@ let multi = decode(&hash).unwrap();
 * `SHA2-256`
 * `SHA2-512`
 * `SHA3`/`Keccak`
+* `Blake2s`
+* `Blake2b`
 
 ## Maintainers
 

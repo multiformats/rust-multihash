@@ -1,7 +1,10 @@
-sudo: false
-
+sudo: required
 language: rust
 
+# Cache cargo symbols for faster build
+cache: cargo
+
+# Dependencies of kcov, used by coverage
 addons:
   apt:
     packages:
@@ -9,26 +12,39 @@ addons:
       - libelf-dev
       - libdw-dev
       - binutils-dev
+      - cmake # also required for cargo-update
+    sources:
+      - kalakris-cmake
 
+# run builds for all the trains (and more)
 rust:
+  - nightly
   - beta
   - stable
 
 before_script:
-  - |
-    pip install 'travis-cargo<0.2' --user &&
-    export PATH=$HOME/.local/bin:$PATH
+  - export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install cargo-update || echo "cargo-update already installed"
+  - cargo install cargo-travis || echo "cargo-travis already installed"
+  - cargo install-update -a # update outdated cached binaries
 
-install:
-  - pip install --user travis-cargo codecov
-  - export PATH=$PATH:$HOME/.local/bin
-
+# the main build
 script:
-  - |
-    travis-cargo build &&
-    travis-cargo test &&
-    travis-cargo --only stable doc
+  - if [ "$NIGHTLY" = "YES" ]; cargo test --all-features; fi
+  - cargo build --release
+  - cargo test
+  - cargo test --no-default-features --features derive
 
 after_success:
-  - travis-cargo coverage --no-sudo
-  - codecov --file target/kcov/kcov-merged/cobertura.xml
+# measure code coverage and upload to coveralls.io
+  - cargo coveralls
+
+matrix:
+  include:
+    - rust: nightly
+      env: NIGHTLY=TRUE
+    - rust: beta
+      env: NIGHTLY=FALSE
+    - rust: stable
+      env: NIGHTLY=FALSE
+  fast_finish: false
