@@ -86,7 +86,7 @@ fn impl_multihash_digest(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
                 #(#impls)*
             };
 
-            res.into()
+            res
         }
         _ => panic!("Multihash can only be derived on an enum"),
     }
@@ -196,7 +196,7 @@ fn fetch_attr(name: &str, attrs: &[syn::Attribute]) -> Option<String> {
         if let Some(meta) = attr.interpret_meta() {
             match meta {
                 syn::Meta::NameValue(nv) => {
-                    if nv.ident.to_string() == name {
+                    if nv.ident == name {
                         match nv.lit {
                             syn::Lit::Str(ref s) => return Some(s.value()),
                             _ => {
