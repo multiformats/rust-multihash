@@ -11,8 +11,7 @@ use integer_encoding::VarIntWriter;
 
 #[proc_macro_derive(MultihashDigest, attributes(Code, Size, Digest))]
 pub fn multihash_digest_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    // Construct a represntation of Rust code as a syntax tree
-    // that we can manipulate
+    // Construct a representation of Rust code as a syntax tree that we can manipulate
     let ast = syn::parse(input).unwrap();
 
     // Build the trait implementation
@@ -70,17 +69,6 @@ fn impl_multihash_digest(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
                             _ => None
                         }
                     }
-                //     fn new_hasher(&self) -> Box<MultihashDigest> {
-                //         match *self {
-                //             Code::Sha1 => {
-                //                 Box::new(Sha1::new())
-                //             },
-                //             Code::Sha2256 => {
-                //                 Box::new(Sha2256::new())
-                //             },
-                //             _ => unimplemented!(),
-                //         }
-                //     }
                 }
 
                 #(#impls)*
@@ -96,7 +84,7 @@ fn impl_variant(_code_name: &syn::Ident, variant: &syn::Variant) -> proc_macro2:
     let name = &variant.ident;
     let attrs = &variant.attrs;
 
-    let size: usize = fetch_attr("Size", &attrs)
+    let size: u32 = fetch_attr("Size", &attrs)
         .expect("Please supply a Size attribute")
         .parse()
         .expect("Size should be a number");
@@ -145,10 +133,10 @@ fn impl_variant(_code_name: &syn::Ident, variant: &syn::Variant) -> proc_macro2:
 
         impl MultihashDigest for #name {
             fn new() -> Self {
-                #name(<#original_digest as Digest>::new())
+                #name(#original_digest::new())
             }
 
-            fn size() -> usize {
+            fn size() -> u32 {
                 #size
             }
 
@@ -160,31 +148,32 @@ fn impl_variant(_code_name: &syn::Ident, variant: &syn::Variant) -> proc_macro2:
                 Code::#name
             }
 
-            fn wrap(
-                raw: &[u8],
+            fn wrap<T: AsRef<[u8]>>(
+                raw: T,
             ) -> Multihash {
-                let mut out = vec![0u8; raw.len() + #prefix_len];
+                let re = raw.as_ref();
+                let mut out = vec![0u8; re.len() + #prefix_len];
 
                 #( #code_iter )*
 
                 // TODO: varint - handle larger sizes
                 out[#code_len] = Self::size() as u8;
 
-                out[#prefix_len..].copy_from_slice(raw);
+                out[#prefix_len..].copy_from_slice(re);
 
                 Multihash(out.into())
             }
 
             fn result(self) -> Multihash {
-                Self::wrap(&self.0.result())
+                Self::wrap(self.0.result())
             }
 
             fn result_reset(&mut self) -> Multihash {
-                Self::wrap(&self.0.result_reset())
+                Self::wrap(self.0.result_reset())
             }
 
             fn digest(data: &[u8]) -> Multihash {
-                Self::wrap(&<#original_digest as Digest>::digest(data))
+                Self::wrap(<#original_digest as Digest>::digest(data))
             }
         }
     }

@@ -11,7 +11,7 @@ pub trait MultihashDigest:
     fn new() -> Self;
 
     /// Returns the default size for this hash (the raw hash, not the multihash).
-    fn size() -> usize;
+    fn size() -> u32;
     /// Returns a string representation of the hashing algorithm.
     fn to_string() -> &'static str;
     /// Returns the multihash code for this algorithm based on [this table](https://github.com/multiformats/multicodec/blob/master/table.csv).
@@ -21,7 +21,7 @@ pub trait MultihashDigest:
     fn digest(data: &[u8]) -> Multihash;
 
     /// Wraps a raw hash, into its multihash version.
-    fn wrap(&[u8]) -> Multihash;
+    fn wrap<T: AsRef<[u8]>>(T) -> Multihash;
 
     /// Finishes the hashing and returns the result. The hasher can not be used afterwards.
     fn result(self) -> Multihash;

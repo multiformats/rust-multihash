@@ -17,7 +17,7 @@ impl AsRef<[u8]> for Multihash {
 
 impl Multihash {
     /// Creates a new `Multihash` from a `Vec<u8>`, consuming it.
-    /// If the input data is not a valid  multihash an error is returned.
+    /// If the input data is not a valid multihash an error is returned.
     ///
     /// # Example
     ///
@@ -47,7 +47,7 @@ impl Multihash {
     }
 
     /// Creates a new `Multihash` from a slice.
-    /// If the input data is not a valid  multihash an error is returned.
+    /// If the input data is not a valid multihash an error is returned.
     ///
     /// # Example
     ///
@@ -198,7 +198,7 @@ mod tests {
 
         let raw_digest = Sha256::digest(b"helloworld");
 
-        assert_eq!(Sha2256::wrap(raw_digest.as_ref()).as_ref(), &expected[..]);
+        assert_eq!(Sha2256::wrap(raw_digest).as_ref(), &expected[..]);
     }
 
     #[test]
