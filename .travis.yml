@@ -24,7 +24,7 @@ before_script:
 
 # the main build
 script:
-  - if [ "$NIGHTLY" = "YES" ]; cargo test --all-features; fi
+  - if [ "$NIGHTLY" = "YES" ]; then cargo test --all-features; fi
   - cargo build --release
   - cargo test
   - cargo test --no-default-features --features derive
