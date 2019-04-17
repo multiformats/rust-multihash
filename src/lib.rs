@@ -9,6 +9,8 @@
 mod errors;
 mod hashes;
 
+use std::convert::TryFrom;
+
 use blake2b_simd::blake2b;
 use blake2s_simd::blake2s;
 use sha2::Digest;
@@ -161,6 +163,14 @@ impl<'a> PartialEq<MultihashRef<'a>> for Multihash {
     #[inline]
     fn eq(&self, other: &MultihashRef<'a>) -> bool {
         &*self.bytes == other.bytes
+    }
+}
+
+impl TryFrom<Vec<u8>> for Multihash {
+    type Error = DecodeOwnedError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        Multihash::from_bytes(value)
     }
 }
 
