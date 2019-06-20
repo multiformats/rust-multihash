@@ -3,8 +3,8 @@ use std::convert::TryFrom;
 use digest::{BlockInput, Digest, Input, Reset};
 use integer_encoding::VarInt;
 
-use errors::Error;
-use multihash_digest::MultihashDigest;
+use crate::errors::Error;
+use crate::multihash_digest::MultihashDigest;
 
 /// Representation of a valid multihash. This enforces validity on construction,
 /// so it can be assumed this is always a valid multihash.

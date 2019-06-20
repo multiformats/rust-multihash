@@ -1,6 +1,6 @@
 use digest::{BlockInput, Input, Reset};
 
-use digests::{Code, Multihash};
+use crate::digests::{Code, Multihash};
 
 /// The `MultihashDigest` trait specifies an interface common for
 /// all multihash functions. It is heavily based on the `digest::Digest` trait.
@@ -21,7 +21,7 @@ pub trait MultihashDigest:
     fn digest(data: &[u8]) -> Multihash;
 
     /// Wraps a raw hash, into its multihash version.
-    fn wrap<T: AsRef<[u8]>>(T) -> Multihash;
+    fn wrap<T: AsRef<[u8]>>(_: T) -> Multihash;
 
     /// Finishes the hashing and returns the result. The hasher can not be used afterwards.
     fn result(self) -> Multihash;

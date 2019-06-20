@@ -8,7 +8,7 @@ authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 documentation = "https://docs.rs/multihash/"
-
+edition = "2018"
 
 [dependencies]
 sha-1 ={ version = "0.8", default-features = false }
