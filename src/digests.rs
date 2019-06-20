@@ -1,10 +1,9 @@
 use std::convert::TryFrom;
 
-use digest::{BlockInput, Digest, Input, Reset};
 use integer_encoding::VarInt;
 
 use crate::errors::Error;
-use crate::multihash_digest::MultihashDigest;
+use crate::Code;
 
 /// Representation of a valid multihash. This enforces validity on construction,
 /// so it can be assumed this is always a valid multihash.
@@ -93,6 +92,11 @@ impl Multihash {
         Ok(Multihash(raw.into_boxed_slice()))
     }
 
+    /// Create a new Multihash from a boxed slice, without validating.
+    pub fn from_box(raw: Box<[u8]>) -> Self {
+        Multihash(raw)
+    }
+
     /// Creates a new `Multihash` from a slice.
     /// If the input data is not a valid multihash an error is returned.
     ///
@@ -153,66 +157,82 @@ impl Multihash {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, MultihashDigest)]
-#[repr(u32)]
-pub enum Code {
-    #[Size = "20"]
-    #[Digest = "sha1::Sha1"]
-    Sha1 = 0x11,
+impl<'a> MultihashRef<'a> {
+    /// Creates a new `MultihashRef` from a `&[u8]`.
+    /// If the input data is not a valid multihash an error is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{Sha2_256, MultihashDigest, Multihash, MultihashRef, Code};
+    ///
+    /// let mh = Sha2_256::digest(b"hello world");
+    ///
+    /// // valid multihash
+    /// let mh2 = MultihashRef::from_slice(&mh).unwrap();
+    ///
+    /// // invalid multihash
+    /// assert!(Multihash::from_slice(&vec![1,2,3]).is_err());
+    /// ```
+    pub fn from_slice(raw: &'a [u8]) -> Result<Self, Error> {
+        // validate code
+        let (raw_code, code_size) = u32::decode_var(raw);
+        Code::from_u32(raw_code).ok_or_else(|| Error::Invalid)?;
 
-    #[Size = "32"]
-    #[Digest = "sha2::Sha256"]
-    Sha2_256 = 0x12,
+        // validate size
+        let (size, size_size) = u64::decode_var(&raw[code_size..]);
+        if size != (raw.len() - code_size - size_size) as u64 {
+            return Err(Error::BadInputLength);
+        }
 
-    #[Size = "64"]
-    #[Digest = "sha2::Sha512"]
-    Sha2_512 = 0x13,
+        Ok(MultihashRef(raw))
+    }
 
-    #[Size = "28"]
-    #[Digest = "sha3::Sha3_224"]
-    Sha3_224 = 0x17,
+    /// Creates a new `Vec<u8>`.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
 
-    #[Size = "32"]
-    #[Digest = "sha3::Sha3_256"]
-    Sha3_256 = 0x16,
+    /// Returns the `Code` of this multihash.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{Sha2_256, MultihashDigest, Code};
+    ///
+    /// let mh = Sha2_256::digest(b"hello world");
+    /// assert_eq!(mh.code(), Code::Sha2_256);
+    /// ```
+    pub fn code(&self) -> Code {
+        let (raw_code, _) = u32::decode_var(&self.0);
+        Code::from_u32(raw_code).unwrap()
+    }
 
-    #[Size = "48"]
-    #[Digest = "sha3::Sha3_384"]
-    Sha3_384 = 0x15,
+    /// Returns the algorithm used in this multihash as a string.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{Sha2_256, MultihashDigest};
+    ///
+    /// let mh = Sha2_256::digest(b"hello world");
+    /// assert_eq!(mh.algorithm(), "Sha2_256");
+    /// ```
+    pub fn algorithm(&self) -> &'static str {
+        self.code().into()
+    }
 
-    #[Size = "64"]
-    #[Digest = "sha3::Sha3_512"]
-    Sha3_512 = 0x14,
-
-    #[Size = "28"]
-    #[Digest = "sha3::Keccak224"]
-    Keccak224 = 0x1A,
-
-    #[Size = "32"]
-    #[Digest = "sha3::Keccak256"]
-    Keccak256 = 0x1B,
-
-    #[Size = "48"]
-    #[Digest = "sha3::Keccak384"]
-    Keccak384 = 0x1C,
-
-    #[Size = "64"]
-    #[Digest = "sha3::Keccak512"]
-    Keccak512 = 0x1D,
-
-    #[Size = "64"]
-    #[Digest = "blake2::Blake2b"]
-    Blake2b = 0xb240,
-
-    #[Size = "32"]
-    #[Digest = "blake2::Blake2s"]
-    Blake2s = 0xb260,
+    /// Create a `Multihash` matching this `MultihashRef`.
+    pub fn to_owned(&self) -> Multihash {
+        Multihash(self.0.to_vec().into_boxed_slice())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::super::MultihashDigest;
-    use super::{decode, Code, Sha2_256};
+    use super::*;
+    use crate::{decode, Sha2_256};
     use digest::{Digest, Input};
 
     use hex;

@@ -1,6 +1,7 @@
 use digest::{BlockInput, Input, Reset};
 
-use crate::digests::{Code, Multihash};
+use crate::digests::Multihash;
+use crate::Code;
 
 /// The `MultihashDigest` trait specifies an interface common for
 /// all multihash functions. It is heavily based on the `digest::Digest` trait.

@@ -32,16 +32,16 @@ fn impl_multihash_digest(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
                     .expect("Please provide the code as discriminant")
                     as u32;
 
-                quote!{ #code => Some(Code::#name), }
+                quote! { #code => Some(Code::#name), }
             });
 
             let code_matches_into_str = data.variants.iter().map(|variant| {
                 let name = &variant.ident;
 
-                quote!{ Code::#name => stringify!(#name), }
+                quote! { Code::#name => stringify!(#name), }
             });
 
-            let res = quote!{
+            let res = quote! {
                 /// Decodes the raw value into a `Multihash`. If the input data is not a valid
                 /// multihash an error is returned.
                 pub fn decode(raw: &[u8]) -> Result<Multihash, Error> {
@@ -111,7 +111,7 @@ fn impl_variant(_code_name: &syn::Ident, variant: &syn::Variant) -> proc_macro2:
     // TODO: actually derive this from the encoded size of the size.
     let prefix_len = 1 + code_len;
 
-    quote!{
+    quote! {
         #[derive(Debug, Default, Clone)]
         pub struct #name(#original_digest);
 
@@ -161,7 +161,7 @@ fn impl_variant(_code_name: &syn::Ident, variant: &syn::Variant) -> proc_macro2:
 
                 out[#prefix_len..].copy_from_slice(re);
 
-                Multihash(out.into())
+                Multihash::from_box(out.into())
             }
 
             fn result(self) -> Multihash {
