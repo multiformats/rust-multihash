@@ -72,7 +72,7 @@ macro_rules! assert_roundtrip {
             {
                 let hash = $alg::digest(b"helloworld");
                 assert_eq!(
-                    decode(hash.as_ref()).unwrap().code(),
+                    decode(&hash[..]).unwrap().code(),
                     $alg::code()
                 );
             }
