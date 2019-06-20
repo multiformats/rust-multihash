@@ -22,9 +22,9 @@ impl Multihash {
     /// # Example
     ///
     /// ```
-    /// use multihash::{Sha2256, MultihashDigest, Multihash, Code};
+    /// use multihash::{Sha2_256, MultihashDigest, Multihash, Code};
     ///
-    /// let mh = Sha2256::digest(b"hello world");
+    /// let mh = Sha2_256::digest(b"hello world");
     ///
     /// // valid multihash
     /// let mh2 = Multihash::from_vec(mh.into_vec()).unwrap();
@@ -52,9 +52,9 @@ impl Multihash {
     /// # Example
     ///
     /// ```
-    /// use multihash::{Sha2256, MultihashDigest, Multihash, Code};
+    /// use multihash::{Sha2_256, MultihashDigest, Multihash, Code};
     ///
-    /// let mh = Sha2256::digest(b"hello world");
+    /// let mh = Sha2_256::digest(b"hello world");
     ///
     /// // valid multihash
     /// let mh2 = Multihash::from_slice(mh.as_ref()).unwrap();
@@ -81,10 +81,10 @@ impl Multihash {
     /// # Example
     ///
     /// ```
-    /// use multihash::{Sha2256, MultihashDigest, Code};
+    /// use multihash::{Sha2_256, MultihashDigest, Code};
     ///
-    /// let mh = Sha2256::digest(b"hello world");
-    /// assert_eq!(mh.code(), Code::Sha2256);
+    /// let mh = Sha2_256::digest(b"hello world");
+    /// assert_eq!(mh.code(), Code::Sha2_256);
     /// ```
     pub fn code(&self) -> Code {
         let (raw_code, _) = u32::decode_var(&self.0);
@@ -96,10 +96,10 @@ impl Multihash {
     /// # Example
     ///
     /// ```
-    /// use multihash::{Sha2256, MultihashDigest};
+    /// use multihash::{Sha2_256, MultihashDigest};
     ///
-    /// let mh = Sha2256::digest(b"hello world");
-    /// assert_eq!(mh.algorithm(), "Sha2256");
+    /// let mh = Sha2_256::digest(b"hello world");
+    /// assert_eq!(mh.algorithm(), "Sha2_256");
     /// ```
     pub fn algorithm(&self) -> &'static str {
         self.code().into()
@@ -115,27 +115,27 @@ pub enum Code {
 
     #[Size = "32"]
     #[Digest = "sha2::Sha256"]
-    Sha2256 = 0x12,
+    Sha2_256 = 0x12,
 
     #[Size = "64"]
     #[Digest = "sha2::Sha512"]
-    Sha2512 = 0x13,
+    Sha2_512 = 0x13,
 
     #[Size = "28"]
     #[Digest = "sha3::Sha3_224"]
-    Sha3224 = 0x17,
+    Sha3_224 = 0x17,
 
     #[Size = "32"]
     #[Digest = "sha3::Sha3_256"]
-    Sha3256 = 0x16,
+    Sha3_256 = 0x16,
 
     #[Size = "48"]
     #[Digest = "sha3::Sha3_384"]
-    Sha3384 = 0x15,
+    Sha3_384 = 0x15,
 
     #[Size = "64"]
     #[Digest = "sha3::Sha3_512"]
-    Sha3512 = 0x14,
+    Sha3_512 = 0x14,
 
     #[Size = "28"]
     #[Digest = "sha3::Keccak224"]
@@ -165,29 +165,29 @@ pub enum Code {
 #[cfg(test)]
 mod tests {
     use super::super::MultihashDigest;
-    use super::{decode, Code, Sha2256};
+    use super::{decode, Code, Sha2_256};
     use digest::{Digest, Input};
 
     use hex;
     use sha2::Sha256;
 
     #[test]
-    fn test_multihash_sha2265() {
-        assert_eq!(Sha2256::size(), 32);
-        assert_eq!(Sha2256::to_string(), "Sha2256");
+    fn test_multihash_sha2_265() {
+        assert_eq!(Sha2_256::size(), 32);
+        assert_eq!(Sha2_256::to_string(), "Sha2_256");
 
         let expected =
             hex::decode("1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af")
                 .expect("invalid hex fixture");
 
-        let mut hasher = Sha2256::new();
+        let mut hasher = Sha2_256::new();
         hasher.input(b"hello");
         hasher.input(b"world");
         let res = hasher.result();
         assert_eq!(res.as_ref(), &expected[..]);
-        assert_eq!(res.code(), Code::Sha2256);
+        assert_eq!(res.code(), Code::Sha2_256);
 
-        assert_eq!(Sha2256::digest(b"helloworld").as_ref(), &expected[..]);
+        assert_eq!(Sha2_256::digest(b"helloworld").as_ref(), &expected[..]);
     }
 
     #[test]
@@ -198,7 +198,7 @@ mod tests {
 
         let raw_digest = Sha256::digest(b"helloworld");
 
-        assert_eq!(Sha2256::wrap(raw_digest).as_ref(), &expected[..]);
+        assert_eq!(Sha2_256::wrap(raw_digest).as_ref(), &expected[..]);
     }
 
     #[test]
