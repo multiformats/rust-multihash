@@ -277,4 +277,19 @@ mod tests {
         assert_eq!(&decoded[..], &bytes[..]);
         assert_eq!(decoded.to_vec(), bytes);
     }
+
+    #[cfg(feature = "random")]
+    fn test_random() {
+        let mut rng = rand::thread_rng();
+
+        for _ in 0..2000 {
+            let hash = Sha2_256::random(&mut rng);
+            assert_eq!(hash, Multihash::from_bytes(hash.to_vec()).unwrap());
+        }
+
+        for _ in 0..2000 {
+            let hash = crate::Blake2b::random(&mut rng);
+            assert_eq!(hash, Multihash::from_bytes(hash.to_vec()).unwrap());
+        }
+    }
 }

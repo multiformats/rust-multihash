@@ -29,4 +29,14 @@ pub trait MultihashDigest:
 
     /// Finishes the hashing and resets the internal hasher, so it can be reused.
     fn result_reset(&mut self) -> Multihash;
+
+    #[cfg(feature = "random")]
+    /// Generates a random `Multihash` from a the passed `RngCore`.
+    fn random<R: rand::Rng + ?Sized>(rng: &mut R) -> Multihash {
+        let size = Self::size() as usize;
+        let mut buf = vec![0u8; size];
+        rng.fill_bytes(&mut buf[..]);
+
+        Self::wrap(buf)
+    }
 }
