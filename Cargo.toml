@@ -20,7 +20,8 @@ edition = "2018"
 [dependencies]
 blake2b_simd = { version = "0.5.9", default-features = false }
 blake2s_simd = { version = "0.5.9", default-features = false }
+bytes = "0.5"
 sha1 = "0.5"
 sha2 = { version = "0.7", default-features = false }
 tiny-keccak = "1.4"
-unsigned-varint = "0.2"
+unsigned-varint = "0.3"
