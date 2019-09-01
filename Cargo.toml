@@ -31,3 +31,9 @@ std = ["sha-1/std", "blake2/std", "sha3/std", "sha2/std", "failure/std", "digest
 simd = ["blake2/simd_opt"]
 asm = ["sha2/asm", "blake2/simd_asm"]
 random = ["rand"]
+
+[workspace]
+members = [
+  "cli",
+  "multihash_derive",
+]
