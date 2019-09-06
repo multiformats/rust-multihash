@@ -58,4 +58,12 @@ pub enum Code {
     #[Size = "32"]
     #[Digest = "blake2::Blake2s"]
     Blake2s = 0xb260,
+
+    #[Size = "16"]
+    #[Digest = "crate::fasthash::Murmur3_128X64"]
+    Murmur3_128X64 = 0x22,
+
+    #[Size = "4"]
+    #[Digest = "crate::fasthash::Murmur3_32"]
+    Murmur3_32 = 0x23,
 }
