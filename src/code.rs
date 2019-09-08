@@ -1,4 +1,5 @@
 use digest::{BlockInput, Digest, Input, Reset};
+use multihash_derive::MultihashDigest;
 
 use crate::digests::Multihash;
 use crate::errors::Error;

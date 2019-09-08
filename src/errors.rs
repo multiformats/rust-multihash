@@ -1,3 +1,5 @@
+use failure::Fail;
+
 #[derive(Debug, Fail)]
 pub enum Error {
     #[fail(display = "This type is not supported yet")]
