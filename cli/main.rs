@@ -1,12 +1,9 @@
-use async_std::{
-    io::{self, Read, Write},
-    task,
-};
 use core::{convert::TryFrom, fmt, str::FromStr};
 use digest::Input;
 use exitfailure::ExitFailure;
 use failure::{format_err, Error};
 use multihash::{self, Code, Multihash, MultihashDigest};
+use std::io::{self, Read, Write};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -34,13 +31,11 @@ enum Mode {
 
 fn main() -> Result<(), ExitFailure> {
     env_logger::init();
-    task::block_on(async {
-        let opts = Opts::from_args();
-        match opts.mode {
-            Mode::Hash { hasher } => hash(hasher).await,
-            Mode::Verify { hash } => verify(hash).await,
-        }
-    })
+    let opts = Opts::from_args();
+    match opts.mode {
+        Mode::Hash { hasher } => hash(hasher),
+        Mode::Verify { hash } => verify(hash),
+    }
 }
 
 #[derive(Debug)]
@@ -58,6 +53,8 @@ enum Hasher {
     Keccak512(multihash::Keccak512),
     Blake2b(multihash::Blake2b),
     Blake2s(multihash::Blake2s),
+    Murmur3_32(multihash::Murmur3_32),
+    Murmur3_128X64(multihash::Murmur3_128X64),
 }
 
 impl fmt::Display for Hasher {
@@ -76,6 +73,8 @@ impl fmt::Display for Hasher {
             Hasher::Keccak512(_) => "keccak-512",
             Hasher::Blake2b(_) => "blake2b",
             Hasher::Blake2s(_) => "blake2s",
+            Hasher::Murmur3_32(_) => "murmur3-32",
+            Hasher::Murmur3_128X64(_) => "murmur3-128-x64",
         };
         write!(f, "{}", hash_str)
     }
@@ -99,6 +98,8 @@ impl FromStr for Hasher {
             "keccak-512" => Self::try_from(Code::Keccak512),
             "blake2b" => Self::try_from(Code::Blake2b),
             "blake2s" => Self::try_from(Code::Blake2s),
+            "murmur3-32" => Self::try_from(Code::Murmur3_32),
+            "murmur3-128-x64" => Self::try_from(Code::Murmur3_128X64),
             _ => Err(format_err!("Unknown hasher {:?}", hash_str)),
         }
     }
@@ -122,6 +123,8 @@ impl TryFrom<Code> for Hasher {
             Code::Keccak512 => Ok(Hasher::Keccak512(multihash::Keccak512::new())),
             Code::Blake2b => Ok(Hasher::Blake2b(multihash::Blake2b::new())),
             Code::Blake2s => Ok(Hasher::Blake2s(multihash::Blake2s::new())),
+            Code::Murmur3_32 => Ok(Hasher::Murmur3_32(multihash::Murmur3_32::new())),
+            Code::Murmur3_128X64 => Ok(Hasher::Murmur3_128X64(multihash::Murmur3_128X64::new())),
         }
     }
 }
@@ -142,6 +145,8 @@ impl Hasher {
             Self::Keccak512(hasher) => hasher.input(data),
             Self::Blake2b(hasher) => hasher.input(data),
             Self::Blake2s(hasher) => hasher.input(data),
+            Self::Murmur3_32(hasher) => hasher.input(data),
+            Self::Murmur3_128X64(hasher) => hasher.input(data),
         }
     }
 
@@ -160,33 +165,35 @@ impl Hasher {
             Self::Keccak512(hasher) => hasher.result(),
             Self::Blake2b(hasher) => hasher.result(),
             Self::Blake2s(hasher) => hasher.result(),
+            Self::Murmur3_32(hasher) => hasher.result(),
+            Self::Murmur3_128X64(hasher) => hasher.result(),
         }
     }
 }
 
-async fn hash_stdin(mut hasher: Hasher) -> Result<Multihash, Error> {
+fn hash_stdin(mut hasher: Hasher) -> Result<Multihash, Error> {
     log::debug!("hashing with {}", hasher);
     let mut stdin = io::stdin();
     let mut buffer = Vec::new();
-    stdin.read_to_end(&mut buffer).await?;
+    stdin.read_to_end(&mut buffer)?;
     hasher.input(buffer.as_slice());
     Ok(hasher.result())
 }
 
-async fn hash(hasher: Hasher) -> Result<(), ExitFailure> {
+fn hash(hasher: Hasher) -> Result<(), ExitFailure> {
     let mut stdout = io::stdout();
-    let hash = hash_stdin(hasher).await?;
+    let hash = hash_stdin(hasher)?;
     let bytes = &hash;
-    stdout.write_all(&bytes).await?;
+    stdout.write_all(&bytes)?;
     Ok(())
 }
 
-async fn verify(hash: String) -> Result<(), ExitFailure> {
+fn verify(hash: String) -> Result<(), ExitFailure> {
     let (_, result) = multibase::decode(hash.as_str())?;
     let expected = multihash::decode(result.as_slice())?;
     let hasher = Hasher::try_from(expected.code())?;
     log::debug!("detected {}", hasher);
-    let input = hash_stdin(hasher).await?;
+    let input = hash_stdin(hasher)?;
     if input != expected {
         Err(format_err!("Hash mismatch"))?
     }
