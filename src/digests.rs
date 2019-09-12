@@ -279,6 +279,7 @@ mod tests {
     }
 
     #[cfg(feature = "random")]
+    #[test]
     fn test_random() {
         let mut rng = rand::thread_rng();
 
