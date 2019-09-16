@@ -7,7 +7,7 @@ use crate::Code;
 
 /// Representation of a valid multihash. This enforces validity on construction,
 /// so it can be assumed this is always a valid multihash.
-#[derive(Clone, Debug, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Multihash(Box<[u8]>);
 
 impl AsRef<[u8]> for Multihash {
@@ -16,7 +16,7 @@ impl AsRef<[u8]> for Multihash {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct MultihashRef<'a>(&'a [u8]);
 
 impl<'a> AsRef<[u8]> for MultihashRef<'a> {
