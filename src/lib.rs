@@ -1,11 +1,10 @@
+use sha2::Digest;
 /// ! # multihash
 /// !
 /// ! Implementation of [multihash](https://github.com/multiformats/multihash)
 /// ! in Rust.
 /// Representation of a Multiaddr.
-
 use std::fmt::Write;
-use sha2::Digest;
 use tiny_keccak::Keccak;
 
 mod hashes;
@@ -16,21 +15,21 @@ pub use errors::*;
 
 // Helper macro for encoding input into output using sha1, sha2 or tiny_keccak
 macro_rules! encode {
-    (sha1, Sha1, $input:expr, $output:expr) => ({
+    (sha1, Sha1, $input:expr, $output:expr) => {{
         let mut hasher = sha1::Sha1::new();
         hasher.update($input);
         $output.copy_from_slice(&hasher.digest().bytes());
-    });
-    (sha2, $algorithm:ident, $input:expr, $output:expr) => ({
+    }};
+    (sha2, $algorithm:ident, $input:expr, $output:expr) => {{
         let mut hasher = sha2::$algorithm::default();
         hasher.input($input);
         $output.copy_from_slice(hasher.result().as_ref());
-    });
-    (tiny, $constructor:ident, $input:expr, $output:expr) => ({
+    }};
+    (tiny, $constructor:ident, $input:expr, $output:expr) => {{
         let mut kec = Keccak::$constructor();
         kec.update($input);
         kec.finalize($output);
-    });
+    }};
 }
 
 // And another one to keep the matching DRY
@@ -47,7 +46,6 @@ macro_rules! match_encoder {
         }
     })
 }
-
 
 /// Encodes data into a multihash.
 ///
