@@ -4,10 +4,6 @@
 /// ! in Rust.
 /// Representation of a Multiaddr.
 
-extern crate sha1;
-extern crate sha2;
-extern crate tiny_keccak;
-
 use std::fmt::Write;
 use sha2::Digest;
 use tiny_keccak::Keccak;
@@ -123,7 +119,7 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Vec<u8>, Error> {
 /// );
 /// ```
 ///
-pub fn decode(input: &[u8]) -> Result<Multihash, Error> {
+pub fn decode(input: &[u8]) -> Result<Multihash<'_>, Error> {
     if input.is_empty() {
         return Err(Error::BadInputLength);
     }
