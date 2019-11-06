@@ -73,7 +73,6 @@ impl Hash {
             Keccak512 => 64,
             Blake2b => 64,
             Blake2s => 32,
-
         }
     }
 
