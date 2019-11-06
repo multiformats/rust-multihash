@@ -133,7 +133,7 @@ pub fn decode(input: &[u8]) -> Result<Multihash<'_>, Error> {
     }
 
     Ok(Multihash {
-        alg: alg,
+        alg,
         digest: &input[2..],
     })
 }

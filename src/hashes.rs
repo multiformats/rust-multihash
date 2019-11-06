@@ -35,10 +35,10 @@ pub enum Hash {
 
 impl Hash {
     /// Get the corresponding hash code
-    pub fn code(&self) -> u8 {
+    pub fn code(self) -> u8 {
         use Hash::*;
 
-        match *self {
+        match self {
             SHA1 => 0x11,
             SHA2256 => 0x12,
             SHA2512 => 0x13,
@@ -56,10 +56,10 @@ impl Hash {
     }
 
     /// Get the hash length in bytes
-    pub fn size(&self) -> u8 {
+    pub fn size(self) -> u8 {
         use Hash::*;
 
-        match *self {
+        match self {
             SHA1 => 20,
             SHA2256 => 32,
             SHA2512 => 64,
