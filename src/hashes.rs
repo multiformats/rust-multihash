@@ -1,4 +1,4 @@
-use errors::Error;
+use crate::errors::Error;
 
 /// List of types currently supported in the multihash spec.
 ///

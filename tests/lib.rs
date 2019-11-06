@@ -1,5 +1,3 @@
-extern crate multihash;
-
 use multihash::*;
 
 /// Helper function to convert a hex-encoded byte array back into a bytearray
