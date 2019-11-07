@@ -10,7 +10,6 @@ mod errors;
 mod hashes;
 
 use sha2::Digest;
-use std::fmt::Write;
 use tiny_keccak::Keccak;
 
 pub use errors::{DecodeError, DecodeOwnedError, EncodeError};
@@ -223,15 +222,4 @@ impl<'a> PartialEq<Multihash> for MultihashRef<'a> {
     fn eq(&self, other: &Multihash) -> bool {
         self.bytes == &*other.bytes
     }
-}
-
-/// Convert bytes to a hex representation
-pub fn to_hex(bytes: &[u8]) -> String {
-    let mut hex = String::with_capacity(bytes.len() * 2);
-
-    for byte in bytes {
-        write!(hex, "{:02x}", byte).expect("Can't fail on writing to string");
-    }
-
-    hex
 }
