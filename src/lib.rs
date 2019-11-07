@@ -204,7 +204,7 @@ impl<'a> MultihashRef<'a> {
     ///
     /// This operation allocates.
     #[inline]
-    pub fn into_owned(&self) -> Multihash {
+    pub fn to_owned(&self) -> Multihash {
         Multihash {
             bytes: self.bytes.to_owned(),
         }
