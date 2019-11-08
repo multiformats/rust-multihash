@@ -111,10 +111,10 @@ fn hash_types() {
     assert_eq!(Hash::Keccak256.size(), 32);
     assert_eq!(Hash::Keccak384.size(), 48);
     assert_eq!(Hash::Keccak512.size(), 64);
-    assert_eq!(Hash::Blake2b512.size(), 64);
     assert_eq!(Hash::Blake2b256.size(), 32);
-    assert_eq!(Hash::Blake2s256.size(), 32);
+    assert_eq!(Hash::Blake2b512.size(), 64);
     assert_eq!(Hash::Blake2s128.size(), 16);
+    assert_eq!(Hash::Blake2s256.size(), 32);
 }
 
 /// Testing the public interface of `Multihash` and `MultihashRef`
