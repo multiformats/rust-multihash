@@ -25,14 +25,14 @@ pub enum Hash {
     Keccak384,
     /// Keccak-512 (64-byte hash size)
     Keccak512,
+    /// Encoding unsupported
+    Blake2b256,
     /// BLAKE2b-512 (64-byte hash size)
     Blake2b512,
     /// Encoding unsupported
-    Blake2b256,
+    Blake2s128,
     /// BLAKE2s-256 (32-byte hash size)
     Blake2s256,
-    /// Encoding unsupported
-    Blake2s128,
 }
 
 impl Hash {
@@ -50,10 +50,10 @@ impl Hash {
             Hash::Keccak256 => 0x1B,
             Hash::Keccak384 => 0x1C,
             Hash::Keccak512 => 0x1D,
-            Hash::Blake2b512 => 0xB240,
             Hash::Blake2b256 => 0xB220,
-            Hash::Blake2s256 => 0xB260,
+            Hash::Blake2b512 => 0xB240,
             Hash::Blake2s128 => 0xB250,
+            Hash::Blake2s256 => 0xB260,
         }
     }
 
@@ -71,10 +71,10 @@ impl Hash {
             Hash::Keccak256 => 32,
             Hash::Keccak384 => 48,
             Hash::Keccak512 => 64,
-            Hash::Blake2b512 => 64,
             Hash::Blake2b256 => 32,
-            Hash::Blake2s256 => 32,
+            Hash::Blake2b512 => 64,
             Hash::Blake2s128 => 16,
+            Hash::Blake2s256 => 32,
         }
     }
 
@@ -92,10 +92,10 @@ impl Hash {
             0x1B => Hash::Keccak256,
             0x1C => Hash::Keccak384,
             0x1D => Hash::Keccak512,
-            0xB240 => Hash::Blake2b512,
             0xB220 => Hash::Blake2b256,
-            0xB260 => Hash::Blake2s256,
+            0xB240 => Hash::Blake2b512,
             0xB250 => Hash::Blake2s128,
+            0xB260 => Hash::Blake2s256,
             _ => return None,
         })
     }
