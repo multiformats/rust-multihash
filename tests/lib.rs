@@ -197,6 +197,15 @@ fn multihash_methods() {
         Hash::Keccak512,
         "1D40",
         "3ee2b40047b8060f68c67242175660f4174d0af5c01d47168ec20ed619b0b7c42181f40aa1046f39e2ef9efc6910782a998e0013d172458957957fac9405b67d");
+    test_methods(
+        Hash::Blake2b512,
+        "c0e40240",
+        "021ced8799296ceca557832ab941a50b4a11f83478cf141f51f933f653ab9fbcc05a037cddbed06e309bf334942c4e58cdf1a46e237911ccd7fcf9787cbc7fd0");
+    test_methods(
+        Hash::Blake2s256,
+        "e0e40220",
+        "9aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b",
+    );
 }
 
 #[test]
