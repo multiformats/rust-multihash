@@ -9,6 +9,8 @@
 mod errors;
 mod hashes;
 
+use blake2b_simd::blake2b;
+use blake2s_simd::blake2s;
 use sha2::Digest;
 use tiny_keccak::Keccak;
 use unsigned_varint::{decode, encode};
@@ -34,9 +36,8 @@ macro_rules! encode {
         kec.finalize($output);
     }};
     (blake2, $algorithm:ident, $input:expr, $output:expr) => {{
-        let mut hasher = blake2::$algorithm::default();
-        hasher.input($input);
-        $output.copy_from_slice(hasher.result().as_ref());
+        let hash = $algorithm($input);
+        $output.copy_from_slice(hash.as_ref());
     }};
 }
 
@@ -98,8 +99,8 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Multihash, EncodeError> {
         Keccak256 => tiny::new_keccak256,
         Keccak384 => tiny::new_keccak384,
         Keccak512 => tiny::new_keccak512,
-        Blake2b512 => blake2::Blake2b,
-        Blake2s256 => blake2::Blake2s,
+        Blake2b512 => blake2::blake2b,
+        Blake2s256 => blake2::blake2s,
     });
 
     Ok(Multihash { bytes: output })
