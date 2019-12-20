@@ -18,7 +18,8 @@ documentation = "https://docs.rs/multihash/"
 edition = "2018"
 
 [dependencies]
-blake2 = { version = "0.7", default-features = false }
+blake2b_simd = { version = "0.5.9", default-features = false }
+blake2s_simd = { version = "0.5.9", default-features = false }
 sha1 = "0.5"
 sha2 = { version = "0.7", default-features = false }
 tiny-keccak = "1.4"
