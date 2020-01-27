@@ -26,6 +26,7 @@ macro_rules! assert_encode {
 #[test]
 fn multihash_encode() {
     assert_encode! {
+        Identity, b"beep boop", "00096265657020626f6f70";
         SHA1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         SHA2256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         SHA2256, b"beep boop", "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -59,6 +60,7 @@ macro_rules! assert_decode {
 #[test]
 fn assert_decode() {
     assert_decode! {
+        Identity, "000a68656c6c6f776f726c64";
         SHA1, "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         SHA2256, "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         SHA2256, "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -93,7 +95,7 @@ macro_rules! assert_roundtrip {
 #[test]
 fn assert_roundtrip() {
     assert_roundtrip!(
-        SHA1, SHA2256, SHA2512, SHA3224, SHA3256, SHA3384, SHA3512, Keccak224, Keccak256,
+        Identity, SHA1, SHA2256, SHA2512, SHA3224, SHA3256, SHA3384, SHA3512, Keccak224, Keccak256,
         Keccak384, Keccak512, Blake2b512, Blake2s256
     );
 }
@@ -147,6 +149,7 @@ fn test_methods(hash: Hash, prefix: &str, digest: &str) {
 
 #[test]
 fn multihash_methods() {
+    test_methods(Hash::Identity, "000b", "68656c6c6f20776f726c64");
     test_methods(
         Hash::SHA1,
         "1114",
@@ -226,6 +229,12 @@ fn multihash_errors() {
         Multihash::from_bytes(vec![0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
+    let identity_code = Hash::Identity.code() as u8;
+    let identity_length = 3;
+    assert!(
+        Multihash::from_bytes(vec![identity_code, identity_length, 1, 2, 3, 4]).is_err(),
+        "Should error on wrong hash length"
+    );
 }
 
 #[test]
@@ -245,5 +254,11 @@ fn multihash_ref_errors() {
     assert!(
         MultihashRef::from_slice(&[0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
+    );
+    let identity_code = Hash::Identity.code() as u8;
+    let identity_length = 3;
+    assert!(
+        MultihashRef::from_slice(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
+        "Should error on wrong hash length"
     );
 }
