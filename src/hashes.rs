@@ -63,6 +63,9 @@ impl Hash {
     /// Get the hash length in bytes.
     pub fn size(self) -> u8 {
         match self {
+            // TODO vmx 2020-01-27: Identity doesn't have a fixed length. The `size()` API should
+            // be removed or renamed to `max_size()` as you can also store truncated hashes with a
+            // different size.
             Hash::Identity => 42,
             Hash::SHA1 => 20,
             Hash::SHA2256 => 32,
