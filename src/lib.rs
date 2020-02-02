@@ -11,8 +11,8 @@ mod hashes;
 
 use std::convert::TryFrom;
 
-use blake2b_simd::blake2b;
-use blake2s_simd::blake2s;
+use blake2b_simd::{blake2b, Params as Blake2bVariable};
+use blake2s_simd::{blake2s, Params as Blake2sVariable};
 use bytes::{BufMut, Bytes, BytesMut};
 use sha2::Digest;
 use tiny_keccak::Keccak;
@@ -40,6 +40,22 @@ macro_rules! encode {
     }};
     (blake2, $algorithm:ident, $input:expr, $output:expr) => {{
         let hash = $algorithm($input);
+        $output.copy_from_slice(hash.as_ref());
+    }};
+    (blake2_256, $constructor:ident, $input:expr, $output:expr) => {{
+        let hash = $constructor::new()
+            .hash_length(32)
+            .to_state()
+            .update($input)
+            .finalize();
+        $output.copy_from_slice(hash.as_ref());
+    }};
+    (blake2_128, $constructor:ident, $input:expr, $output:expr) => {{
+        let hash = $constructor::new()
+            .hash_length(16)
+            .to_state()
+            .update($input)
+            .finalize();
         $output.copy_from_slice(hash.as_ref());
     }};
 }
@@ -113,7 +129,9 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Multihash, EncodeError> {
             Keccak384 => tiny::new_keccak384,
             Keccak512 => tiny::new_keccak512,
             Blake2b512 => blake2::blake2b,
+            Blake2b256 => blake2_256::Blake2bVariable,
             Blake2s256 => blake2::blake2s,
+            Blake2s128 => blake2_128::Blake2sVariable,
         });
 
         Ok(Multihash {
