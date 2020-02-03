@@ -216,7 +216,8 @@ fn multihash_methods() {
     test_methods(
         Hash::Blake2b256,
         "a0e40220",
-        "256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610");
+        "256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610",
+    );
     test_methods(
         Hash::Blake2s128,
         "d0e40210",
