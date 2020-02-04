@@ -27,11 +27,11 @@ pub enum Hash {
     Keccak384,
     /// Keccak-512 (64-byte hash size)
     Keccak512,
-    /// Encoding unsupported
+    /// BLAKE2b-256 (32-byte hash size)
     Blake2b256,
     /// BLAKE2b-512 (64-byte hash size)
     Blake2b512,
-    /// Encoding unsupported
+    /// BLAKE2s-128 (16-byte hash size)
     Blake2s128,
     /// BLAKE2s-256 (32-byte hash size)
     Blake2s256,
