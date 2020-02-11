@@ -2,19 +2,12 @@
 name = "multihash"
 description = "Implementation of the multihash format"
 repository = "https://github.com/multiformats/rust-multihash"
-
 keywords = ["multihash", "ipfs"]
-
 version = "0.9.4"
-
 authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
-
 license = "MIT"
-
 readme = "README.md"
-
 documentation = "https://docs.rs/multihash/"
-
 edition = "2018"
 
 [dependencies]
