@@ -21,7 +21,7 @@ impl Storage {
     }
 
     /// creates storage from a vec. Note that this will not preserve the size.
-    pub fn copy_from_slice(slice: &[u8]) -> Self {
+    pub fn from_slice(slice: &[u8]) -> Self {
         if slice.len() <= MAX_INLINE {
             let mut data: [u8; MAX_INLINE] = [0; MAX_INLINE];
             data[..slice.len()].copy_from_slice(slice);

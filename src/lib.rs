@@ -116,7 +116,7 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Multihash, EncodeError> {
         output.extend_from_slice(size);
         output.extend_from_slice(input);
         Ok(Multihash {
-            storage: Storage::copy_from_slice(&output),
+            storage: Storage::from_slice(&output),
         })
     } else {
         let (offset, mut output) = encode_hash(hash);
@@ -139,7 +139,7 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Multihash, EncodeError> {
         });
 
         Ok(Multihash {
-            storage: Storage::copy_from_slice(&output),
+            storage: Storage::from_slice(&output),
         })
     }
 }
@@ -196,7 +196,7 @@ impl Multihash {
             });
         }
         Ok(Multihash {
-            storage: Storage::copy_from_slice(&bytes),
+            storage: Storage::from_slice(&bytes),
         })
     }
 
@@ -342,7 +342,7 @@ impl<'a> MultihashRef<'a> {
     /// This operation allocates.
     pub fn to_owned(&self) -> Multihash {
         Multihash {
-            storage: Storage::copy_from_slice(self.bytes),
+            storage: Storage::from_slice(self.bytes),
         }
     }
 

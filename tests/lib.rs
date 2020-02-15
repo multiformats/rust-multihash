@@ -276,3 +276,8 @@ fn multihash_ref_errors() {
         "Should error on wrong hash length"
     );
 }
+
+#[test]
+fn multihash_size() {
+    assert_eq!(std::mem::size_of::<Multihash>(), 40);
+}
