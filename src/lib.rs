@@ -8,18 +8,22 @@
 
 mod errors;
 mod hashes;
+mod storage;
 
 use std::convert::TryFrom;
+use std::fmt::Debug;
+use std::hash;
 
 use blake2b_simd::{blake2b, Params as Blake2bVariable};
 use blake2s_simd::{blake2s, Params as Blake2sVariable};
-use bytes::{BufMut, Bytes, BytesMut};
 use sha2::Digest;
 use tiny_keccak::Keccak;
 use unsigned_varint::{decode, encode};
 
 pub use errors::{DecodeError, DecodeOwnedError, EncodeError};
 pub use hashes::Hash;
+use std::fmt;
+use storage::Storage;
 
 // Helper macro for encoding input into output using sha1, sha2, tiny_keccak, or blake2
 macro_rules! encode {
@@ -107,12 +111,12 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Multihash, EncodeError> {
 
         let total_len = code.len() + size.len() + input.len();
 
-        let mut output = BytesMut::with_capacity(total_len);
-        output.put_slice(code);
-        output.put_slice(size);
-        output.put_slice(input);
+        let mut output = Vec::with_capacity(total_len);
+        output.extend_from_slice(code);
+        output.extend_from_slice(size);
+        output.extend_from_slice(input);
         Ok(Multihash {
-            bytes: output.freeze(),
+            storage: Storage::copy_from_slice(&output),
         })
     } else {
         let (offset, mut output) = encode_hash(hash);
@@ -135,31 +139,51 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Multihash, EncodeError> {
         });
 
         Ok(Multihash {
-            bytes: output.freeze(),
+            storage: Storage::copy_from_slice(&output),
         })
     }
 }
 
-// Encode the given [`Hash`] value and ensure the returned [`BytesMut`]
+// Encode the given [`Hash`] value and ensure the returned [`Vec<u8>`]
 // has enough capacity to hold the actual digest.
-fn encode_hash(hash: Hash) -> (usize, BytesMut) {
+fn encode_hash(hash: Hash) -> (usize, Vec<u8>) {
     let mut buf = encode::u16_buffer();
     let code = encode::u16(hash.code(), &mut buf);
 
     let len = code.len() + 1 + usize::from(hash.size());
 
-    let mut output = BytesMut::with_capacity(len);
-    output.put_slice(code);
-    output.put_u8(hash.size());
+    let mut output = Vec::with_capacity(len);
+    output.extend_from_slice(code);
+    output.push(hash.size());
     output.resize(len, 0);
 
     (code.len() + 1, output)
 }
 
 /// Represents a valid multihash.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone)]
 pub struct Multihash {
-    bytes: Bytes,
+    storage: Storage,
+}
+
+impl Debug for Multihash {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Multihash")
+    }
+}
+
+impl PartialEq for Multihash {
+    fn eq(&self, other: &Self) -> bool {
+        self.storage.bytes() == other.storage.bytes()
+    }
+}
+
+impl Eq for Multihash {}
+
+impl hash::Hash for Multihash {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.storage.bytes().hash(state);
+    }
 }
 
 impl Multihash {
@@ -172,7 +196,7 @@ impl Multihash {
             });
         }
         Ok(Multihash {
-            bytes: Bytes::from(bytes),
+            storage: Storage::copy_from_slice(&bytes),
         })
     }
 
@@ -183,17 +207,21 @@ impl Multihash {
 
     /// Returns the bytes representation of the multihash.
     pub fn to_vec(&self) -> Vec<u8> {
-        Vec::from(&self.bytes[..])
+        Vec::from(self.as_bytes())
     }
 
     /// Returns the bytes representation of this multihash.
     pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes
+        let bytes = self.storage.bytes();
+        let size = multihash_size(bytes).expect("storage contains a valid multihash");
+        &bytes[..size]
     }
 
     /// Builds a `MultihashRef` corresponding to this `Multihash`.
     pub fn as_ref(&self) -> MultihashRef {
-        MultihashRef { bytes: &self.bytes }
+        MultihashRef {
+            bytes: self.as_bytes(),
+        }
     }
 
     /// Returns which hashing algorithm is used in this multihash.
@@ -215,7 +243,7 @@ impl AsRef<[u8]> for Multihash {
 
 impl<'a> PartialEq<MultihashRef<'a>> for Multihash {
     fn eq(&self, other: &MultihashRef<'a>) -> bool {
-        &*self.bytes == other.bytes
+        &*self.as_bytes() == other.as_bytes()
     }
 }
 
@@ -231,6 +259,30 @@ impl TryFrom<Vec<u8>> for Multihash {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct MultihashRef<'a> {
     bytes: &'a [u8],
+}
+
+/// Given a buffer starting with a valid multihash, returns the size of the multihash
+fn multihash_size(input: &[u8]) -> Result<usize, DecodeError> {
+    if input.is_empty() {
+        return Err(DecodeError::BadInputLength);
+    }
+    let mut res = 0usize;
+
+    // Ensure `Hash::code` returns a `u16` so that our `decode::u16` here is correct.
+    std::convert::identity::<fn(Hash) -> u16>(Hash::code);
+    let (code, bytes) = decode::u16(&input).map_err(|_| DecodeError::BadInputLength)?;
+
+    // Very convoluted way to get the size of the code
+    let mut tmp = [0u8; 3];
+    res += unsigned_varint::encode::u16(code, &mut tmp).len();
+
+    let (hash_len, _) = decode::u32(&bytes).map_err(|_| DecodeError::BadInputLength)?;
+
+    // Very convoluted way to get the size of the hash_len
+    let mut tmp = [0u8; 5];
+    res += unsigned_varint::encode::u32(hash_len, &mut tmp).len();
+    res += hash_len as usize;
+    Ok(res)
 }
 
 impl<'a> MultihashRef<'a> {
@@ -290,7 +342,7 @@ impl<'a> MultihashRef<'a> {
     /// This operation allocates.
     pub fn to_owned(&self) -> Multihash {
         Multihash {
-            bytes: Bytes::copy_from_slice(self.bytes),
+            storage: Storage::copy_from_slice(self.bytes),
         }
     }
 
@@ -302,7 +354,7 @@ impl<'a> MultihashRef<'a> {
 
 impl<'a> PartialEq<Multihash> for MultihashRef<'a> {
     fn eq(&self, other: &Multihash) -> bool {
-        self.bytes == &*other.bytes
+        self.as_bytes() == &*other.as_bytes()
     }
 }
 
