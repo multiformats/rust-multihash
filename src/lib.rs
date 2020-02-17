@@ -161,7 +161,7 @@ pub struct Multihash {
 
 impl Debug for Multihash {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Multihash")
+        f.debug_tuple("Multihash").field(&self.as_bytes()).finish()
     }
 }
 
