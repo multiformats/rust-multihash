@@ -212,9 +212,7 @@ impl Multihash {
 
     /// Returns the bytes representation of this multihash.
     pub fn as_bytes(&self) -> &[u8] {
-        let bytes = self.storage.bytes();
-        let size = multihash_size(bytes).expect("storage contains a valid multihash");
-        &bytes[..size]
+        self.storage.bytes()
     }
 
     /// Builds a `MultihashRef` corresponding to this `Multihash`.
@@ -259,30 +257,6 @@ impl TryFrom<Vec<u8>> for Multihash {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct MultihashRef<'a> {
     bytes: &'a [u8],
-}
-
-/// Given a buffer starting with a valid multihash, returns the size of the multihash
-fn multihash_size(input: &[u8]) -> Result<usize, DecodeError> {
-    if input.is_empty() {
-        return Err(DecodeError::BadInputLength);
-    }
-    let mut res = 0usize;
-
-    // Ensure `Hash::code` returns a `u16` so that our `decode::u16` here is correct.
-    std::convert::identity::<fn(Hash) -> u16>(Hash::code);
-    let (code, bytes) = decode::u16(&input).map_err(|_| DecodeError::BadInputLength)?;
-
-    // Very convoluted way to get the size of the code
-    let mut tmp = [0u8; 3];
-    res += unsigned_varint::encode::u16(code, &mut tmp).len();
-
-    let (hash_len, _) = decode::u32(&bytes).map_err(|_| DecodeError::BadInputLength)?;
-
-    // Very convoluted way to get the size of the hash_len
-    let mut tmp = [0u8; 5];
-    res += unsigned_varint::encode::u32(hash_len, &mut tmp).len();
-    res += hash_len as usize;
-    Ok(res)
 }
 
 impl<'a> MultihashRef<'a> {
