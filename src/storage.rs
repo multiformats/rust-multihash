@@ -1,5 +1,11 @@
 use std::sync::Arc;
 
+/// MAX_INLINE is the maximum size of a multihash that can be stored inline
+///
+/// We want the currently most common multihashes using 256bit hashes to be stored inline. These
+/// hashes are 34 bytes long. An overall size of 38 seems like a good compromise. It allows storing
+/// any 256bit hash with some room to spare and gives an overall size for Storage of 40 bytes, which
+/// is a multiple of 8. We need 2 extra bytes, one for the size and one for the enum discriminator.
 const MAX_INLINE: usize = 38;
 
 #[derive(Clone)]
