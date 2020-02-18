@@ -62,6 +62,7 @@ impl Storage {
 #[cfg(test)]
 mod tests {
     use super::{Storage, MAX_INLINE};
+    use quickcheck;
 
     #[test]
     fn struct_size() {
@@ -76,6 +77,24 @@ mod tests {
             let data = (0..i).collect::<Vec<u8>>();
             let storage = Storage::from_slice(&data);
             assert_eq!(data, storage.bytes());
+        }
+    }
+
+    quickcheck! {
+        fn roundtrip_check(data: Vec<u8>) -> bool {
+            let storage = Storage::from_slice(&data);
+            storage.bytes() == data.as_slice()
+        }
+
+        fn from_slices_roundtrip_check(data: Vec<Vec<u8>>) -> bool {
+            let mut slices = Vec::new();
+            let mut expected = Vec::new();
+            for v in data.iter() {
+                slices.push(v.as_slice());
+                expected.extend_from_slice(&v);
+            }
+            let storage = Storage::from_slices(&slices);
+            storage.bytes() == expected.as_slice()
         }
     }
 }
