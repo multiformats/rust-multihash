@@ -80,10 +80,17 @@ mod tests {
         }
     }
 
+    fn check_invariants(storage: Storage) -> bool {
+        match storage {
+            Storage::Inline(len, _) => len as usize <= MAX_INLINE,
+            Storage::Heap(arc) => arc.len() > MAX_INLINE,
+        }
+    }
+
     quickcheck! {
         fn roundtrip_check(data: Vec<u8>) -> bool {
             let storage = Storage::from_slice(&data);
-            storage.bytes() == data.as_slice()
+            storage.bytes() == data.as_slice() && check_invariants(storage)
         }
 
         fn from_slices_roundtrip_check(data: Vec<Vec<u8>>) -> bool {
@@ -94,7 +101,7 @@ mod tests {
                 expected.extend_from_slice(&v);
             }
             let storage = Storage::from_slices(&slices);
-            storage.bytes() == expected.as_slice()
+            storage.bytes() == expected.as_slice() && check_invariants(storage)
         }
     }
 }
