@@ -108,15 +108,8 @@ pub fn encode(hash: Hash, input: &[u8]) -> Result<Multihash, EncodeError> {
         let code = encode::u16(hash.code(), &mut buf);
         let mut len_buf = encode::u32_buffer();
         let size = encode::u32(input.len() as u32, &mut len_buf);
-
-        let total_len = code.len() + size.len() + input.len();
-
-        let mut output = Vec::with_capacity(total_len);
-        output.extend_from_slice(code);
-        output.extend_from_slice(size);
-        output.extend_from_slice(input);
         Ok(Multihash {
-            storage: Storage::from_slice(&output),
+            storage: Storage::from_slices(&[&code, &size, &input]),
         })
     } else {
         let (offset, mut output) = encode_hash(hash);

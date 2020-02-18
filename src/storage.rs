@@ -9,7 +9,7 @@ use std::sync::Arc;
 const MAX_INLINE: usize = 38;
 
 #[derive(Clone)]
-pub enum Storage {
+pub(crate) enum Storage {
     /// hash is stored inline if it is smaller than MAX_INLINE
     Inline(u8, [u8; MAX_INLINE]),
     /// hash is stored on the heap. this must be only used if the hash is actually larger than
@@ -35,6 +35,26 @@ impl Storage {
             Storage::Inline(len as u8, data)
         } else {
             Storage::Heap(slice.into())
+        }
+    }
+
+    /// creates storage from multiple slices. For a size up to MAX_INLINE, this will not allocate.
+    pub fn from_slices(slices: &[&[u8]]) -> Self {
+        let n = slices.iter().fold(0usize, |a, s| a.saturating_add(s.len()));
+        if n <= MAX_INLINE {
+            let s = slices
+                .iter()
+                .fold(([0; MAX_INLINE], 0), |(mut array, i), s| {
+                    array[i..i + s.len()].copy_from_slice(s);
+                    (array, i + s.len())
+                });
+            Storage::Inline(n as u8, s.0)
+        } else {
+            let mut v = Vec::with_capacity(n);
+            for s in slices {
+                v.extend_from_slice(s)
+            }
+            Storage::Heap(v.into())
         }
     }
 }
