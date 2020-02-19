@@ -62,7 +62,7 @@ impl Storage {
 #[cfg(test)]
 mod tests {
     use super::{Storage, MAX_INLINE};
-    use quickcheck;
+    use quickcheck::quickcheck;
 
     #[test]
     fn struct_size() {

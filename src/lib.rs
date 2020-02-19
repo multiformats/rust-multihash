@@ -25,10 +25,6 @@ pub use hashes::Hash;
 use std::fmt;
 use storage::Storage;
 
-#[cfg(test)]
-#[macro_use]
-extern crate quickcheck;
-
 // Helper macro for encoding input into output using sha1, sha2, tiny_keccak, or blake2
 macro_rules! encode {
     (sha1, Sha1, $input:expr, $output:expr) => {{
