@@ -253,7 +253,7 @@ impl PartialOrd for Multihash {
 }
 
 /// Represents a valid multihash.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct MultihashRef<'a> {
     bytes: &'a [u8],
 }
@@ -328,12 +328,6 @@ impl<'a> MultihashRef<'a> {
 impl<'a> PartialEq<Multihash> for MultihashRef<'a> {
     fn eq(&self, other: &Multihash) -> bool {
         self.as_bytes() == &*other.as_bytes()
-    }
-}
-
-impl<'a> PartialOrd for MultihashRef<'a> {
-    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        Some(self.as_bytes().cmp(other.as_bytes()))
     }
 }
 
