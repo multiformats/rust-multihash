@@ -31,7 +31,7 @@ fn custom_multihash_digest() {
 
         fn digest(&self, _data: &[u8]) -> Multihash {
             let data = b"alwaysthesame";
-            wrap(&Self.code(), data)
+            wrap(Self.code(), data)
         }
     }
 

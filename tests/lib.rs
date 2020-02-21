@@ -212,7 +212,7 @@ fn test_long_identity_hash() {
 fn custom_multihash() {
     let code = Code::Custom(0x1234);
     let data = b"abcde".to_vec();
-    let multihash = wrap(&code, &data);
+    let multihash = wrap(code, &data);
 
     assert_eq!(
         multihash.as_bytes(),

@@ -190,7 +190,7 @@ pub trait MultihashDigest {
 ///
 /// The size of the hash is determoned by the size of the input hash. If it should be truncated
 /// the input data must already be the truncated hash.
-pub fn wrap(code: &Code, data: &[u8]) -> Multihash {
+pub fn wrap(code: Code, data: &[u8]) -> Multihash {
     let mut code_buf = varint_encode::u64_buffer();
     let code = varint_encode::u64(code.to_u64(), &mut code_buf);
 
