@@ -1,6 +1,6 @@
 use std::borrow::Borrow;
 use std::convert::TryFrom;
-use std::{cmp, fmt, hash};
+use std::{cmp, fmt, hash, ops};
 
 use unsigned_varint::{decode as varint_decode, encode as varint_encode};
 
@@ -87,6 +87,14 @@ impl AsRef<[u8]> for Multihash {
     }
 }
 
+impl ops::Deref for Multihash {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.as_bytes()
+    }
+}
+
 impl Borrow<[u8]> for Multihash {
     fn borrow(&self) -> &[u8] {
         self.as_bytes()
@@ -104,6 +112,12 @@ impl TryFrom<Vec<u8>> for Multihash {
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         Multihash::from_bytes(value)
+    }
+}
+
+impl Into<Vec<u8>> for Multihash {
+    fn into(self) -> Vec<u8> {
+        self.to_vec()
     }
 }
 
@@ -177,6 +191,20 @@ impl<'a> MultihashRef<'a> {
 impl<'a> PartialEq<Multihash> for MultihashRef<'a> {
     fn eq(&self, other: &Multihash) -> bool {
         self.as_bytes() == &*other.as_bytes()
+    }
+}
+
+impl<'a> ops::Deref for MultihashRef<'a> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_bytes()
+    }
+}
+
+impl<'a> Into<Vec<u8>> for MultihashRef<'a> {
+    fn into(self) -> Vec<u8> {
+        self.to_vec()
     }
 }
 
