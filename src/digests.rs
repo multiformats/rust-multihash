@@ -8,7 +8,8 @@ use crate::errors::{DecodeError, DecodeOwnedError};
 use crate::hashes::Code;
 use crate::storage::Storage;
 
-/// Represents a valid multihash.
+/// Representation of a valid multihash. This enforces validity on construction,
+/// so it can be assumed this is always a valid multihash.
 #[derive(Clone)]
 pub struct Multihash {
     storage: Storage,
@@ -35,7 +36,22 @@ impl hash::Hash for Multihash {
 }
 
 impl Multihash {
-    /// Verifies whether `bytes` contains a valid multihash, and if so returns a `Multihash`.
+    /// Creates a new `Multihash` from a `Vec<u8>`, consuming it.
+    /// If the input data is not a valid multihash an error is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{Sha2_256, Multihash};
+    ///
+    /// let mh = Sha2_256::digest(b"hello world");
+    ///
+    /// // valid multihash
+    /// let mh2 = Multihash::from_bytes(mh.into_bytes()).unwrap();
+    ///
+    /// // invalid multihash
+    /// assert!(Multihash::from_bytes(vec![1,2,3]).is_err());
+    /// ```
     pub fn from_bytes(bytes: Vec<u8>) -> Result<Multihash, DecodeOwnedError> {
         if let Err(err) = MultihashRef::from_slice(&bytes) {
             return Err(DecodeOwnedError {
@@ -70,7 +86,16 @@ impl Multihash {
         }
     }
 
-    /// Returns which hashing algorithm is used in this multihash.
+    /// Returns the algorithm used in this multihash.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{Code, Sha2_256};
+    ///
+    /// let mh = Sha2_256::digest(b"hello world");
+    /// assert_eq!(mh.algorithm(), Code::Sha2_256);
+    /// ```
     pub fn algorithm(&self) -> Code {
         self.as_ref().algorithm()
     }
@@ -140,7 +165,22 @@ pub struct MultihashRef<'a> {
 }
 
 impl<'a> MultihashRef<'a> {
-    /// Creates a `MultihashRef` from the given `input`.
+    /// Creates a new `MultihashRef` from a `&[u8]`.
+    /// If the input data is not a valid multihash an error is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{Sha2_256, Multihash, MultihashRef};
+    ///
+    /// let mh = Sha2_256::digest(b"hello world");
+    ///
+    /// // valid multihash
+    /// let mh2 = MultihashRef::from_slice(&mh).unwrap();
+    ///
+    /// // invalid multihash
+    /// assert!(MultihashRef::from_slice(&vec![1,2,3]).is_err());
+    /// ```
     pub fn from_slice(input: &'a [u8]) -> Result<Self, DecodeError> {
         if input.is_empty() {
             return Err(DecodeError::BadInputLength);
@@ -157,14 +197,37 @@ impl<'a> MultihashRef<'a> {
         Ok(MultihashRef { bytes: input })
     }
 
-    /// Returns which hashing algorithm is used in this multihash.
+    /// Returns the algorithm used in this multihash.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{Code, Sha2_256, MultihashRef};
+    ///
+    /// let mh = Sha2_256::digest(b"hello world");
+    ///
+    /// // valid multihash
+    /// let mh2 = MultihashRef::from_slice(&mh).unwrap();
+    /// assert_eq!(mh2.algorithm(), Code::Sha2_256);
+    /// ```
     pub fn algorithm(&self) -> Code {
         let (code, _bytes) =
             varint_decode::u64(&self.bytes).expect("multihash is known to be valid algorithm");
         Code::from_u64(code)
     }
 
-    /// Returns the hashed data.
+    /// Returns the hash digest.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{wrap, Code, Sha2_256};
+    ///
+    /// let mh = Sha2_256::digest(b"hello world");
+    /// let digest = mh.digest();
+    /// let wrapped = wrap(Code::Sha2_256, &digest);
+    /// assert_eq!(wrapped.digest(), digest);
+    /// ```
     pub fn digest(&self) -> &'a [u8] {
         let (_code, bytes) =
             varint_decode::u64(&self.bytes).expect("multihash is known to be valid digest");
@@ -225,6 +288,17 @@ pub trait MultihashDigest {
 ///
 /// The size of the hash is determoned by the size of the input hash. If it should be truncated
 /// the input data must already be the truncated hash.
+///
+/// # Example
+///
+/// ```
+/// use multihash::{wrap, Code, Sha2_256};
+///
+/// let mh = Sha2_256::digest(b"hello world");
+/// let digest = mh.digest();
+/// let wrapped = wrap(Code::Sha2_256, &digest);
+/// assert_eq!(wrapped.digest(), digest);
+/// ```
 pub fn wrap(code: Code, data: &[u8]) -> Multihash {
     let mut code_buf = varint_encode::u64_buffer();
     let code = varint_encode::u64(code.to_u64(), &mut code_buf);
