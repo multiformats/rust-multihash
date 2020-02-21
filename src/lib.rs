@@ -248,7 +248,13 @@ impl TryFrom<Vec<u8>> for Multihash {
 
 impl PartialOrd for Multihash {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        Some(self.as_ref().cmp(&other.as_ref()))
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Multihash {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        self.as_ref().cmp(&other.as_ref())
     }
 }
 
