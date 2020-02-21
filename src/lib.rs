@@ -22,7 +22,7 @@ use unsigned_varint::{decode, encode};
 
 pub use errors::{DecodeError, DecodeOwnedError, EncodeError};
 pub use hashes::Hash;
-use std::fmt;
+use std::{cmp, fmt};
 use storage::Storage;
 
 // Helper macro for encoding input into output using sha1, sha2, tiny_keccak, or blake2
@@ -246,8 +246,20 @@ impl TryFrom<Vec<u8>> for Multihash {
     }
 }
 
+impl PartialOrd for Multihash {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Multihash {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        self.as_ref().cmp(&other.as_ref())
+    }
+}
+
 /// Represents a valid multihash.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct MultihashRef<'a> {
     bytes: &'a [u8],
 }
