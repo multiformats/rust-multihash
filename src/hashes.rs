@@ -7,7 +7,7 @@ use tiny_keccak::{Hasher, Keccak, Sha3};
 
 use crate::digests::{wrap, Multihash, MultihashDigest};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Code {
     /// Identity (Raw binary )
     Identity,
@@ -136,7 +136,7 @@ impl Identity {
         if (data.len() as u64) >= u64::from(std::u32::MAX) {
             panic!("Input data for identity hash is too large, it needs to be less the 2^32.")
         }
-        wrap(&Self::CODE, &data)
+        wrap(Self::CODE, &data)
     }
 }
 
@@ -154,7 +154,7 @@ impl Sha1 {
     pub const CODE: Code = Code::Sha1;
     pub fn digest(data: &[u8]) -> Multihash {
         let digest = Sha1Hasher::from(&data).digest().bytes();
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -172,7 +172,7 @@ impl Sha2_256 {
     pub const CODE: Code = Code::Sha2_256;
     pub fn digest(data: &[u8]) -> Multihash {
         let digest = Sha256::digest(&data);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -190,7 +190,7 @@ impl Sha2_512 {
     pub const CODE: Code = Code::Sha2_512;
     pub fn digest(data: &[u8]) -> Multihash {
         let digest = Sha512::digest(&data);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -211,7 +211,7 @@ impl Sha3_224 {
         let mut sha3 = Sha3::v224();
         sha3.update(&data);
         sha3.finalize(&mut digest);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -232,7 +232,7 @@ impl Sha3_256 {
         let mut sha3 = Sha3::v256();
         sha3.update(&data);
         sha3.finalize(&mut digest);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -253,7 +253,7 @@ impl Sha3_384 {
         let mut sha3 = Sha3::v384();
         sha3.update(&data);
         sha3.finalize(&mut digest);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -274,7 +274,7 @@ impl Sha3_512 {
         let mut sha3 = Sha3::v512();
         sha3.update(&data);
         sha3.finalize(&mut digest);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -295,7 +295,7 @@ impl Keccak224 {
         let mut keccak = Keccak::v224();
         keccak.update(&data);
         keccak.finalize(&mut digest);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -316,7 +316,7 @@ impl Keccak256 {
         let mut keccak = Keccak::v256();
         keccak.update(&data);
         keccak.finalize(&mut digest);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -337,7 +337,7 @@ impl Keccak384 {
         let mut keccak = Keccak::v384();
         keccak.update(&data);
         keccak.finalize(&mut digest);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -358,7 +358,7 @@ impl Keccak512 {
         let mut keccak = Keccak::v512();
         keccak.update(&data);
         keccak.finalize(&mut digest);
-        wrap(&Self::CODE, &digest)
+        wrap(Self::CODE, &digest)
     }
 }
 
@@ -380,7 +380,7 @@ impl Blake2b256 {
             .to_state()
             .update(&data)
             .finalize();
-        wrap(&Self::CODE, &digest.as_bytes())
+        wrap(Self::CODE, &digest.as_bytes())
     }
 }
 
@@ -402,7 +402,7 @@ impl Blake2b512 {
             .to_state()
             .update(&data)
             .finalize();
-        wrap(&Self::CODE, &digest.as_bytes())
+        wrap(Self::CODE, &digest.as_bytes())
     }
 }
 
@@ -424,7 +424,7 @@ impl Blake2s128 {
             .to_state()
             .update(&data)
             .finalize();
-        wrap(&Self::CODE, &digest.as_bytes())
+        wrap(Self::CODE, &digest.as_bytes())
     }
 }
 
@@ -446,6 +446,6 @@ impl Blake2s256 {
             .to_state()
             .update(&data)
             .finalize();
-        wrap(&Self::CODE, &digest.as_bytes())
+        wrap(Self::CODE, &digest.as_bytes())
     }
 }
