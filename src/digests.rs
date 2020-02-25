@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::{cmp, fmt, hash};
 
@@ -82,6 +83,12 @@ impl Multihash {
 
 impl AsRef<[u8]> for Multihash {
     fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
+impl Borrow<[u8]> for Multihash {
+    fn borrow(&self) -> &[u8] {
         self.as_bytes()
     }
 }
