@@ -5,7 +5,7 @@ use digest::Digest;
 use crate::digests::{wrap, Multihash, MultihashDigest};
 
 /// The code of Multihash.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Code {
     /// Identity (Raw binary )
     Identity,
@@ -162,7 +162,7 @@ impl Sha1 {
     }
 }
 
-/// THe Sha2-256 hasher.
+/// The Sha2-256 hasher.
 #[derive(Clone, Debug)]
 pub struct Sha2_256;
 impl MultihashDigest for Sha2_256 {

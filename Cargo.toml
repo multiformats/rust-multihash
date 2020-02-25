@@ -1,14 +1,14 @@
 [package]
 name = "multihash"
-version = "0.9.4"
-authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
-edition = "2018"
-license = "MIT"
-readme = "README.md"
 description = "Implementation of the multihash format"
-documentation = "https://docs.rs/multihash/"
 repository = "https://github.com/multiformats/rust-multihash"
 keywords = ["multihash", "ipfs"]
+version = "0.9.4"
+authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+documentation = "https://docs.rs/multihash/"
+edition = "2018"
 
 [dependencies]
 blake2b_simd = { version = "0.5.9", default-features = false }
