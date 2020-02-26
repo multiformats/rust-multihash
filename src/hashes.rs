@@ -1,13 +1,11 @@
 use blake2b_simd::Params as Blake2b;
 use blake2s_simd::Params as Blake2s;
 use digest::Digest;
-use sha1::Sha1 as Sha1Hasher;
-use sha2::{Sha256, Sha512};
-use tiny_keccak::{Hasher, Keccak, Sha3};
 
 use crate::digests::{wrap, Multihash, MultihashDigest};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// The code of Multihash.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Code {
     /// Identity (Raw binary )
     Identity,
@@ -71,7 +69,7 @@ impl Code {
 
     /// Return the `Code` based on the integer value. If the code is unknown/not implemented yet
     /// then it returns a `Code::Custom`.
-    /// implementes with that value.
+    /// implements with that value.
     pub fn from_u64(code: u64) -> Self {
         match code {
             0x00 => Code::Identity,
@@ -120,6 +118,7 @@ impl Code {
     }
 }
 
+/// The Identity hasher
 #[derive(Clone, Debug)]
 pub struct Identity;
 impl MultihashDigest for Identity {
@@ -131,7 +130,9 @@ impl MultihashDigest for Identity {
     }
 }
 impl Identity {
+    /// The code of Identity hasher, 0x00.
     pub const CODE: Code = Code::Identity;
+    /// Hash some input and return the raw binary digest.
     pub fn digest(data: &[u8]) -> Multihash {
         if (data.len() as u64) >= u64::from(std::u32::MAX) {
             panic!("Input data for identity hash is too large, it needs to be less the 2^32.")
@@ -140,6 +141,7 @@ impl Identity {
     }
 }
 
+/// The Sha1 hasher.
 #[derive(Clone, Debug)]
 pub struct Sha1;
 impl MultihashDigest for Sha1 {
@@ -151,13 +153,16 @@ impl MultihashDigest for Sha1 {
     }
 }
 impl Sha1 {
+    /// The code of Sha1 hasher, 0x11.
     pub const CODE: Code = Code::Sha1;
+    /// Hash some input and return the sha1 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let digest = Sha1Hasher::from(&data).digest().bytes();
+        let digest = sha1::Sha1::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The Sha2-256 hasher.
 #[derive(Clone, Debug)]
 pub struct Sha2_256;
 impl MultihashDigest for Sha2_256 {
@@ -169,13 +174,16 @@ impl MultihashDigest for Sha2_256 {
     }
 }
 impl Sha2_256 {
+    /// The code of Sha2-256 hasher, 0x12.
     pub const CODE: Code = Code::Sha2_256;
+    /// Hash some input and return the sha2-256 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let digest = Sha256::digest(&data);
+        let digest = sha2::Sha256::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The Sha2-512 hasher.
 #[derive(Clone, Debug)]
 pub struct Sha2_512;
 impl MultihashDigest for Sha2_512 {
@@ -187,13 +195,16 @@ impl MultihashDigest for Sha2_512 {
     }
 }
 impl Sha2_512 {
+    /// The code of Sha2-512 hasher, 0x13.
     pub const CODE: Code = Code::Sha2_512;
+    /// Hash some input and return the sha2-512 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let digest = Sha512::digest(&data);
+        let digest = sha2::Sha512::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The Sha3-224 hasher.
 #[derive(Clone, Debug)]
 pub struct Sha3_224;
 impl MultihashDigest for Sha3_224 {
@@ -205,16 +216,16 @@ impl MultihashDigest for Sha3_224 {
     }
 }
 impl Sha3_224 {
+    /// The code of Sha3-224 hasher, 0x17.
     pub const CODE: Code = Code::Sha3_224;
+    /// Hash some input and return the sha3-224 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let mut digest = [0; 28];
-        let mut sha3 = Sha3::v224();
-        sha3.update(&data);
-        sha3.finalize(&mut digest);
+        let digest = sha3::Sha3_224::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The Sha3-256
 #[derive(Clone, Debug)]
 pub struct Sha3_256;
 impl MultihashDigest for Sha3_256 {
@@ -226,16 +237,16 @@ impl MultihashDigest for Sha3_256 {
     }
 }
 impl Sha3_256 {
+    /// The code of Sha3-256 hasher, 0x16.
     pub const CODE: Code = Code::Sha3_256;
+    /// Hash some input and return the sha3-256 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let mut digest = [0; 32];
-        let mut sha3 = Sha3::v256();
-        sha3.update(&data);
-        sha3.finalize(&mut digest);
+        let digest = sha3::Sha3_256::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The Sha3-384 hasher.
 #[derive(Clone, Debug)]
 pub struct Sha3_384;
 impl MultihashDigest for Sha3_384 {
@@ -247,16 +258,16 @@ impl MultihashDigest for Sha3_384 {
     }
 }
 impl Sha3_384 {
+    /// The code of Sha3-384 hasher, 0x15.
     pub const CODE: Code = Code::Sha3_384;
+    /// Hash some input and return the sha3-384 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let mut digest = [0; 48];
-        let mut sha3 = Sha3::v384();
-        sha3.update(&data);
-        sha3.finalize(&mut digest);
+        let digest = sha3::Sha3_384::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The Sha3-512 hasher.
 #[derive(Clone, Debug)]
 pub struct Sha3_512;
 impl MultihashDigest for Sha3_512 {
@@ -268,16 +279,16 @@ impl MultihashDigest for Sha3_512 {
     }
 }
 impl Sha3_512 {
+    /// The code of Sha3-512 hasher, 0x14.
     pub const CODE: Code = Code::Sha3_512;
+    /// Hash some input and return the sha3-512 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let mut digest = [0; 64];
-        let mut sha3 = Sha3::v512();
-        sha3.update(&data);
-        sha3.finalize(&mut digest);
+        let digest = sha3::Sha3_512::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The Keccak-224 hasher.
 #[derive(Clone, Debug)]
 pub struct Keccak224;
 impl MultihashDigest for Keccak224 {
@@ -289,16 +300,16 @@ impl MultihashDigest for Keccak224 {
     }
 }
 impl Keccak224 {
+    /// The code of Keccak-224 hasher, 0x1a.
     pub const CODE: Code = Code::Keccak224;
+    /// Hash some input and return the keccak-224 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let mut digest = [0; 28];
-        let mut keccak = Keccak::v224();
-        keccak.update(&data);
-        keccak.finalize(&mut digest);
+        let digest = sha3::Keccak224::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The keccak-256 hasher.
 #[derive(Clone, Debug)]
 pub struct Keccak256;
 impl MultihashDigest for Keccak256 {
@@ -310,16 +321,16 @@ impl MultihashDigest for Keccak256 {
     }
 }
 impl Keccak256 {
+    /// The code of Keccak-256 hasher, 0x1b.
     pub const CODE: Code = Code::Keccak256;
+    /// Hash some input and return the keccak-256 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let mut digest = [0; 32];
-        let mut keccak = Keccak::v256();
-        keccak.update(&data);
-        keccak.finalize(&mut digest);
+        let digest = sha3::Keccak256::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The keccak-384 hasher.
 #[derive(Clone, Debug)]
 pub struct Keccak384;
 impl MultihashDigest for Keccak384 {
@@ -331,16 +342,16 @@ impl MultihashDigest for Keccak384 {
     }
 }
 impl Keccak384 {
+    /// The code of Keccak-384 hasher, 0x1c.
     pub const CODE: Code = Code::Keccak384;
+    /// Hash some input and return the keccak-384 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let mut digest = [0; 48];
-        let mut keccak = Keccak::v384();
-        keccak.update(&data);
-        keccak.finalize(&mut digest);
+        let digest = sha3::Keccak384::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The keccak-512 hasher.
 #[derive(Clone, Debug)]
 pub struct Keccak512;
 impl MultihashDigest for Keccak512 {
@@ -352,16 +363,16 @@ impl MultihashDigest for Keccak512 {
     }
 }
 impl Keccak512 {
+    /// The code of Keccak-512 hasher, 0x1d.
     pub const CODE: Code = Code::Keccak512;
+    /// Hash some input and return the keccak-512 digest.
     pub fn digest(data: &[u8]) -> Multihash {
-        let mut digest = [0; 64];
-        let mut keccak = Keccak::v512();
-        keccak.update(&data);
-        keccak.finalize(&mut digest);
+        let digest = sha3::Keccak512::digest(&data);
         wrap(Self::CODE, &digest)
     }
 }
 
+/// The Blake2b-256 hasher.
 #[derive(Clone, Debug)]
 pub struct Blake2b256;
 impl MultihashDigest for Blake2b256 {
@@ -373,7 +384,9 @@ impl MultihashDigest for Blake2b256 {
     }
 }
 impl Blake2b256 {
+    /// The code of Blake2b-256 hasher, 0xb220.
     pub const CODE: Code = Code::Blake2b256;
+    /// Hash some input and return the blake2b-256 digest.
     pub fn digest(data: &[u8]) -> Multihash {
         let digest = Blake2b::new()
             .hash_length(32)
@@ -384,6 +397,7 @@ impl Blake2b256 {
     }
 }
 
+/// The Blake2b-512 hasher.
 #[derive(Clone, Debug)]
 pub struct Blake2b512;
 impl MultihashDigest for Blake2b512 {
@@ -395,7 +409,9 @@ impl MultihashDigest for Blake2b512 {
     }
 }
 impl Blake2b512 {
+    /// The code of Blake2b-512 hasher, 0xb240.
     pub const CODE: Code = Code::Blake2b512;
+    /// Hash some input and return the blake2b-512 digest.
     pub fn digest(data: &[u8]) -> Multihash {
         let digest = Blake2b::new()
             .hash_length(64)
@@ -406,6 +422,7 @@ impl Blake2b512 {
     }
 }
 
+/// The Blake2s-128 hasher.
 #[derive(Clone, Debug)]
 pub struct Blake2s128;
 impl MultihashDigest for Blake2s128 {
@@ -417,7 +434,9 @@ impl MultihashDigest for Blake2s128 {
     }
 }
 impl Blake2s128 {
+    /// The code of Blake2s-128 hasher, 0xb250.
     pub const CODE: Code = Code::Blake2s128;
+    /// Hash some input and return the blake2s-128 digest.
     pub fn digest(data: &[u8]) -> Multihash {
         let digest = Blake2s::new()
             .hash_length(16)
@@ -428,6 +447,7 @@ impl Blake2s128 {
     }
 }
 
+/// The Blake2s-256 hasher.
 #[derive(Clone, Debug)]
 pub struct Blake2s256;
 impl MultihashDigest for Blake2s256 {
@@ -439,7 +459,9 @@ impl MultihashDigest for Blake2s256 {
     }
 }
 impl Blake2s256 {
+    /// The code of Blake2s-256 hasher, 0xb260.
     pub const CODE: Code = Code::Blake2s256;
+    /// Hash some input and return the blake2s-256 digest.
     pub fn digest(data: &[u8]) -> Multihash {
         let digest = Blake2s::new()
             .hash_length(32)

@@ -6,6 +6,8 @@
 //! A `MultihashRef` is the same as a `Multihash`, except that it doesn't own its data.
 //!
 
+#![deny(missing_docs)]
+
 mod digests;
 mod errors;
 mod hashes;
