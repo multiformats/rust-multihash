@@ -35,12 +35,12 @@ Then run `cargo build`.
 ## Usage
 
 ```rust
-extern crate multihash;
+use multihash::Sha2_256;
 
-use multihash::{encode, decode, Hash};
-
-let hash = encode(Hash::SHA2256, b"my hash").unwrap();
-let multi = decode(&hash).unwrap();
+fn main() {
+    let hash = Sha2_256::digest(b"my hash");
+    println!("{:?}", hash);
+}
 ```
 
 ## Supported Hash Types
@@ -49,6 +49,7 @@ let multi = decode(&hash).unwrap();
 * `SHA2-256`
 * `SHA2-512`
 * `SHA3`/`Keccak`
+* `Blake2b-256`/`Blake2b-512`/`Blake2s-128`/`Blake2s-256`
 
 ## Maintainers
 
