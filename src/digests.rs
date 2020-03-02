@@ -104,6 +104,20 @@ impl Multihash {
     pub fn digest(&self) -> &[u8] {
         self.as_ref().digest()
     }
+
+    /// truncate the digest to the given number of bytes
+    ///
+    /// when this is called with a size that is larger or equal to the current digest size,
+    /// the multihash is returned unchanged.
+    pub fn truncate(&self, size: usize) -> Multihash {
+        let digest = self.digest();
+        if size >= digest.len() {
+            self.to_owned()
+        } else {
+            let shortened = &digest[..size];
+            wrap(self.algorithm(), shortened)
+        }
+    }
 }
 
 impl AsRef<[u8]> for Multihash {
