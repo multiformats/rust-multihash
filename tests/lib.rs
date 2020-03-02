@@ -224,6 +224,20 @@ fn custom_multihash() {
 }
 
 #[test]
+fn truncate() {
+    let multihash = Sha2_256::digest(b"abcde");
+    let algorithm = multihash.algorithm();
+
+    let truncated1 = multihash.truncate(1024);
+    assert_eq!(truncated1.algorithm(), algorithm);
+    assert_eq!(truncated1.digest().len(), 32);
+
+    let truncated2 = multihash.truncate(16);
+    assert_eq!(truncated2.algorithm(), algorithm);
+    assert_eq!(truncated2.digest().len(), 16);
+}
+
+#[test]
 fn multihash_errors() {
     assert!(
         Multihash::from_bytes(Vec::new()).is_err(),
