@@ -3,11 +3,14 @@
 [![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
 [![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](https://github.com/multiformats/multiformats)
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
-[![Travis CI](https://img.shields.io/travis/multiformats/rust-multihash.svg?style=flat-square&branch=master)](https://travis-ci.org/multiformats/rust-multihash)
-[![codecov.io](https://img.shields.io/codecov/c/github/multiformats/rust-multihash.svg?style=flat-square&branch=master)](https://codecov.io/github/multiformats/rust-multihash?branch=master)
-[![](https://img.shields.io/badge/rust-docs-blue.svg?style=flat-square)](https://docs.rs/multihash/)
-[![crates.io](https://img.shields.io/badge/crates.io-v0.4.0-orange.svg?style=flat-square )](https://crates.io/crates/multihash)
 [![](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+
+[![Build Status](https://github.com/multiformats/rust-multihash/workflows/build/badge.svg)](https://github.com/multiformats/rust-multihash/actions)
+[![Crates.io](https://img.shields.io/crates/v/multihash?style=flat-square)](https://crates.io/crates/multihash)
+[![License](https://img.shields.io/crates/l/multihash?style=flat-square)](LICENSE)
+[![Documentation](https://docs.rs/multihash/badge.svg?style=flat-square)](https://docs.rs/multihash)
+[![Dependency Status](https://deps.rs/repo/github/multiformats/rust-multihash/status.svg)](https://deps.rs/repo/github/multiformats/rust-multihash)
+[![Coverage Status]( https://img.shields.io/codecov/c/github/multiformats/rust-multihash?style=flat-square)](https://codecov.io/gh/multiformats/rust-multihash)
 
 > [multihash](https://github.com/multiformats/multihash) implementation in Rust.
 
@@ -16,7 +19,6 @@
 - [Install](#install)
 - [Usage](#usage)
 - [Supported Hash Types](#supported-hash-types)
-- [Dependencies](#dependencies)
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
 - [License](#license)

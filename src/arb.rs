@@ -1,6 +1,7 @@
-use crate::{Code, Code::*, Multihash};
 use quickcheck::{Arbitrary, Gen};
 use rand::seq::SliceRandom;
+
+use crate::{Code, Code::*, Multihash};
 
 const HASHES: [Code; 16] = [
     Identity, Sha1, Sha2_256, Sha2_512, Sha3_512, Sha3_384, Sha3_256, Sha3_224, Keccak224,
