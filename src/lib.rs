@@ -15,6 +15,6 @@ mod storage;
 #[cfg(any(test, feature = "test"))]
 mod arb;
 
-pub use digests::{wrap, Multihash, MultihashDigest, MultihashRef};
+pub use digests::{wrap, Multihash, MultihashDigest, MultihashGeneric, MultihashRef};
 pub use errors::{DecodeError, DecodeOwnedError, EncodeError};
 pub use hashes::*;

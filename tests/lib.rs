@@ -127,7 +127,7 @@ fn assert_roundtrip() {
 }
 
 /// Testing the public interface of `Multihash` and `MultihashRef`
-fn test_methods(hash: impl MultihashDigest, prefix: &str, digest: &str) {
+fn test_methods(hash: impl MultihashDigest<Code>, prefix: &str, digest: &str) {
     let expected_bytes = hex_to_bytes(&format!("{}{}", prefix, digest));
     let multihash = hash.digest(b"hello world");
     assert_eq!(
@@ -234,21 +234,6 @@ fn test_long_identity_hash() {
     let input = b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz";
     let multihash = Identity::digest(input);
     assert_eq!(multihash.digest().to_vec(), input.to_vec());
-}
-
-#[test]
-fn custom_multihash() {
-    let code = Code::Custom(0x1234);
-    let data = b"abcde".to_vec();
-    let multihash = wrap(code, &data);
-
-    assert_eq!(
-        multihash.as_bytes(),
-        &[0xb4, 0x24, 0x05, 0x61, 0x62, 0x63, 0x64, 0x65]
-    );
-    assert_eq!(multihash.algorithm(), code);
-    assert_eq!(<u64>::from(multihash.algorithm()), 0x1234);
-    assert_eq!(multihash.digest(), b"abcde");
 }
 
 #[test]

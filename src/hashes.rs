@@ -1,8 +1,11 @@
+use std::convert::TryFrom;
+
 use blake2b_simd::{Params as Blake2bParams, State as Blake2b};
 use blake2s_simd::{Params as Blake2sParams, State as Blake2s};
 use digest::Digest;
 
 use crate::digests::{wrap, Multihash, MultihashDigest};
+use crate::errors::DecodeError;
 
 #[doc(hidden)]
 #[macro_export(local_inner_macros)]
@@ -18,18 +21,15 @@ macro_rules! impl_code {
                 #[$doc]
                 $name,
             )*
-            /// Make it possible to use a custom code that is not part of the enum yet
-            Custom(u64),
         }
 
         impl Code {
             /// Return the hasher that is used to create a hash with this code.
             ///
             /// If a custom code is used, `None` is returned.
-            pub fn hasher(&self) -> Option<Box<dyn MultihashDigest>> {
+            pub fn hasher(&self) -> Box<dyn MultihashDigest<Code>> {
                 match *self {
-                    $(Self::$name => Some(Box::new($name::default())),)*
-                    Self::Custom(_) => None,
+                    $(Self::$name => Box::new($name::default()),)*
                 }
             }
         }
@@ -39,19 +39,18 @@ macro_rules! impl_code {
             fn from(code: Code) -> Self {
                 match code {
                     $(Code::$name => $code,)*
-                    Code::Custom(code) => code,
                 }
             }
         }
 
-        impl From<u64> for Code {
-            /// Return the `Code` based on the integer value. If the code is
-            /// unknown/not implemented yet then it returns a `Code::Custom`.
-            /// implements with that value.
-            fn from(code: u64) -> Self {
-                match code {
-                    $($code => Self::$name,)*
-                    _ => Self::Custom(code),
+        impl TryFrom<u64> for Code {
+            type Error = DecodeError;
+
+            /// Return the `Code` based on the integer value. Error if no matching code exists.
+            fn try_from(raw: u64) -> Result<Self, Self::Error> {
+                match raw {
+                    $($code => Ok(Self::$name),)*
+                    _ => Err(DecodeError::UnknownCode),
                 }
             }
         }
@@ -79,7 +78,7 @@ macro_rules! derive_digest {
                     wrap(Self::CODE, &digest)
                 }
             }
-            impl MultihashDigest for $name {
+            impl MultihashDigest<Code> for $name {
                 #[inline]
                 fn code(&self) -> Code {
                     Self::CODE
@@ -108,7 +107,7 @@ macro_rules! derive_digest {
             impl ::std::io::Write for $name {
                 #[inline]
                 fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
-                    <$name as MultihashDigest>::input(self, buf);
+                    <$name as MultihashDigest<Code>>::input(self, buf);
                     Ok(buf.len())
                 }
                 #[inline]
@@ -141,7 +140,7 @@ macro_rules! derive_digest {
                     $name(<$params>::new().hash_length($len).to_state())
                 }
             }
-            impl MultihashDigest for $name {
+            impl MultihashDigest<Code> for $name {
                 #[inline]
                 fn code(&self) -> Code {
                     Self::CODE
@@ -174,7 +173,7 @@ macro_rules! derive_digest {
             impl ::std::io::Write for $name {
                 #[inline]
                 fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
-                    <$name as MultihashDigest>::input(self, buf);
+                    <$name as MultihashDigest<Code>>::input(self, buf);
                     Ok(buf.len())
                 }
                 #[inline]
@@ -225,7 +224,7 @@ impl_code! {
 /// The Identity hasher.
 #[derive(Clone, Debug, Default)]
 pub struct Identity(Vec<u8>);
-impl MultihashDigest for Identity {
+impl MultihashDigest<Code> for Identity {
     #[inline]
     fn code(&self) -> Code {
         Self::CODE

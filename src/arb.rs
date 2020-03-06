@@ -27,6 +27,6 @@ impl Arbitrary for Multihash {
         // encoding an actual random piece of data might be better than just choosing
         // random numbers of the appropriate size, since some hash algos might produce
         // a limited set of values
-        code.hasher().unwrap().digest(&data)
+        code.hasher().digest(&data)
     }
 }
