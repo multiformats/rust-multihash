@@ -130,7 +130,7 @@ macro_rules! derive_digest {
                 }
                 fn result(self) -> Multihash {
                     let digest = self.0.finalize();
-                    wrap(Self::CODE, &digest.as_bytes())
+                    wrap(Self::CODE, digest.as_bytes())
                 }
             }
 
