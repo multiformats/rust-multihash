@@ -1,132 +1,203 @@
-use blake2b_simd::Params as Blake2b;
-use blake2s_simd::Params as Blake2s;
+use blake2b_simd::{Params as Blake2bParams, State as Blake2b};
+use blake2s_simd::{Params as Blake2sParams, State as Blake2s};
 use digest::Digest;
 
 use crate::digests::{wrap, Multihash, MultihashDigest};
 
-/// The code of Multihash.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Code {
+#[doc(hidden)]
+#[macro_export(local_inner_macros)]
+macro_rules! impl_code {
+    ($(
+        #[$doc:meta]
+        $name:ident => $code:expr,
+    )*) => {
+        /// The code of Multihash.
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        pub enum Code {
+            $(
+                #[$doc]
+                $name,
+            )*
+            /// Make it possible to use a custom code that is not part of the enum yet
+            Custom(u64),
+        }
+
+        impl Code {
+            /// Return the code as integer value.
+            pub fn to_u64(&self) -> u64 {
+                match *self {
+                    $(Self::$name => $code,)*
+                    Self::Custom(code) => code,
+                }
+            }
+
+            /// Return the `Code` based on the integer value. If the code is
+            /// unknown/not implemented yet then it returns a `Code::Custom`.
+            /// implements with that value.
+            pub fn from_u64(code: u64) -> Self {
+                match code {
+                    $($code => Self::$name,)*
+                    _ => Self::Custom(code),
+                }
+            }
+
+            /// Return the hasher that is used to create a hash with this code.
+            ///
+            /// If a custom code is used, `None` is returned.
+            pub fn hasher(&self) -> Option<Box<dyn MultihashDigest>> {
+                match *self {
+                    $(Self::$name => Some(Box::new($name::default())),)*
+                    Self::Custom(_) => None,
+                }
+            }
+        }
+    };
+}
+
+#[doc(hidden)]
+#[macro_export(local_inner_macros)]
+macro_rules! derive_digest {
+    ($(
+        #[$doc:meta]
+        @sha $type:ty as $name:ident => $code:expr,
+    )*) => {
+        $(
+            #[$doc]
+            #[derive(Clone, Debug, Default)]
+            pub struct $name($type);
+            impl $name {
+                const CODE: Code = Code::$name;
+
+                /// Computes the digest of
+                fn digest(&self, data: &[u8]) -> Multihash {
+                    let digest = <$type>::digest(&data);
+                    wrap(Self::CODE, &digest)
+                }
+            }
+            impl MultihashDigest for $name {
+                fn code(&self) -> Code {
+                    Self::CODE
+                }
+                fn digest(&self, data: &[u8]) -> Multihash {
+                    Self::digest(self, data)
+                }
+                fn input(&mut self, data: &[u8]) {
+                    Digest::input(&mut self.0, data)
+                }
+                fn result(self) -> Multihash {
+                    wrap(Self::CODE, Digest::result(self.0).as_slice())
+                }
+            }
+
+            derive_digest!(@write $name);
+        )*
+    };
+    ($(
+        #[$docs:meta]
+        @blake $type:ty | $params:ty as $name:ident => $code:expr,
+    )*) => {
+        $(
+            #[$docs]
+            #[derive(Clone, Debug)]
+            pub struct $name($type);
+            impl $name {
+                const CODE: Code = Code::$name;
+
+                fn digest(&self, data: &[u8]) -> Multihash {
+                    let digest = Self::default().0.update(&data).finalize();
+                    wrap(Self::CODE, &digest.as_bytes())
+                }
+            }
+            impl Default for $name {
+                fn default() -> Self {
+                    $name(<$params>::new().hash_length(32).to_state())
+                }
+            }
+            impl MultihashDigest for $name {
+                fn code(&self) -> Code {
+                    Self::CODE
+                }
+                fn digest(&self, data: &[u8]) -> Multihash {
+                    Self::digest(self, data)
+                }
+                fn input(&mut self, data: &[u8]) {
+                    self.0.update(data);
+                }
+                fn result(self) -> Multihash {
+                    let digest = self.0.finalize();
+                    wrap(Self::CODE, &digest.as_bytes())
+                }
+            }
+
+            derive_digest!(@write $name);
+        )*
+    };
+    (@write $name:ident) => {
+        impl ::std::io::Write for $name {
+            fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
+                <$name as MultihashDigest>::input(self, buf);
+                Ok(buf.len())
+            }
+            fn flush(&mut self) -> ::std::io::Result<()> {
+                Ok(())
+            }
+        }
+    };
+}
+
+impl_code! {
     /// Identity (Raw binary )
-    Identity,
+    Identity => 0x00,
     /// SHA-1 (20-byte hash size)
-    Sha1,
+    Sha1 => 0x11,
     /// SHA-256 (32-byte hash size)
-    Sha2_256,
+    Sha2_256 => 0x12,
     /// SHA-512 (64-byte hash size)
-    Sha2_512,
+    Sha2_512 => 0x13,
     /// SHA3-224 (28-byte hash size)
-    Sha3_224,
+    Sha3_224 => 0x17,
     /// SHA3-256 (32-byte hash size)
-    Sha3_256,
+    Sha3_256 => 0x16,
     /// SHA3-384 (48-byte hash size)
-    Sha3_384,
+    Sha3_384 => 0x15,
     /// SHA3-512 (64-byte hash size)
-    Sha3_512,
+    Sha3_512 => 0x14,
     /// Keccak-224 (28-byte hash size)
-    Keccak224,
+    Keccak224 => 0x1a,
     /// Keccak-256 (32-byte hash size)
-    Keccak256,
+    Keccak256 => 0x1b,
     /// Keccak-384 (48-byte hash size)
-    Keccak384,
+    Keccak384 => 0x1c,
     /// Keccak-512 (64-byte hash size)
-    Keccak512,
+    Keccak512 => 0x1d,
     /// BLAKE2b-256 (32-byte hash size)
-    Blake2b256,
+    Blake2b256 => 0xb220,
     /// BLAKE2b-512 (64-byte hash size)
-    Blake2b512,
+    Blake2b512 => 0xb240,
     /// BLAKE2s-128 (16-byte hash size)
-    Blake2s128,
+    Blake2s128 => 0xb250,
     /// BLAKE2s-256 (32-byte hash size)
-    Blake2s256,
-    /// Make it possible to use a custom code that is not part of the enum yet
-    Custom(u64),
+    Blake2s256 => 0xb260,
 }
 
-impl Code {
-    /// Return the code as integer value.
-    pub fn to_u64(&self) -> u64 {
-        match *self {
-            Self::Custom(code) => code,
-            Self::Identity => 0x00,
-            Self::Sha1 => 0x11,
-            Self::Sha2_256 => 0x12,
-            Self::Sha2_512 => 0x13,
-            Self::Sha3_224 => 0x17,
-            Self::Sha3_256 => 0x16,
-            Self::Sha3_384 => 0x15,
-            Self::Sha3_512 => 0x14,
-            Self::Keccak224 => 0x1a,
-            Self::Keccak256 => 0x1b,
-            Self::Keccak384 => 0x1c,
-            Self::Keccak512 => 0x1d,
-            Self::Blake2b256 => 0xb220,
-            Self::Blake2b512 => 0xb240,
-            Self::Blake2s128 => 0xb250,
-            Self::Blake2s256 => 0xb260,
-        }
-    }
-
-    /// Return the `Code` based on the integer value. If the code is unknown/not implemented yet
-    /// then it returns a `Code::Custom`.
-    /// implements with that value.
-    pub fn from_u64(code: u64) -> Self {
-        match code {
-            0x00 => Code::Identity,
-            0x11 => Code::Sha1,
-            0x12 => Code::Sha2_256,
-            0x13 => Code::Sha2_512,
-            0x14 => Code::Sha3_512,
-            0x15 => Code::Sha3_384,
-            0x16 => Code::Sha3_256,
-            0x17 => Code::Sha3_224,
-            0x1A => Code::Keccak224,
-            0x1B => Code::Keccak256,
-            0x1C => Code::Keccak384,
-            0x1D => Code::Keccak512,
-            0xB220 => Code::Blake2b256,
-            0xB240 => Code::Blake2b512,
-            0xB250 => Code::Blake2s128,
-            0xB260 => Code::Blake2s256,
-            _ => Code::Custom(code),
-        }
-    }
-
-    /// Return the hasher that is used to create a hash with this code.
-    ///
-    /// If a custom code is used, `None` is returned.
-    pub fn hasher(&self) -> Option<Box<dyn MultihashDigest>> {
-        match *self {
-            Self::Custom(_) => None,
-            Self::Identity => Some(Box::new(Identity)),
-            Self::Sha1 => Some(Box::new(Sha1)),
-            Self::Sha2_256 => Some(Box::new(Sha2_256)),
-            Self::Sha2_512 => Some(Box::new(Sha2_512)),
-            Self::Sha3_224 => Some(Box::new(Sha3_224)),
-            Self::Sha3_256 => Some(Box::new(Sha3_256)),
-            Self::Sha3_384 => Some(Box::new(Sha3_384)),
-            Self::Sha3_512 => Some(Box::new(Sha3_512)),
-            Self::Keccak224 => Some(Box::new(Keccak224)),
-            Self::Keccak256 => Some(Box::new(Keccak256)),
-            Self::Keccak384 => Some(Box::new(Keccak384)),
-            Self::Keccak512 => Some(Box::new(Keccak512)),
-            Self::Blake2b256 => Some(Box::new(Blake2b256)),
-            Self::Blake2b512 => Some(Box::new(Blake2b512)),
-            Self::Blake2s128 => Some(Box::new(Blake2s128)),
-            Self::Blake2s256 => Some(Box::new(Blake2s256)),
-        }
-    }
-}
-
-/// The Identity hasher
-#[derive(Clone, Debug)]
-pub struct Identity;
+/// The Identity hasher.
+#[derive(Clone, Debug, Default)]
+pub struct Identity(Vec<u8>);
 impl MultihashDigest for Identity {
     fn code(&self) -> Code {
         Self::CODE
     }
     fn digest(&self, data: &[u8]) -> Multihash {
         Self::digest(data)
+    }
+    fn input(&mut self, data: &[u8]) {
+        if ((self.0.len() as u64) + (data.len() as u64)) >= u64::from(std::u32::MAX) {
+            panic!("Input data for identity hash is too large, it needs to be less than 2^32.")
+        }
+        self.0.extend_from_slice(data)
+    }
+    fn result(self) -> Multihash {
+        wrap(Self::CODE, &self.0)
     }
 }
 impl Identity {
@@ -135,339 +206,43 @@ impl Identity {
     /// Hash some input and return the raw binary digest.
     pub fn digest(data: &[u8]) -> Multihash {
         if (data.len() as u64) >= u64::from(std::u32::MAX) {
-            panic!("Input data for identity hash is too large, it needs to be less the 2^32.")
+            panic!("Input data for identity hash is too large, it needs to be less than 2^32.")
         }
         wrap(Self::CODE, &data)
     }
 }
 
-/// The Sha1 hasher.
-#[derive(Clone, Debug)]
-pub struct Sha1;
-impl MultihashDigest for Sha1 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
+derive_digest! {
+    /// The SHA-1 hasher.
+    @sha ::sha1::Sha1 as Sha1 => 0x11,
+    /// The SHA2-256 hasher.
+    @sha ::sha2::Sha256 as Sha2_256 => 0x12,
+    /// The SHA2-512 hasher.
+    @sha ::sha2::Sha512 as Sha2_512 => 0x13,
+    /// The SHA3-224 hasher.
+    @sha ::sha3::Sha3_224 as Sha3_224 => 0x17,
+    /// The SHA3-256 hasher.
+    @sha ::sha3::Sha3_256 as Sha3_256 => 0x16,
+    /// The SHA3-384 hasher.
+    @sha ::sha3::Sha3_384 as Sha3_384 => 0x15,
+    /// The SHA3-512 hasher.
+    @sha ::sha3::Sha3_512 as Sha3_512 => 0x14,
+    /// The Keccak-224 hasher.
+    @sha ::sha3::Keccak224 as Keccak224 => 0x1a,
+    /// The Keccak-256 hasher.
+    @sha ::sha3::Keccak256 as Keccak256 => 0x1b,
+    /// The Keccak-384 hasher.
+    @sha ::sha3::Keccak384 as Keccak384 => 0x1c,
+    /// The Keccak-512 hasher.
+    @sha ::sha3::Keccak512 as Keccak512 => 0x1d,
 }
-impl Sha1 {
-    /// The code of Sha1 hasher, 0x11.
-    pub const CODE: Code = Code::Sha1;
-    /// Hash some input and return the sha1 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha1::Sha1::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The Sha2-256 hasher.
-#[derive(Clone, Debug)]
-pub struct Sha2_256;
-impl MultihashDigest for Sha2_256 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Sha2_256 {
-    /// The code of Sha2-256 hasher, 0x12.
-    pub const CODE: Code = Code::Sha2_256;
-    /// Hash some input and return the sha2-256 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha2::Sha256::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The Sha2-512 hasher.
-#[derive(Clone, Debug)]
-pub struct Sha2_512;
-impl MultihashDigest for Sha2_512 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Sha2_512 {
-    /// The code of Sha2-512 hasher, 0x13.
-    pub const CODE: Code = Code::Sha2_512;
-    /// Hash some input and return the sha2-512 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha2::Sha512::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The Sha3-224 hasher.
-#[derive(Clone, Debug)]
-pub struct Sha3_224;
-impl MultihashDigest for Sha3_224 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Sha3_224 {
-    /// The code of Sha3-224 hasher, 0x17.
-    pub const CODE: Code = Code::Sha3_224;
-    /// Hash some input and return the sha3-224 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha3::Sha3_224::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The Sha3-256
-#[derive(Clone, Debug)]
-pub struct Sha3_256;
-impl MultihashDigest for Sha3_256 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Sha3_256 {
-    /// The code of Sha3-256 hasher, 0x16.
-    pub const CODE: Code = Code::Sha3_256;
-    /// Hash some input and return the sha3-256 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha3::Sha3_256::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The Sha3-384 hasher.
-#[derive(Clone, Debug)]
-pub struct Sha3_384;
-impl MultihashDigest for Sha3_384 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Sha3_384 {
-    /// The code of Sha3-384 hasher, 0x15.
-    pub const CODE: Code = Code::Sha3_384;
-    /// Hash some input and return the sha3-384 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha3::Sha3_384::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The Sha3-512 hasher.
-#[derive(Clone, Debug)]
-pub struct Sha3_512;
-impl MultihashDigest for Sha3_512 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Sha3_512 {
-    /// The code of Sha3-512 hasher, 0x14.
-    pub const CODE: Code = Code::Sha3_512;
-    /// Hash some input and return the sha3-512 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha3::Sha3_512::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The Keccak-224 hasher.
-#[derive(Clone, Debug)]
-pub struct Keccak224;
-impl MultihashDigest for Keccak224 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Keccak224 {
-    /// The code of Keccak-224 hasher, 0x1a.
-    pub const CODE: Code = Code::Keccak224;
-    /// Hash some input and return the keccak-224 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha3::Keccak224::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The keccak-256 hasher.
-#[derive(Clone, Debug)]
-pub struct Keccak256;
-impl MultihashDigest for Keccak256 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Keccak256 {
-    /// The code of Keccak-256 hasher, 0x1b.
-    pub const CODE: Code = Code::Keccak256;
-    /// Hash some input and return the keccak-256 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha3::Keccak256::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The keccak-384 hasher.
-#[derive(Clone, Debug)]
-pub struct Keccak384;
-impl MultihashDigest for Keccak384 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Keccak384 {
-    /// The code of Keccak-384 hasher, 0x1c.
-    pub const CODE: Code = Code::Keccak384;
-    /// Hash some input and return the keccak-384 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha3::Keccak384::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The keccak-512 hasher.
-#[derive(Clone, Debug)]
-pub struct Keccak512;
-impl MultihashDigest for Keccak512 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Keccak512 {
-    /// The code of Keccak-512 hasher, 0x1d.
-    pub const CODE: Code = Code::Keccak512;
-    /// Hash some input and return the keccak-512 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = sha3::Keccak512::digest(&data);
-        wrap(Self::CODE, &digest)
-    }
-}
-
-/// The Blake2b-256 hasher.
-#[derive(Clone, Debug)]
-pub struct Blake2b256;
-impl MultihashDigest for Blake2b256 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Blake2b256 {
-    /// The code of Blake2b-256 hasher, 0xb220.
-    pub const CODE: Code = Code::Blake2b256;
-    /// Hash some input and return the blake2b-256 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = Blake2b::new()
-            .hash_length(32)
-            .to_state()
-            .update(&data)
-            .finalize();
-        wrap(Self::CODE, &digest.as_bytes())
-    }
-}
-
-/// The Blake2b-512 hasher.
-#[derive(Clone, Debug)]
-pub struct Blake2b512;
-impl MultihashDigest for Blake2b512 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Blake2b512 {
-    /// The code of Blake2b-512 hasher, 0xb240.
-    pub const CODE: Code = Code::Blake2b512;
-    /// Hash some input and return the blake2b-512 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = Blake2b::new()
-            .hash_length(64)
-            .to_state()
-            .update(&data)
-            .finalize();
-        wrap(Self::CODE, &digest.as_bytes())
-    }
-}
-
-/// The Blake2s-128 hasher.
-#[derive(Clone, Debug)]
-pub struct Blake2s128;
-impl MultihashDigest for Blake2s128 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Blake2s128 {
-    /// The code of Blake2s-128 hasher, 0xb250.
-    pub const CODE: Code = Code::Blake2s128;
-    /// Hash some input and return the blake2s-128 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = Blake2s::new()
-            .hash_length(16)
-            .to_state()
-            .update(&data)
-            .finalize();
-        wrap(Self::CODE, &digest.as_bytes())
-    }
-}
-
-/// The Blake2s-256 hasher.
-#[derive(Clone, Debug)]
-pub struct Blake2s256;
-impl MultihashDigest for Blake2s256 {
-    fn code(&self) -> Code {
-        Self::CODE
-    }
-    fn digest(&self, data: &[u8]) -> Multihash {
-        Self::digest(data)
-    }
-}
-impl Blake2s256 {
-    /// The code of Blake2s-256 hasher, 0xb260.
-    pub const CODE: Code = Code::Blake2s256;
-    /// Hash some input and return the blake2s-256 digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        let digest = Blake2s::new()
-            .hash_length(32)
-            .to_state()
-            .update(&data)
-            .finalize();
-        wrap(Self::CODE, &digest.as_bytes())
-    }
+derive_digest! {
+    /// The Blake2b-256 hasher.
+    @blake Blake2b | Blake2bParams as Blake2b256 => 0xb220,
+    /// The Blake2b-512 hasher.
+    @blake Blake2b | Blake2bParams as Blake2b512 => 0xb240,
+    /// The Blake2s-128 hasher.
+    @blake Blake2s | Blake2sParams as Blake2s128 => 0xb250,
+    /// The Blake2s-256 hasher.
+    @blake Blake2s | Blake2sParams as Blake2s256 => 0xb260,
 }
