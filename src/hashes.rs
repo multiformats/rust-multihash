@@ -57,13 +57,17 @@ macro_rules! impl_code {
 #[doc(hidden)]
 #[macro_export(local_inner_macros)]
 macro_rules! derive_digest {
-    ($(#[$doc:meta] @sha $type:ty as $name:ident,)*) => {
+    ($(
+        #[$doc:meta]
+        @sha $type:ty as $name:ident;
+            @code_doc $code_doc:literal,
+    )*) => {
         $(
             #[$doc]
             #[derive(Clone, Debug, Default)]
             pub struct $name($type);
             impl $name {
-                /// The code of the hasher.
+                #[doc = $code_doc]
                 pub const CODE: Code = Code::$name;
 
                 /// Hash some input and return the Multihash digest.
@@ -90,13 +94,17 @@ macro_rules! derive_digest {
             derive_digest!(@io_write $name);
         )*
     };
-    ($(#[$doc:meta] @blake $type:ty | $params:ty as $name:ident $len:expr,)*) => {
+    ($(
+        #[$doc:meta]
+        @blake $type:ty | $params:ty as $name:ident $len:expr;
+            @code_doc $code_doc:literal,
+    )*) => {
         $(
             #[$doc]
             #[derive(Clone, Debug)]
             pub struct $name($type);
             impl $name {
-                /// The code of the hasher.
+                #[doc = $code_doc]
                 pub const CODE: Code = Code::$name;
 
                 /// Hash some input and return the Multihash digest.
@@ -211,35 +219,50 @@ impl Identity {
 
 derive_digest! {
     /// The SHA-1 hasher.
-    @sha ::sha1::Sha1 as Sha1,
+    @sha ::sha1::Sha1 as Sha1;
+        @code_doc "The code of the SHA-1 hasher, 0x11",
     /// The SHA2-256 hasher.
-    @sha ::sha2::Sha256 as Sha2_256,
+    @sha ::sha2::Sha256 as Sha2_256;
+        @code_doc "The code of the SHA2-256 hasher, 0x12",
     /// The SHA2-512 hasher.
-    @sha ::sha2::Sha512 as Sha2_512,
+    @sha ::sha2::Sha512 as Sha2_512;
+        @code_doc "The code of the SHA2-512 hasher, 0x13",
     /// The SHA3-224 hasher.
-    @sha ::sha3::Sha3_224 as Sha3_224,
+    @sha ::sha3::Sha3_224 as Sha3_224;
+        @code_doc "The code of the SHA3-224 hasher, 0x17",
     /// The SHA3-256 hasher.
-    @sha ::sha3::Sha3_256 as Sha3_256,
+    @sha ::sha3::Sha3_256 as Sha3_256;
+        @code_doc "The code of the SHA3-256 hasher, 0x16",
     /// The SHA3-384 hasher.
-    @sha ::sha3::Sha3_384 as Sha3_384,
+    @sha ::sha3::Sha3_384 as Sha3_384;
+        @code_doc "The code of the SHA3-384 hasher, 0x15",
     /// The SHA3-512 hasher.
-    @sha ::sha3::Sha3_512 as Sha3_512,
+    @sha ::sha3::Sha3_512 as Sha3_512;
+        @code_doc "The code of the SHA3-512 hasher, 0x14",
     /// The Keccak-224 hasher.
-    @sha ::sha3::Keccak224 as Keccak224,
+    @sha ::sha3::Keccak224 as Keccak224;
+        @code_doc "The code of the Keccak-224 hasher, 0x1a",
     /// The Keccak-256 hasher.
-    @sha ::sha3::Keccak256 as Keccak256,
+    @sha ::sha3::Keccak256 as Keccak256;
+        @code_doc "The code of the Keccak-256 hasher, 0x1b",
     /// The Keccak-384 hasher.
-    @sha ::sha3::Keccak384 as Keccak384,
+    @sha ::sha3::Keccak384 as Keccak384;
+        @code_doc "The code of the Keccak-384 hasher, 0x1c",
     /// The Keccak-512 hasher.
-    @sha ::sha3::Keccak512 as Keccak512,
+    @sha ::sha3::Keccak512 as Keccak512;
+        @code_doc "The code of the Keccak-512 hasher, 0x1d",
 }
 derive_digest! {
     /// The Blake2b-256 hasher.
-    @blake Blake2b | Blake2bParams as Blake2b256 32,
+    @blake Blake2b | Blake2bParams as Blake2b256 32;
+        @code_doc "The code of the Blake2-256 hasher, 0xb220",
     /// The Blake2b-512 hasher.
-    @blake Blake2b | Blake2bParams as Blake2b512 64,
+    @blake Blake2b | Blake2bParams as Blake2b512 64;
+        @code_doc "The code of the Blake2-512 hasher, 0xb240",
     /// The Blake2s-128 hasher.
-    @blake Blake2s | Blake2sParams as Blake2s128 16,
+    @blake Blake2s | Blake2sParams as Blake2s128 16;
+        @code_doc "The code of the Blake2-128 hasher, 0xb250",
     /// The Blake2s-256 hasher.
-    @blake Blake2s | Blake2sParams as Blake2s256 32,
+    @blake Blake2s | Blake2sParams as Blake2s256 32;
+        @code_doc "The code of the Blake2-256 hasher, 0xb260",
 }
