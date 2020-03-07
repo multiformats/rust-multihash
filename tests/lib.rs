@@ -20,15 +20,14 @@ macro_rules! assert_encode {
                 hex,
                 "{:?} encodes correctly", stringify!($alg)
             );
-            {
-                let mut hasher = <$alg>::default();
-                &mut hasher.input($data);
-                assert_eq!(
-                    hasher.result().into_bytes(),
-                    hex,
-                    "{:?} encodes correctly", stringify!($alg)
-                )
-            }
+
+            let mut hasher = <$alg>::default();
+            &mut hasher.input($data);
+            assert_eq!(
+                hasher.result().into_bytes(),
+                hex,
+                "{:?} encodes correctly", stringify!($alg)
+            );
         )*
     }
 }
@@ -111,7 +110,7 @@ macro_rules! assert_roundtrip {
                 assert_eq!(
                     MultihashRef::from_slice(&hash).unwrap().algorithm(),
                     $alg::CODE
-                )
+                );
             }
         )*
     }
