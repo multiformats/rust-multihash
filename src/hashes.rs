@@ -227,7 +227,7 @@ impl Identity {
         if (data.len() as u64) >= u64::from(std::u32::MAX) {
             panic!("Input data for identity hash is too large, it needs to be less than 2^32.")
         }
-        wrap(Self::CODE, &data)
+        wrap(Self::CODE, data)
     }
 }
 
