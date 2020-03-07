@@ -57,19 +57,17 @@ macro_rules! impl_code {
 #[doc(hidden)]
 #[macro_export(local_inner_macros)]
 macro_rules! derive_digest {
-    ($(
-        #[$doc:meta]
-        @sha $type:ty as $name:ident => $code:expr,
-    )*) => {
+    ($(#[$doc:meta] @sha $type:ty as $name:ident,)*) => {
         $(
             #[$doc]
             #[derive(Clone, Debug, Default)]
             pub struct $name($type);
             impl $name {
-                const CODE: Code = Code::$name;
+                /// The code of the hasher.
+                pub const CODE: Code = Code::$name;
 
-                /// Computes the digest of
-                fn digest(&self, data: &[u8]) -> Multihash {
+                /// Hash some input and return the Multihash digest.
+                pub fn digest(data: &[u8]) -> Multihash {
                     let digest = <$type>::digest(&data);
                     wrap(Self::CODE, &digest)
                 }
@@ -79,7 +77,7 @@ macro_rules! derive_digest {
                     Self::CODE
                 }
                 fn digest(&self, data: &[u8]) -> Multihash {
-                    Self::digest(self, data)
+                    Self::digest(data)
                 }
                 fn input(&mut self, data: &[u8]) {
                     Digest::input(&mut self.0, data)
@@ -89,28 +87,27 @@ macro_rules! derive_digest {
                 }
             }
 
-            derive_digest!(@write $name);
+            derive_digest!(@io_write $name);
         )*
     };
-    ($(
-        #[$docs:meta]
-        @blake $type:ty | $params:ty as $name:ident => $code:expr,
-    )*) => {
+    ($(#[$doc:meta] @blake $type:ty | $params:ty as $name:ident $len:expr,)*) => {
         $(
-            #[$docs]
+            #[$doc]
             #[derive(Clone, Debug)]
             pub struct $name($type);
             impl $name {
-                const CODE: Code = Code::$name;
+                /// The code of the hasher.
+                pub const CODE: Code = Code::$name;
 
-                fn digest(&self, data: &[u8]) -> Multihash {
+                /// Hash some input and return the Multihash digest.
+                pub fn digest(data: &[u8]) -> Multihash {
                     let digest = Self::default().0.update(&data).finalize();
                     wrap(Self::CODE, &digest.as_bytes())
                 }
             }
             impl Default for $name {
                 fn default() -> Self {
-                    $name(<$params>::new().hash_length(32).to_state())
+                    $name(<$params>::new().hash_length($len).to_state())
                 }
             }
             impl MultihashDigest for $name {
@@ -118,7 +115,7 @@ macro_rules! derive_digest {
                     Self::CODE
                 }
                 fn digest(&self, data: &[u8]) -> Multihash {
-                    Self::digest(self, data)
+                    Self::digest(data)
                 }
                 fn input(&mut self, data: &[u8]) {
                     self.0.update(data);
@@ -129,10 +126,10 @@ macro_rules! derive_digest {
                 }
             }
 
-            derive_digest!(@write $name);
+            derive_digest!(@io_write $name);
         )*
     };
-    (@write $name:ident) => {
+    (@io_write $name:ident) => {
         impl ::std::io::Write for $name {
             fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
                 <$name as MultihashDigest>::input(self, buf);
@@ -201,7 +198,7 @@ impl MultihashDigest for Identity {
     }
 }
 impl Identity {
-    /// The code of Identity hasher, 0x00.
+    /// The code of the Identity hasher, 0x00.
     pub const CODE: Code = Code::Identity;
     /// Hash some input and return the raw binary digest.
     pub fn digest(data: &[u8]) -> Multihash {
@@ -214,35 +211,35 @@ impl Identity {
 
 derive_digest! {
     /// The SHA-1 hasher.
-    @sha ::sha1::Sha1 as Sha1 => 0x11,
+    @sha ::sha1::Sha1 as Sha1,
     /// The SHA2-256 hasher.
-    @sha ::sha2::Sha256 as Sha2_256 => 0x12,
+    @sha ::sha2::Sha256 as Sha2_256,
     /// The SHA2-512 hasher.
-    @sha ::sha2::Sha512 as Sha2_512 => 0x13,
+    @sha ::sha2::Sha512 as Sha2_512,
     /// The SHA3-224 hasher.
-    @sha ::sha3::Sha3_224 as Sha3_224 => 0x17,
+    @sha ::sha3::Sha3_224 as Sha3_224,
     /// The SHA3-256 hasher.
-    @sha ::sha3::Sha3_256 as Sha3_256 => 0x16,
+    @sha ::sha3::Sha3_256 as Sha3_256,
     /// The SHA3-384 hasher.
-    @sha ::sha3::Sha3_384 as Sha3_384 => 0x15,
+    @sha ::sha3::Sha3_384 as Sha3_384,
     /// The SHA3-512 hasher.
-    @sha ::sha3::Sha3_512 as Sha3_512 => 0x14,
+    @sha ::sha3::Sha3_512 as Sha3_512,
     /// The Keccak-224 hasher.
-    @sha ::sha3::Keccak224 as Keccak224 => 0x1a,
+    @sha ::sha3::Keccak224 as Keccak224,
     /// The Keccak-256 hasher.
-    @sha ::sha3::Keccak256 as Keccak256 => 0x1b,
+    @sha ::sha3::Keccak256 as Keccak256,
     /// The Keccak-384 hasher.
-    @sha ::sha3::Keccak384 as Keccak384 => 0x1c,
+    @sha ::sha3::Keccak384 as Keccak384,
     /// The Keccak-512 hasher.
-    @sha ::sha3::Keccak512 as Keccak512 => 0x1d,
+    @sha ::sha3::Keccak512 as Keccak512,
 }
 derive_digest! {
     /// The Blake2b-256 hasher.
-    @blake Blake2b | Blake2bParams as Blake2b256 => 0xb220,
+    @blake Blake2b | Blake2bParams as Blake2b256 32,
     /// The Blake2b-512 hasher.
-    @blake Blake2b | Blake2bParams as Blake2b512 => 0xb240,
+    @blake Blake2b | Blake2bParams as Blake2b512 64,
     /// The Blake2s-128 hasher.
-    @blake Blake2s | Blake2sParams as Blake2s128 => 0xb250,
+    @blake Blake2s | Blake2sParams as Blake2s128 16,
     /// The Blake2s-256 hasher.
-    @blake Blake2s | Blake2sParams as Blake2s256 => 0xb260,
+    @blake Blake2s | Blake2sParams as Blake2s256 32,
 }
