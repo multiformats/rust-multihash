@@ -33,6 +33,11 @@ fn custom_multihash_digest() {
             let data = b"alwaysthesame";
             wrap(Self.code(), data)
         }
+
+        fn input(&mut self, _data: &[u8]) {}
+        fn result(self) -> Multihash {
+            Self::digest(&self, &[])
+        }
     }
 
     let my_hash = SameHash.digest(b"abc");
