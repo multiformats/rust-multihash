@@ -30,8 +30,7 @@ macro_rules! group_stream {
                         let mut hasher = <$hash>::default();
                         for i in 0..3 {
                             let start = i * 256;
-                            let input: &[u8] = $input.as_ref();
-                            &mut hasher.input(&input[start..(start + 256)]);
+                            &mut hasher.input(&$input[start..(start + 256)]);
                         }
                         hasher.result()
                     });

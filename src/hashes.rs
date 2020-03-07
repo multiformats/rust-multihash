@@ -69,7 +69,6 @@ macro_rules! derive_digest {
             impl $name {
                 #[doc = $code_doc]
                 pub const CODE: Code = Code::$name;
-
                 /// Hash some input and return the Multihash digest.
                 pub fn digest(data: &[u8]) -> Multihash {
                     let digest = <$type>::digest(&data);
@@ -77,21 +76,34 @@ macro_rules! derive_digest {
                 }
             }
             impl MultihashDigest for $name {
+                #[inline]
                 fn code(&self) -> Code {
                     Self::CODE
                 }
+                #[inline]
                 fn digest(&self, data: &[u8]) -> Multihash {
                     Self::digest(data)
                 }
+                #[inline]
                 fn input(&mut self, data: &[u8]) {
                     Digest::input(&mut self.0, data)
                 }
+                #[inline]
                 fn result(self) -> Multihash {
                     wrap(Self::CODE, Digest::result(self.0).as_slice())
                 }
             }
-
-            derive_digest!(@io_write $name);
+            impl ::std::io::Write for $name {
+                #[inline]
+                fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
+                    <$name as MultihashDigest>::input(self, buf);
+                    Ok(buf.len())
+                }
+                #[inline]
+                fn flush(&mut self) -> ::std::io::Result<()> {
+                    Ok(())
+                }
+            }
         )*
     };
     ($(
@@ -106,7 +118,6 @@ macro_rules! derive_digest {
             impl $name {
                 #[doc = $code_doc]
                 pub const CODE: Code = Code::$name;
-
                 /// Hash some input and return the Multihash digest.
                 pub fn digest(data: &[u8]) -> Multihash {
                     let digest = Self::default().0.update(&data).finalize();
@@ -119,39 +130,42 @@ macro_rules! derive_digest {
                 }
             }
             impl MultihashDigest for $name {
+                #[inline]
                 fn code(&self) -> Code {
                     Self::CODE
                 }
+                #[inline]
                 fn digest(&self, data: &[u8]) -> Multihash {
                     Self::digest(data)
                 }
+                #[inline]
                 fn input(&mut self, data: &[u8]) {
                     self.0.update(data);
                 }
+                #[inline]
                 fn result(self) -> Multihash {
                     let digest = self.0.finalize();
                     wrap(Self::CODE, digest.as_bytes())
                 }
             }
-
-            derive_digest!(@io_write $name);
+            impl ::std::io::Write for $name {
+                #[inline]
+                fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
+                    <$name as MultihashDigest>::input(self, buf);
+                    Ok(buf.len())
+                }
+                #[inline]
+                fn flush(&mut self) -> ::std::io::Result<()> {
+                    self.0.finalize();
+                    Ok(())
+                }
+            }
         )*
-    };
-    (@io_write $name:ident) => {
-        impl ::std::io::Write for $name {
-            fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
-                <$name as MultihashDigest>::input(self, buf);
-                Ok(buf.len())
-            }
-            fn flush(&mut self) -> ::std::io::Result<()> {
-                Ok(())
-            }
-        }
     };
 }
 
 impl_code! {
-    /// Identity (Raw binary )
+    /// Identity (Raw binary)
     Identity => 0x00,
     /// SHA-1 (20-byte hash size)
     Sha1 => 0x11,
