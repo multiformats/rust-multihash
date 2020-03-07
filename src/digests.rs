@@ -282,6 +282,18 @@ pub trait MultihashDigest {
     ///
     /// Panics if the digest length is bigger than 2^32. This only happens for identity hasing.
     fn digest(&self, data: &[u8]) -> Multihash;
+
+    /// Digest input data.
+    ///
+    /// This method can be called repeatedly for use with streaming messages.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the digest length is bigger than 2^32. This only happens for identity hashing.
+    fn input(&mut self, data: &[u8]);
+
+    /// Retrieve the computed `Multihash`, consuming the hasher.
+    fn result(self) -> Multihash;
 }
 
 /// Wraps a hash digest in Multihash with the given Mutlihash code.
