@@ -14,11 +14,21 @@ fn hex_to_bytes(s: &str) -> Vec<u8> {
 macro_rules! assert_encode {
     {$( $alg:ty, $data:expr, $expect:expr; )*} => {
         $(
+            let hex = hex_to_bytes($expect);
             assert_eq!(
                 <$alg>::digest($data).into_bytes(),
-                hex_to_bytes($expect),
+                hex,
                 "{:?} encodes correctly", stringify!($alg)
             );
+            {
+                let mut hasher = <$alg>::default();
+                &mut hasher.input($data);
+                assert_eq!(
+                    hasher.result().into_bytes(),
+                    hex,
+                    "{:?} encodes correctly", stringify!($alg)
+                )
+            }
         )*
     }
 }
@@ -93,6 +103,15 @@ macro_rules! assert_roundtrip {
                     MultihashRef::from_slice(&hash).unwrap().algorithm(),
                     $alg::CODE
                 );
+            }
+            {
+                let mut hasher = $alg::default();
+                &mut hasher.input(b"helloworld");
+                let hash: Vec<u8> = hasher.result().into_bytes();
+                assert_eq!(
+                    MultihashRef::from_slice(&hash).unwrap().algorithm(),
+                    $alg::CODE
+                )
             }
         )*
     }
