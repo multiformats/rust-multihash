@@ -35,6 +35,7 @@ fn custom_multihash_digest() {
         }
 
         fn input(&mut self, _data: &[u8]) {}
+
         fn result(self) -> Multihash {
             Self::digest(&self, &[])
         }
