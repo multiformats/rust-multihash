@@ -23,24 +23,6 @@ macro_rules! impl_code {
         }
 
         impl Code {
-            /// Return the code as integer value.
-            pub fn to_u64(&self) -> u64 {
-                match *self {
-                    $(Self::$name => $code,)*
-                    Self::Custom(code) => code,
-                }
-            }
-
-            /// Return the `Code` based on the integer value. If the code is
-            /// unknown/not implemented yet then it returns a `Code::Custom`.
-            /// implements with that value.
-            pub fn from_u64(code: u64) -> Self {
-                match code {
-                    $($code => Self::$name,)*
-                    _ => Self::Custom(code),
-                }
-            }
-
             /// Return the hasher that is used to create a hash with this code.
             ///
             /// If a custom code is used, `None` is returned.
@@ -48,6 +30,28 @@ macro_rules! impl_code {
                 match *self {
                     $(Self::$name => Some(Box::new($name::default())),)*
                     Self::Custom(_) => None,
+                }
+            }
+        }
+
+        impl From<Code> for u64 {
+            /// Return the code as integer value.
+            fn from(code: Code) -> Self {
+                match code {
+                    $(Code::$name => $code,)*
+                    Code::Custom(code) => code,
+                }
+            }
+        }
+
+        impl From<u64> for Code {
+            /// Return the `Code` based on the integer value. If the code is
+            /// unknown/not implemented yet then it returns a `Code::Custom`.
+            /// implements with that value.
+            fn from(code: u64) -> Self {
+                match code {
+                    $($code => Self::$name,)*
+                    _ => Self::Custom(code),
                 }
             }
         }

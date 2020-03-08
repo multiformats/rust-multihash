@@ -245,7 +245,7 @@ fn custom_multihash() {
         &[0xb4, 0x24, 0x05, 0x61, 0x62, 0x63, 0x64, 0x65]
     );
     assert_eq!(multihash.algorithm(), code);
-    assert_eq!(multihash.algorithm().to_u64(), 0x1234);
+    assert_eq!(<u64>::from(multihash.algorithm()), 0x1234);
     assert_eq!(multihash.digest(), b"abcde");
 }
 
@@ -267,7 +267,7 @@ fn multihash_errors() {
         Multihash::from_bytes(vec![0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
-    let identity_code = Identity::CODE.to_u64() as u8;
+    let identity_code = <u64>::from(Identity::CODE) as u8;
     let identity_length = 3;
     assert!(
         Multihash::from_bytes(vec![identity_code, identity_length, 1, 2, 3, 4]).is_err(),
@@ -293,7 +293,7 @@ fn multihash_ref_errors() {
         MultihashRef::from_slice(&[0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
-    let identity_code = Identity::CODE.to_u64() as u8;
+    let identity_code = <u64>::from(Identity::CODE) as u8;
     let identity_length = 3;
     assert!(
         MultihashRef::from_slice(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
