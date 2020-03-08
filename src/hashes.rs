@@ -90,11 +90,19 @@ macro_rules! derive_digest {
                 }
                 #[inline]
                 fn input(&mut self, data: &[u8]) {
-                    Digest::input(&mut self.0, data)
+                    self.0.input(data)
                 }
                 #[inline]
                 fn result(self) -> Multihash {
-                    wrap(Self::CODE, Digest::result(self.0).as_slice())
+                    wrap(Self::CODE, self.0.result().as_slice())
+                }
+                #[inline]
+                fn result_reset(&mut self) -> Multihash {
+                    wrap(Self::CODE, self.0.result_reset().as_slice())
+                }
+                #[inline]
+                fn reset(&mut self) {
+                    self.0.reset()
                 }
             }
             impl ::std::io::Write for $name {
@@ -124,7 +132,7 @@ macro_rules! derive_digest {
                 pub const CODE: Code = Code::$name;
                 /// Hash some input and return the Multihash digest.
                 pub fn digest(data: &[u8]) -> Multihash {
-                    let digest = Self::default().0.update(&data).finalize();
+                    let digest = <$params>::new().hash_length($len).hash(data);
                     wrap(Self::CODE, &digest.as_bytes())
                 }
             }
@@ -150,6 +158,17 @@ macro_rules! derive_digest {
                 fn result(self) -> Multihash {
                     let digest = self.0.finalize();
                     wrap(Self::CODE, digest.as_bytes())
+                }
+                #[inline]
+                fn result_reset(&mut self) -> Multihash {
+                    let digest = self.0.finalize();
+                    let hash = wrap(Self::CODE, digest.as_bytes());
+                    self.reset();
+                    hash
+                }
+                #[inline]
+                fn reset(&mut self) {
+                    self.0 = <$params>::new().hash_length($len).to_state();
                 }
             }
             impl ::std::io::Write for $name {
@@ -221,6 +240,14 @@ impl MultihashDigest for Identity {
     }
     fn result(self) -> Multihash {
         wrap(Self::CODE, &self.0)
+    }
+    fn result_reset(&mut self) -> Multihash {
+        let hash = wrap(Self::CODE, &self.0);
+        self.reset();
+        hash
+    }
+    fn reset(&mut self) {
+        self.0 = Vec::new();
     }
 }
 impl Identity {

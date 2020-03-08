@@ -294,6 +294,14 @@ pub trait MultihashDigest {
 
     /// Retrieve the computed `Multihash`, consuming the hasher.
     fn result(self) -> Multihash;
+
+    /// Retrieve result and reset hasher instance.
+    ///
+    /// This method sometimes can be more efficient compared to hasher re-creation.
+    fn result_reset(&mut self) -> Multihash;
+
+    /// Reset hasher instance to its initial state.
+    fn reset(&mut self);
 }
 
 /// Wraps a hash digest in Multihash with the given Mutlihash code.

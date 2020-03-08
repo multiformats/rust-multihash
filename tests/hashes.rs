@@ -39,6 +39,12 @@ fn custom_multihash_digest() {
         fn result(self) -> Multihash {
             Self::digest(&self, &[])
         }
+
+        fn result_reset(&mut self) -> Multihash {
+            Self::digest(&self, &[])
+        }
+
+        fn reset(&mut self) {}
     }
 
     let my_hash = SameHash.digest(b"abc");
