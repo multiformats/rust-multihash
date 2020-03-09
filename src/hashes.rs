@@ -168,7 +168,7 @@ macro_rules! derive_digest {
                 }
                 #[inline]
                 fn reset(&mut self) {
-                    self.0 = <$params>::new().hash_length($len).to_state();
+                    self.0 = Self::default().0;
                 }
             }
             impl ::std::io::Write for $name {
@@ -226,26 +226,32 @@ impl_code! {
 #[derive(Clone, Debug, Default)]
 pub struct Identity(Vec<u8>);
 impl MultihashDigest for Identity {
+    #[inline]
     fn code(&self) -> Code {
         Self::CODE
     }
+    #[inline]
     fn digest(&self, data: &[u8]) -> Multihash {
         Self::digest(data)
     }
+    #[inline]
     fn input(&mut self, data: &[u8]) {
         if ((self.0.len() as u64) + (data.len() as u64)) >= u64::from(std::u32::MAX) {
             panic!("Input data for identity hash is too large, it needs to be less than 2^32.")
         }
         self.0.extend_from_slice(data)
     }
+    #[inline]
     fn result(self) -> Multihash {
         wrap(Self::CODE, &self.0)
     }
+    #[inline]
     fn result_reset(&mut self) -> Multihash {
         let hash = wrap(Self::CODE, &self.0);
         self.reset();
         hash
     }
+    #[inline]
     fn reset(&mut self) {
         self.0 = Vec::new();
     }
