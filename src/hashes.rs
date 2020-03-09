@@ -253,7 +253,7 @@ impl MultihashDigest for Identity {
     }
     #[inline]
     fn reset(&mut self) {
-        self.0 = Vec::new();
+        self.0.clear()
     }
 }
 impl Identity {
