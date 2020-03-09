@@ -32,6 +32,7 @@ macro_rules! assert_encode {
     }
 }
 
+#[allow(clippy::cognitive_complexity)]
 #[test]
 fn multihash_encode() {
     assert_encode! {
@@ -116,6 +117,7 @@ macro_rules! assert_roundtrip {
     }
 }
 
+#[allow(clippy::cognitive_complexity)]
 #[test]
 fn assert_roundtrip() {
     assert_roundtrip!(
