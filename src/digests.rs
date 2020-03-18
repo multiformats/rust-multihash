@@ -213,7 +213,7 @@ impl<'a> MultihashRef<'a> {
     pub fn algorithm(&self) -> Code {
         let (code, _bytes) =
             varint_decode::u64(&self.bytes).expect("multihash is known to be valid algorithm");
-        Code::from_u64(code)
+        Code::from(code)
     }
 
     /// Returns the hash digest.
@@ -282,6 +282,26 @@ pub trait MultihashDigest {
     ///
     /// Panics if the digest length is bigger than 2^32. This only happens for identity hasing.
     fn digest(&self, data: &[u8]) -> Multihash;
+
+    /// Digest input data.
+    ///
+    /// This method can be called repeatedly for use with streaming messages.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the digest length is bigger than 2^32. This only happens for identity hashing.
+    fn input(&mut self, data: &[u8]);
+
+    /// Retrieve the computed `Multihash`, consuming the hasher.
+    fn result(self) -> Multihash;
+
+    /// Retrieve result and reset hasher instance.
+    ///
+    /// This method sometimes can be more efficient compared to hasher re-creation.
+    fn result_reset(&mut self) -> Multihash;
+
+    /// Reset hasher instance to its initial state.
+    fn reset(&mut self);
 }
 
 /// Wraps a hash digest in Multihash with the given Mutlihash code.
@@ -301,7 +321,7 @@ pub trait MultihashDigest {
 /// ```
 pub fn wrap(code: Code, data: &[u8]) -> Multihash {
     let mut code_buf = varint_encode::u64_buffer();
-    let code = varint_encode::u64(code.to_u64(), &mut code_buf);
+    let code = varint_encode::u64(code.into(), &mut code_buf);
 
     let mut size_buf = varint_encode::u64_buffer();
     let size = varint_encode::u64(data.len() as u64, &mut size_buf);

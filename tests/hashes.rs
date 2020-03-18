@@ -2,14 +2,14 @@ use multihash::{wrap, Code, Multihash, MultihashDigest, Sha3_512};
 
 #[test]
 fn to_u64() {
-    assert_eq!(Code::Keccak256.to_u64(), 0x1b);
-    assert_eq!(Code::Custom(0x1234).to_u64(), 0x1234);
+    assert_eq!(<u64>::from(Code::Keccak256), 0x1b);
+    assert_eq!(<u64>::from(Code::Custom(0x1234)), 0x1234);
 }
 
 #[test]
 fn from_u64() {
-    assert_eq!(Code::from_u64(0xb220), Code::Blake2b256);
-    assert_eq!(Code::from_u64(0x0011_2233), Code::Custom(0x0011_2233));
+    assert_eq!(Code::from(0xb220), Code::Blake2b256);
+    assert_eq!(Code::from(0x0011_2233), Code::Custom(0x0011_2233));
 }
 
 #[test]
@@ -33,6 +33,18 @@ fn custom_multihash_digest() {
             let data = b"alwaysthesame";
             wrap(Self.code(), data)
         }
+
+        fn input(&mut self, _data: &[u8]) {}
+
+        fn result(self) -> Multihash {
+            Self::digest(&self, &[])
+        }
+
+        fn result_reset(&mut self) -> Multihash {
+            Self::digest(&self, &[])
+        }
+
+        fn reset(&mut self) {}
     }
 
     let my_hash = SameHash.digest(b"abc");
