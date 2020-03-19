@@ -4,7 +4,6 @@
 //!
 //! A `Multihash` is a structure that contains a hashing algorithm, plus some hashed data.
 //! A `MultihashRef` is the same as a `Multihash`, except that it doesn't own its data.
-//!
 
 #![deny(missing_docs)]
 
