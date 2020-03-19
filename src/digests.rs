@@ -42,7 +42,7 @@ impl Multihash {
     /// # Example
     ///
     /// ```
-    /// use multihash::{Sha2_256, Multihash};
+    /// use multihash::{Multihash, Sha2_256};
     ///
     /// let mh = Sha2_256::digest(b"hello world");
     ///
@@ -50,7 +50,7 @@ impl Multihash {
     /// let mh2 = Multihash::from_bytes(mh.into_bytes()).unwrap();
     ///
     /// // invalid multihash
-    /// assert!(Multihash::from_bytes(vec![1,2,3]).is_err());
+    /// assert!(Multihash::from_bytes(vec![1, 2, 3]).is_err());
     /// ```
     pub fn from_bytes(bytes: Vec<u8>) -> Result<Multihash, DecodeOwnedError> {
         if let Err(err) = MultihashRef::from_slice(&bytes) {
@@ -171,7 +171,7 @@ impl<'a> MultihashRef<'a> {
     /// # Example
     ///
     /// ```
-    /// use multihash::{Sha2_256, Multihash, MultihashRef};
+    /// use multihash::{Multihash, MultihashRef, Sha2_256};
     ///
     /// let mh = Sha2_256::digest(b"hello world");
     ///
@@ -179,7 +179,7 @@ impl<'a> MultihashRef<'a> {
     /// let mh2 = MultihashRef::from_slice(&mh).unwrap();
     ///
     /// // invalid multihash
-    /// assert!(MultihashRef::from_slice(&vec![1,2,3]).is_err());
+    /// assert!(MultihashRef::from_slice(&vec![1, 2, 3]).is_err());
     /// ```
     pub fn from_slice(input: &'a [u8]) -> Result<Self, DecodeError> {
         if input.is_empty() {
@@ -202,7 +202,7 @@ impl<'a> MultihashRef<'a> {
     /// # Example
     ///
     /// ```
-    /// use multihash::{Code, Sha2_256, MultihashRef};
+    /// use multihash::{Code, MultihashRef, Sha2_256};
     ///
     /// let mh = Sha2_256::digest(b"hello world");
     ///
