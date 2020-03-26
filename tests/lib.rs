@@ -287,3 +287,19 @@ fn multihash_ref_errors() {
         "Should error on wrong hash length"
     );
 }
+
+#[test]
+fn wrap() {
+    let mh = Sha2_256::digest(b"hello world");
+    let digest = mh.digest();
+    let wrapped: Multihash = multihash::wrap(Code::Sha2_256, &digest);
+    assert_eq!(wrapped.algorithm(), Code::Sha2_256);
+}
+
+#[test]
+fn wrap_generic() {
+    let mh = Sha2_256::digest(b"hello world");
+    let digest = mh.digest();
+    let wrapped: MultihashGeneric<u64> = multihash::wrap(124, &digest);
+    assert_eq!(wrapped.algorithm(), 124);
+}
