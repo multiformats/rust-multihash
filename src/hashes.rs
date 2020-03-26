@@ -23,13 +23,13 @@ macro_rules! impl_code {
             )*
         }
 
-        impl Code {
-            /// Return the hasher that is used to create a hash with this code.
-            ///
-            /// If a custom code is used, `None` is returned.
-            pub fn hasher(&self) -> Box<dyn MultihashDigest<Code>> {
-                match *self {
-                    $(Self::$name => Box::new($name::default()),)*
+        impl TryFrom<Code> for Box<dyn MultihashDigest<Code>> {
+            // TODO vmx 2020-03-25: Use a better error than `DeocdeError`
+            type Error = DecodeError;
+
+            fn try_from(code: Code) -> Result<Self, Self::Error> {
+                match code {
+                    $(Code::$name => Ok(Box::new($name::default())),)*
                 }
             }
         }
