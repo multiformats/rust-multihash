@@ -25,7 +25,7 @@ pub type MultihashRef<'a> = MultihashRefGeneric<'a, Code>;
 /// # Example
 ///
 /// ```
-/// use multihash::{wrap, MultihashDigest, MultihashGeneric};
+/// use multihash::{wrap, MultihashGeneric};
 /// use std::convert::TryFrom;
 ///
 /// #[derive(Debug)]
