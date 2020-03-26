@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use multihash::{Code, Sha3_512};
+use multihash::{Code, MultihashDigest, Sha3_512};
 
 #[test]
 fn to_u64() {
@@ -15,6 +15,6 @@ fn from_u64() {
 #[test]
 fn hasher() {
     let expected = Sha3_512::digest(b"abcdefg");
-    let hasher = Code::Sha3_512.hasher();
+    let hasher = Box::<dyn MultihashDigest<Code>>::from(Code::Sha3_512);
     assert_eq!(hasher.digest(b"abcdefg"), expected);
 }

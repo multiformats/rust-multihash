@@ -1,7 +1,7 @@
 use quickcheck::{Arbitrary, Gen};
 use rand::seq::SliceRandom;
 
-use crate::{Code, Code::*, Multihash};
+use crate::{Code, Code::*, Multihash, MultihashDigest};
 
 const HASHES: [Code; 16] = [
     Identity, Sha1, Sha2_256, Sha2_512, Sha3_512, Sha3_384, Sha3_256, Sha3_224, Keccak224,
@@ -27,6 +27,6 @@ impl Arbitrary for Multihash {
         // encoding an actual random piece of data might be better than just choosing
         // random numbers of the appropriate size, since some hash algos might produce
         // a limited set of values
-        code.hasher().digest(&data)
+        Box::<dyn MultihashDigest<Code>>::from(code).digest(&data)
     }
 }

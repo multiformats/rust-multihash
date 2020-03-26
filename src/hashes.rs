@@ -23,13 +23,10 @@ macro_rules! impl_code {
             )*
         }
 
-        impl Code {
-            /// Return the hasher that is used to create a hash with this code.
-            ///
-            /// If a custom code is used, `None` is returned.
-            pub fn hasher(&self) -> Box<dyn MultihashDigest<Code>> {
-                match *self {
-                    $(Self::$name => Box::new($name::default()),)*
+        impl From<Code> for Box<dyn MultihashDigest<Code>> {
+            fn from(code: Code) -> Self {
+                match code {
+                    $(Code::$name => Box::new($name::default()),)*
                 }
             }
         }
