@@ -131,7 +131,7 @@ pub type MultihashRef<'a> = MultihashRefGeneric<'a, Code>;
 /// );
 /// ```
 #[derive(Clone)]
-pub struct MultihashGeneric<T> {
+pub struct MultihashGeneric<T: TryFrom<u64>> {
     storage: Storage,
     // Use `PhantomData` in order to be able to make the `Multihash` struct take a generic
     _code: PhantomData<T>,
@@ -143,15 +143,15 @@ impl<T: TryFrom<u64>> fmt::Debug for MultihashGeneric<T> {
     }
 }
 
-impl<T> PartialEq for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> PartialEq for MultihashGeneric<T> {
     fn eq(&self, other: &Self) -> bool {
         self.storage.bytes() == other.storage.bytes()
     }
 }
 
-impl<T> Eq for MultihashGeneric<T> {}
+impl<T: TryFrom<u64>> Eq for MultihashGeneric<T> {}
 
-impl<T> hash::Hash for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> hash::Hash for MultihashGeneric<T> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.storage.bytes().hash(state);
     }
@@ -407,7 +407,7 @@ impl<'a, T: TryFrom<u64>> Into<Vec<u8>> for MultihashRefGeneric<'a, T> {
 }
 
 /// The `MultihashDigest` trait specifies an interface common for all multihash functions.
-pub trait MultihashDigest<T> {
+pub trait MultihashDigest<T: TryFrom<u64>> {
     /// The Mutlihash byte value.
     fn code(&self) -> T;
 
@@ -454,7 +454,7 @@ pub trait MultihashDigest<T> {
 /// let wrapped: Multihash = wrap(Code::Sha2_256, &digest);
 /// assert_eq!(wrapped.digest(), digest);
 /// ```
-pub fn wrap<T: Into<u64> + std::fmt::Debug>(code: T, data: &[u8]) -> MultihashGeneric<T> {
+pub fn wrap<T: Into<u64> + TryFrom<u64>>(code: T, data: &[u8]) -> MultihashGeneric<T> {
     let mut code_buf = varint_encode::u64_buffer();
     let code = varint_encode::u64(code.into(), &mut code_buf);
 
