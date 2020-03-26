@@ -222,7 +222,7 @@ impl<T: TryFrom<u64>> MultihashGeneric<T> {
     /// ```
     pub fn algorithm(&self) -> T
     where
-        <T as std::convert::TryFrom<u64>>::Error: std::fmt::Debug,
+        <T as TryFrom<u64>>::Error: std::fmt::Debug,
     {
         self.as_ref().algorithm()
     }
@@ -343,11 +343,11 @@ impl<'a, T: TryFrom<u64>> MultihashRefGeneric<'a, T> {
     /// ```
     pub fn algorithm(&self) -> T
     where
-        <T as std::convert::TryFrom<u64>>::Error: std::fmt::Debug,
+        <T as TryFrom<u64>>::Error: std::fmt::Debug,
     {
         let (rawcode, _bytes) =
             varint_decode::u64(&self.bytes).expect("multihash is known to be valid algorithm");
-        T::try_from(rawcode).unwrap()
+        T::try_from(rawcode).expect("multihash is known to be a valid algorithm")
     }
 
     /// Returns the hash digest.
