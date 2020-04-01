@@ -9,14 +9,6 @@ use crate::errors::{DecodeError, DecodeOwnedError};
 use crate::hashes::Code;
 use crate::storage::Storage;
 
-// It would be nice if default generics would work well with `PhantomData`, so that instead of this
-// custom type `Multihash<T = Code>` would work.
-/// This type is using the default Multihash code table
-pub type Multihash = MultihashGeneric<Code>;
-
-/// This type is using the default Multihash code table
-pub type MultihashRef<'a> = MultihashRefGeneric<'a, Code>;
-
 /// Representation of a valid multihash. This enforces validity on construction,
 /// so it can be assumed this is always a valid multihash.
 ///
@@ -25,7 +17,7 @@ pub type MultihashRef<'a> = MultihashRefGeneric<'a, Code>;
 /// # Example
 ///
 /// ```
-/// use multihash::{wrap, MultihashGeneric};
+/// use multihash::{wrap, Multihash};
 /// use std::convert::TryFrom;
 ///
 /// #[derive(Debug)]
@@ -57,7 +49,7 @@ pub type MultihashRef<'a> = MultihashRefGeneric<'a, Code>;
 /// impl SameHash {
 ///     pub const CODE: MyCodeTable = MyCodeTable::Foo;
 ///     /// Hash some input and return the sha1 digest.
-///     pub fn digest(_data: &[u8]) -> MultihashGeneric<MyCodeTable> {
+///     pub fn digest(_data: &[u8]) -> Multihash<MyCodeTable> {
 ///         let digest = b"alwaysthesame";
 ///         wrap(Self::CODE, digest)
 ///     }
@@ -131,51 +123,51 @@ pub type MultihashRef<'a> = MultihashRefGeneric<'a, Code>;
 /// );
 /// ```
 #[derive(Clone)]
-pub struct MultihashGeneric<T: TryFrom<u64>> {
+pub struct Multihash<T = Code> {
     storage: Storage,
     // Use `PhantomData` in order to be able to make the `Multihash` struct take a generic
     _code: PhantomData<T>,
 }
 
-impl<T: TryFrom<u64>> fmt::Debug for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> fmt::Debug for Multihash<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("Multihash").field(&self.as_bytes()).finish()
     }
 }
 
-impl<T: TryFrom<u64>> PartialEq for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> PartialEq for Multihash<T> {
     fn eq(&self, other: &Self) -> bool {
         self.storage.bytes() == other.storage.bytes()
     }
 }
 
-impl<T: TryFrom<u64>> Eq for MultihashGeneric<T> {}
+impl<T: TryFrom<u64>> Eq for Multihash<T> {}
 
-impl<T: TryFrom<u64>> hash::Hash for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> hash::Hash for Multihash<T> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.storage.bytes().hash(state);
     }
 }
 
-impl<T: TryFrom<u64>> MultihashGeneric<T> {
+impl<T: TryFrom<u64>> Multihash<T> {
     /// Creates a new `Multihash` from a `Vec<u8>`, consuming it.
     /// If the input data is not a valid multihash an error is returned.
     ///
     /// # Example
     ///
     /// ```
-    /// use multihash::{Multihash, Sha2_256};
+    /// use multihash::{Code, Multihash, Sha2_256};
     ///
     /// let mh = Sha2_256::digest(b"hello world");
     ///
     /// // valid multihash
-    /// let mh2 = Multihash::from_bytes(mh.into_bytes()).unwrap();
+    /// let mh2 = Multihash::<Code>::from_bytes(mh.into_bytes()).unwrap();
     ///
     /// // invalid multihash
-    /// assert!(Multihash::from_bytes(vec![1, 2, 3]).is_err());
+    /// assert!(Multihash::<Code>::from_bytes(vec![1, 2, 3]).is_err());
     /// ```
-    pub fn from_bytes(bytes: Vec<u8>) -> Result<MultihashGeneric<T>, DecodeOwnedError> {
-        if let Err(err) = MultihashRefGeneric::<T>::from_slice(&bytes) {
+    pub fn from_bytes(bytes: Vec<u8>) -> Result<Multihash<T>, DecodeOwnedError> {
+        if let Err(err) = MultihashRef::<T>::from_slice(&bytes) {
             return Err(DecodeOwnedError {
                 error: err,
                 data: bytes,
@@ -203,8 +195,8 @@ impl<T: TryFrom<u64>> MultihashGeneric<T> {
     }
 
     /// Builds a `MultihashRef` corresponding to this `Multihash`.
-    pub fn as_ref(&self) -> MultihashRefGeneric<T> {
-        MultihashRefGeneric {
+    pub fn as_ref(&self) -> MultihashRef<T> {
+        MultihashRef {
             bytes: self.as_bytes(),
             _code: PhantomData,
         }
@@ -233,13 +225,13 @@ impl<T: TryFrom<u64>> MultihashGeneric<T> {
     }
 }
 
-impl<T: TryFrom<u64>> AsRef<[u8]> for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> AsRef<[u8]> for Multihash<T> {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
-impl<T: TryFrom<u64>> ops::Deref for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> ops::Deref for Multihash<T> {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
@@ -247,39 +239,39 @@ impl<T: TryFrom<u64>> ops::Deref for MultihashGeneric<T> {
     }
 }
 
-impl<T: TryFrom<u64>> Borrow<[u8]> for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> Borrow<[u8]> for Multihash<T> {
     fn borrow(&self) -> &[u8] {
         self.as_bytes()
     }
 }
 
-impl<'a, T: TryFrom<u64>> PartialEq<MultihashRefGeneric<'a, T>> for MultihashGeneric<T> {
-    fn eq(&self, other: &MultihashRefGeneric<'a, T>) -> bool {
+impl<'a, T: TryFrom<u64>> PartialEq<MultihashRef<'a, T>> for Multihash<T> {
+    fn eq(&self, other: &MultihashRef<'a, T>) -> bool {
         &*self.as_bytes() == other.as_bytes()
     }
 }
 
-impl<T: TryFrom<u64>> TryFrom<Vec<u8>> for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> TryFrom<Vec<u8>> for Multihash<T> {
     type Error = DecodeOwnedError;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        MultihashGeneric::from_bytes(value)
+        Multihash::from_bytes(value)
     }
 }
 
-impl<T: TryFrom<u64>> Into<Vec<u8>> for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> Into<Vec<u8>> for Multihash<T> {
     fn into(self) -> Vec<u8> {
         self.to_vec()
     }
 }
 
-impl<T: TryFrom<u64>> PartialOrd for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> PartialOrd for Multihash<T> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<T: TryFrom<u64>> Ord for MultihashGeneric<T> {
+impl<T: TryFrom<u64>> Ord for Multihash<T> {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
         self.as_ref().cmp(&other.as_ref())
     }
@@ -287,27 +279,27 @@ impl<T: TryFrom<u64>> Ord for MultihashGeneric<T> {
 
 /// Represents a valid multihash.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct MultihashRefGeneric<'a, T> {
+pub struct MultihashRef<'a, T = Code> {
     bytes: &'a [u8],
     _code: PhantomData<T>,
 }
 
-impl<'a, T: TryFrom<u64>> MultihashRefGeneric<'a, T> {
+impl<'a, T: TryFrom<u64>> MultihashRef<'a, T> {
     /// Creates a new `MultihashRef` from a `&[u8]`.
     /// If the input data is not a valid multihash an error is returned.
     ///
     /// # Example
     ///
     /// ```
-    /// use multihash::{MultihashRef, Sha2_256};
+    /// use multihash::{Code, MultihashRef, Sha2_256};
     ///
     /// let mh = Sha2_256::digest(b"hello world");
     ///
     /// // valid multihash
-    /// let mh2 = MultihashRef::from_slice(&mh).unwrap();
+    /// let mh2 = MultihashRef::<Code>::from_slice(&mh).unwrap();
     ///
     /// // invalid multihash
-    /// assert!(MultihashRef::from_slice(&vec![1, 2, 3]).is_err());
+    /// assert!(MultihashRef::<Code>::from_slice(&vec![1, 2, 3]).is_err());
     /// ```
     pub fn from_slice(input: &'a [u8]) -> Result<Self, DecodeError> {
         if input.is_empty() {
@@ -338,7 +330,7 @@ impl<'a, T: TryFrom<u64>> MultihashRefGeneric<'a, T> {
     /// let mh = Sha2_256::digest(b"hello world");
     ///
     /// // valid multihash
-    /// let mh2 = MultihashRef::from_slice(&mh).unwrap();
+    /// let mh2 = MultihashRef::<Code>::from_slice(&mh).unwrap();
     /// assert_eq!(mh2.algorithm(), Code::Sha2_256);
     /// ```
     pub fn algorithm(&self) -> T
@@ -373,8 +365,8 @@ impl<'a, T: TryFrom<u64>> MultihashRefGeneric<'a, T> {
     /// Builds a `Multihash` that owns the data.
     ///
     /// This operation allocates.
-    pub fn to_owned(&self) -> MultihashGeneric<T> {
-        MultihashGeneric {
+    pub fn to_owned(&self) -> Multihash<T> {
+        Multihash {
             storage: Storage::from_slice(self.bytes),
             _code: PhantomData,
         }
@@ -386,13 +378,13 @@ impl<'a, T: TryFrom<u64>> MultihashRefGeneric<'a, T> {
     }
 }
 
-impl<'a, T: TryFrom<u64>> PartialEq<MultihashGeneric<T>> for MultihashRefGeneric<'a, T> {
-    fn eq(&self, other: &MultihashGeneric<T>) -> bool {
+impl<'a, T: TryFrom<u64>> PartialEq<Multihash<T>> for MultihashRef<'a, T> {
+    fn eq(&self, other: &Multihash<T>) -> bool {
         self.as_bytes() == &*other.as_bytes()
     }
 }
 
-impl<'a, T: TryFrom<u64>> ops::Deref for MultihashRefGeneric<'a, T> {
+impl<'a, T: TryFrom<u64>> ops::Deref for MultihashRef<'a, T> {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
@@ -400,7 +392,7 @@ impl<'a, T: TryFrom<u64>> ops::Deref for MultihashRefGeneric<'a, T> {
     }
 }
 
-impl<'a, T: TryFrom<u64>> Into<Vec<u8>> for MultihashRefGeneric<'a, T> {
+impl<'a, T: TryFrom<u64>> Into<Vec<u8>> for MultihashRef<'a, T> {
     fn into(self) -> Vec<u8> {
         self.to_vec()
     }
@@ -416,7 +408,7 @@ pub trait MultihashDigest<T: TryFrom<u64>> {
     /// # Panics
     ///
     /// Panics if the digest length is bigger than 2^32. This only happens for identity hasing.
-    fn digest(&self, data: &[u8]) -> MultihashGeneric<T>;
+    fn digest(&self, data: &[u8]) -> Multihash<T>;
 
     /// Digest input data.
     ///
@@ -427,13 +419,13 @@ pub trait MultihashDigest<T: TryFrom<u64>> {
     /// Panics if the digest length is bigger than 2^32. This only happens for identity hashing.
     fn input(&mut self, data: &[u8]);
 
-    /// Retrieve the computed `MultihashGeneric`, consuming the hasher.
-    fn result(self) -> MultihashGeneric<T>;
+    /// Retrieve the computed `Multihash`, consuming the hasher.
+    fn result(self) -> Multihash<T>;
 
     /// Retrieve result and reset hasher instance.
     ///
     /// This method sometimes can be more efficient compared to hasher re-creation.
-    fn result_reset(&mut self) -> MultihashGeneric<T>;
+    fn result_reset(&mut self) -> Multihash<T>;
 
     /// Reset hasher instance to its initial state.
     fn reset(&mut self);
@@ -454,14 +446,14 @@ pub trait MultihashDigest<T: TryFrom<u64>> {
 /// let wrapped: Multihash = wrap(Code::Sha2_256, &digest);
 /// assert_eq!(wrapped.digest(), digest);
 /// ```
-pub fn wrap<T: Into<u64> + TryFrom<u64>>(code: T, data: &[u8]) -> MultihashGeneric<T> {
+pub fn wrap<T: Into<u64> + TryFrom<u64>>(code: T, data: &[u8]) -> Multihash<T> {
     let mut code_buf = varint_encode::u64_buffer();
     let code = varint_encode::u64(code.into(), &mut code_buf);
 
     let mut size_buf = varint_encode::u64_buffer();
     let size = varint_encode::u64(data.len() as u64, &mut size_buf);
 
-    MultihashGeneric {
+    Multihash {
         storage: Storage::from_slices(&[code, &size, &data]),
         _code: PhantomData,
     }

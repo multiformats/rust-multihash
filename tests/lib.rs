@@ -63,7 +63,7 @@ macro_rules! assert_decode {
         $(
             let hash = hex_to_bytes($hash);
             assert_eq!(
-                MultihashRef::from_slice(&hash).unwrap().algorithm(),
+                MultihashRef::<Code>::from_slice(&hash).unwrap().algorithm(),
                 <$alg>::CODE,
                 "{:?} decodes correctly", stringify!($alg)
             );
@@ -100,7 +100,7 @@ macro_rules! assert_roundtrip {
             {
                 let hash: Vec<u8> = $alg::digest(b"helloworld").into_bytes();
                 assert_eq!(
-                    MultihashRef::from_slice(&hash).unwrap().algorithm(),
+                    MultihashRef::<Code>::from_slice(&hash).unwrap().algorithm(),
                     $alg::CODE
                 );
             }
@@ -109,7 +109,7 @@ macro_rules! assert_roundtrip {
                 &mut hasher.input(b"helloworld");
                 let hash: Vec<u8> = hasher.result().into_bytes();
                 assert_eq!(
-                    MultihashRef::from_slice(&hash).unwrap().algorithm(),
+                    MultihashRef::<Code>::from_slice(&hash).unwrap().algorithm(),
                     $alg::CODE
                 );
             }
@@ -239,25 +239,25 @@ fn test_long_identity_hash() {
 #[test]
 fn multihash_errors() {
     assert!(
-        Multihash::from_bytes(Vec::new()).is_err(),
+        Multihash::<Code>::from_bytes(Vec::new()).is_err(),
         "Should error on empty data"
     );
     assert!(
-        Multihash::from_bytes(vec![1, 2, 3]).is_err(),
+        Multihash::<Code>::from_bytes(vec![1, 2, 3]).is_err(),
         "Should error on invalid multihash"
     );
     assert!(
-        Multihash::from_bytes(vec![1, 2, 3]).is_err(),
+        Multihash::<Code>::from_bytes(vec![1, 2, 3]).is_err(),
         "Should error on invalid prefix"
     );
     assert!(
-        Multihash::from_bytes(vec![0x12, 0x20, 0xff]).is_err(),
+        Multihash::<Code>::from_bytes(vec![0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
     let identity_code = <u64>::from(Identity::CODE) as u8;
     let identity_length = 3;
     assert!(
-        Multihash::from_bytes(vec![identity_code, identity_length, 1, 2, 3, 4]).is_err(),
+        Multihash::<Code>::from_bytes(vec![identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
     );
 }
@@ -265,25 +265,25 @@ fn multihash_errors() {
 #[test]
 fn multihash_ref_errors() {
     assert!(
-        MultihashRef::from_slice(&[]).is_err(),
+        MultihashRef::<Code>::from_slice(&[]).is_err(),
         "Should error on empty data"
     );
     assert!(
-        MultihashRef::from_slice(&[1, 2, 3]).is_err(),
+        MultihashRef::<Code>::from_slice(&[1, 2, 3]).is_err(),
         "Should error on invalid multihash"
     );
     assert!(
-        MultihashRef::from_slice(&[0x12, 0xff, 0x03]).is_err(),
+        MultihashRef::<Code>::from_slice(&[0x12, 0xff, 0x03]).is_err(),
         "Should error on invalid prefix"
     );
     assert!(
-        MultihashRef::from_slice(&[0x12, 0x20, 0xff]).is_err(),
+        MultihashRef::<Code>::from_slice(&[0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
     let identity_code = <u64>::from(Identity::CODE) as u8;
     let identity_length = 3;
     assert!(
-        MultihashRef::from_slice(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
+        MultihashRef::<Code>::from_slice(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
     );
 }
@@ -300,6 +300,6 @@ fn wrap() {
 fn wrap_generic() {
     let mh = Sha2_256::digest(b"hello world");
     let digest = mh.digest();
-    let wrapped: MultihashGeneric<u64> = multihash::wrap(124, &digest);
+    let wrapped: Multihash<u64> = multihash::wrap(124, &digest);
     assert_eq!(wrapped.algorithm(), 124);
 }
