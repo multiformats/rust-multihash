@@ -407,7 +407,10 @@ impl<'a, T: TryFrom<u64>> Into<Vec<u8>> for MultihashRefGeneric<'a, T> {
 }
 
 /// The `MultihashDigest` trait specifies an interface common for all multihash functions.
-pub trait MultihashDigest<T: TryFrom<u64>> {
+pub trait MultihashDigest<T = Code>
+where
+    T: TryFrom<u64>,
+{
     /// The Mutlihash byte value.
     fn code(&self) -> T;
 
