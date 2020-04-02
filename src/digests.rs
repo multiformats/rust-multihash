@@ -17,6 +17,16 @@ pub type Multihash = MultihashGeneric<Code>;
 /// This type is using the default Multihash code table
 pub type MultihashRef<'a> = MultihashRefGeneric<'a, Code>;
 
+/// This type makes it easier to interact with hashers
+///
+/// # Example
+///
+/// ```no-run
+/// let hasher1: BoxedMultihashDigest = Code::Sha3_512.into();
+/// let hasher2: BoxedMultihashDigest<_> = MyCodecTable::MyHash.into();
+/// ```
+pub type BoxedMultihashDigest<T = Code> = Box<dyn MultihashDigest<T>>;
+
 /// Representation of a valid multihash. This enforces validity on construction,
 /// so it can be assumed this is always a valid multihash.
 ///
@@ -407,7 +417,7 @@ impl<'a, T: TryFrom<u64>> Into<Vec<u8>> for MultihashRefGeneric<'a, T> {
 }
 
 /// The `MultihashDigest` trait specifies an interface common for all multihash functions.
-pub trait MultihashDigest<T = Code>
+pub trait MultihashDigest<T>
 where
     T: TryFrom<u64>,
 {

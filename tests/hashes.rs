@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use multihash::{wrap, Code, MultihashDigest, MultihashGeneric, Sha3_512};
+use multihash::{wrap, BoxedMultihashDigest, Code, MultihashDigest, MultihashGeneric, Sha3_512};
 
 #[test]
 fn to_u64() {
@@ -15,7 +15,7 @@ fn from_u64() {
 #[test]
 fn hasher() {
     let expected = Sha3_512::digest(b"abcdefg");
-    let hasher = Box::<dyn MultihashDigest>::from(Code::Sha3_512);
+    let hasher: BoxedMultihashDigest = Code::Sha3_512.into();
     assert_eq!(hasher.digest(b"abcdefg"), expected);
 }
 
@@ -80,7 +80,7 @@ fn hasher_custom_codes() {
         fn reset(&mut self) {}
     }
 
-    impl From<MyCodeTable> for Box<dyn MultihashDigest<MyCodeTable>> {
+    impl From<MyCodeTable> for BoxedMultihashDigest<MyCodeTable> {
         fn from(code: MyCodeTable) -> Self {
             match code {
                 MyCodeTable::Foo => Box::new(SameHash::default()),
@@ -90,6 +90,6 @@ fn hasher_custom_codes() {
     }
 
     let expected = SameHash::digest(b"abcdefg");
-    let hasher = Box::<dyn MultihashDigest<_>>::from(MyCodeTable::Foo);
+    let hasher: BoxedMultihashDigest<_> = MyCodeTable::Foo.into();
     assert_eq!(hasher.digest(b"abcdefg"), expected);
 }
