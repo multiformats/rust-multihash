@@ -15,6 +15,6 @@ fn from_u64() {
 #[test]
 fn hasher() {
     let expected = Sha3_512::digest(b"abcdefg");
-    let hasher = Box::<dyn MultihashDigest<Code>>::from(Code::Sha3_512);
+    let hasher = Box::<dyn MultihashDigest>::from(Code::Sha3_512);
     assert_eq!(hasher.digest(b"abcdefg"), expected);
 }
