@@ -17,7 +17,7 @@ mod arb;
 
 pub use digests::{
     wrap, BoxedMultihashDigest, Multihash, MultihashDigest, MultihashGeneric, MultihashRef,
-    MultihashRefGeneric,
+    MultihashRefGeneric, Multihasher,
 };
 pub use errors::{DecodeError, DecodeOwnedError, EncodeError};
 pub use hashes::*;

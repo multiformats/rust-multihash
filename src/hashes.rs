@@ -4,7 +4,7 @@ use blake2b_simd::{Params as Blake2bParams, State as Blake2b};
 use blake2s_simd::{Params as Blake2sParams, State as Blake2s};
 use digest::Digest;
 
-use crate::digests::{wrap, Multihash, MultihashDigest};
+use crate::digests::{wrap, Multihash, MultihashDigest, Multihasher};
 use crate::errors::DecodeError;
 
 #[doc(hidden)]
@@ -21,6 +21,15 @@ macro_rules! impl_code {
                 #[$doc]
                 $name,
             )*
+        }
+
+        impl Code {
+            /// Hash some input and return the raw binary digest.
+            pub fn digest(&self, data: &[u8]) -> Multihash {
+                match self {
+                    $(Self::$name => $name::digest(data),)*
+                }
+            }
         }
 
         impl From<Code> for Box<dyn MultihashDigest<Code>> {
@@ -70,9 +79,17 @@ macro_rules! derive_digest {
                 #[doc = $code_doc]
                 pub const CODE: Code = Code::$name;
                 /// Hash some input and return the Multihash digest.
+                #[inline]
                 pub fn digest(data: &[u8]) -> Multihash {
                     let digest = <$type>::digest(&data);
                     wrap(Self::CODE, &digest)
+                }
+            }
+            impl Multihasher<Code> for $name {
+                const CODE: Code = Code::$name;
+                #[inline]
+                fn digest(data: &[u8]) -> Multihash {
+                    Self::digest(data)
                 }
             }
             impl MultihashDigest<Code> for $name {
@@ -135,6 +152,13 @@ macro_rules! derive_digest {
             impl Default for $name {
                 fn default() -> Self {
                     $name(<$params>::new().hash_length($len).to_state())
+                }
+            }
+            impl Multihasher<Code> for $name {
+                const CODE: Code = Code::$name;
+                #[inline]
+                fn digest(data: &[u8]) -> Multihash {
+                    Self::digest(data)
                 }
             }
             impl MultihashDigest<Code> for $name {
@@ -221,6 +245,13 @@ impl_code! {
 /// The Identity hasher.
 #[derive(Clone, Debug, Default)]
 pub struct Identity(Vec<u8>);
+impl Multihasher<Code> for Identity {
+    const CODE: Code = Code::Identity;
+    #[inline]
+    fn digest(data: &[u8]) -> Multihash {
+        Self::digest(data)
+    }
+}
 impl MultihashDigest<Code> for Identity {
     #[inline]
     fn code(&self) -> Code {

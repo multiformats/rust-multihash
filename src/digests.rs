@@ -416,11 +416,18 @@ impl<'a, T: TryFrom<u64>> Into<Vec<u8>> for MultihashRefGeneric<'a, T> {
     }
 }
 
+/// The `Multihasher` trait specifies an interface common for all multihash functions
+/// that does not require allocating a `Box<dyn MultihashDigest<T>>`.
+pub trait Multihasher<T: TryFrom<u64> + Copy> {
+    /// The multihash code.
+    const CODE: T;
+
+    /// Hash some input and return the digest.
+    fn digest(data: &[u8]) -> MultihashGeneric<T>;
+}
+
 /// The `MultihashDigest` trait specifies an interface common for all multihash functions.
-pub trait MultihashDigest<T>
-where
-    T: TryFrom<u64>,
-{
+pub trait MultihashDigest<T: TryFrom<u64>> {
     /// The Mutlihash byte value.
     fn code(&self) -> T;
 
