@@ -15,7 +15,7 @@ macro_rules! impl_code {
         $name:ident => $code:expr,
     )*) => {
         /// The code of Multihash.
-        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub enum Code {
             $(
                 #[$doc]
