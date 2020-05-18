@@ -352,8 +352,7 @@ impl<'a, T: TryFrom<u64>> MultihashRefGeneric<'a, T> {
         let (rawcode, _bytes) =
             varint_decode::u64(&self.bytes).expect("multihash is known to be valid algorithm");
         T::try_from(rawcode)
-            .or_else(|_| Err("Should not occur as multihash is known to be valid"))
-            .unwrap()
+            .unwrap_or_else(|_| panic!("Should not occur as multihash is known to be valid"))
     }
 
     /// Returns the hash digest.
