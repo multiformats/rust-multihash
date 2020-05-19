@@ -230,10 +230,7 @@ impl<T: TryFrom<u64>> MultihashGeneric<T> {
     /// let mh = Sha2_256::digest(b"hello world");
     /// assert_eq!(mh.algorithm(), Code::Sha2_256);
     /// ```
-    pub fn algorithm(&self) -> T
-    where
-        <T as TryFrom<u64>>::Error: std::fmt::Debug,
-    {
+    pub fn algorithm(&self) -> T {
         self.as_ref().algorithm()
     }
 
@@ -351,13 +348,11 @@ impl<'a, T: TryFrom<u64>> MultihashRefGeneric<'a, T> {
     /// let mh2 = MultihashRef::from_slice(&mh).unwrap();
     /// assert_eq!(mh2.algorithm(), Code::Sha2_256);
     /// ```
-    pub fn algorithm(&self) -> T
-    where
-        <T as TryFrom<u64>>::Error: std::fmt::Debug,
-    {
+    pub fn algorithm(&self) -> T {
         let (rawcode, _bytes) =
             varint_decode::u64(&self.bytes).expect("multihash is known to be valid algorithm");
-        T::try_from(rawcode).expect("multihash is known to be a valid algorithm")
+        T::try_from(rawcode)
+            .unwrap_or_else(|_| panic!("Should not occur as multihash is known to be valid"))
     }
 
     /// Returns the hash digest.
