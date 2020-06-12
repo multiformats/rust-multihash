@@ -4,7 +4,7 @@ use blake2b_simd::{Params as Blake2bParams, State as Blake2b};
 use blake2s_simd::{Params as Blake2sParams, State as Blake2s};
 use digest::Digest;
 
-use crate::digests::{wrap, Multihash, MultihashDigest, Multihasher};
+use crate::digests::{wrap, DigestFromCode, Multihash, MultihashDigest, Multihasher};
 use crate::errors::DecodeError;
 
 #[doc(hidden)]
@@ -23,13 +23,12 @@ macro_rules! impl_code {
             )*
         }
 
-        impl Code {
-            /// Hash some input and return the raw binary digest.
-            pub fn digest(&self, data: &[u8]) -> Multihash {
-                match self {
-                    $(Self::$name => $name::digest(data),)*
-                }
-            }
+        impl DigestFromCode for Code {
+               fn digest(&self, data: &[u8]) -> Multihash {
+                   match self {
+                       $(Self::$name => $name::digest(data),)*
+                   }
+               }
         }
 
         impl From<Code> for Box<dyn MultihashDigest<Code>> {

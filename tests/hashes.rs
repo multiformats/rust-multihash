@@ -1,7 +1,10 @@
 use std::convert::TryFrom;
 
-use multihash::{wrap, BoxedMultihashDigest, Code, MultihashDigest, MultihashGeneric, Sha3_512};
+use multihash::{
+    wrap, BoxedMultihashDigest, Code, DigestFromCode, MultihashDigest, MultihashGeneric, Sha3_512,
+};
 
+#[derive(Clone, Copy)]
 enum MyCodeTable {
     Foo = 1,
     Bar = 2,
@@ -92,4 +95,19 @@ fn hasher_custom_codes() {
     let expected = SameHash::digest(b"abcdefg");
     let hasher: BoxedMultihashDigest<_> = MyCodeTable::Foo.into();
     assert_eq!(hasher.digest(b"abcdefg"), expected);
+}
+
+#[test]
+fn digest_from_code() {
+    impl DigestFromCode for MyCodeTable {
+        fn digest(&self, data: &[u8]) -> MultihashGeneric<Self> {
+            match self {
+                MyCodeTable::Foo => SameHash::digest(data),
+                MyCodeTable::Bar => SameHash::digest(data),
+            }
+        }
+    }
+
+    let expected = SameHash::digest(b"abcdefg");
+    assert_eq!(MyCodeTable::Bar.digest(b"abcdefg"), expected);
 }
