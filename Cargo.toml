@@ -1,33 +1,51 @@
+[workspace]
+members = ["proc-macro", "."]
+
 [package]
 name = "multihash"
+version = "0.11.2"
+authors = ["dignifiedquire <dignifiedquire@gmail.com>", "David Craven <david@craven.ch>"]
+edition = "2018"
 description = "Implementation of the multihash format"
 repository = "https://github.com/multiformats/rust-multihash"
-keywords = ["multihash", "ipfs"]
-version = "0.11.2"
-authors = ["dignifiedquire <dignifiedquire@gmail.com>"]
-license = "MIT"
+documentation = "https://docs.rs/multihash"
 readme = "README.md"
-documentation = "https://docs.rs/multihash/"
-edition = "2018"
+keywords = ["multihash", "ipfs"]
+license = "MIT"
+
+[features]
+default = ["std", "all", "derive"]
+std = []
+derive = ["multihash-proc-macro"]
+test = ["quickcheck", "rand"]
+all = ["blake2b", "blake2s", "sha1", "sha2", "sha3", "strobe"]
+
+blake2b = ["blake2b_simd"]
+blake2s = ["blake2s_simd"]
+sha1 = ["digest", "sha-1"]
+sha2 = ["digest", "sha-2"]
+sha3 = ["digest", "sha-3"]
+strobe = ["strobe-rs"]
 
 [dependencies]
-blake2b_simd = { version = "0.5.9", default-features = false }
-blake2s_simd = { version = "0.5.9", default-features = false }
-digest = { version = "0.8", default-features = false }
-sha-1 = { version = "0.8", default-features = false }
-sha2 = { version = "0.8", default-features = false }
-sha3 = { version = "0.8", default-features = false }
-unsigned-varint = "0.3"
+generic-array = "0.14.2"
+multihash-proc-macro = { path = "proc-macro", optional = true }
 quickcheck = { version = "0.9.2", optional = true }
 rand = { version = "0.7.3", optional = true }
+unsigned-varint = "0.4.0"
+
+blake2b_simd = { version = "0.5.10", default-features = false, optional = true }
+blake2s_simd = { version = "0.5.10", default-features = false, optional = true }
+digest = { version = "0.9.0", default-features = false, optional = true }
+sha-1 = { version = "0.9.0", default-features = false, optional = true }
+sha-2 = { version = "0.9.0", default-features = false, optional = true, package = "sha2" }
+sha-3 = { version = "0.9.0", default-features = false, optional = true, package = "sha3" }
+strobe-rs = { version = "0.5.3", optional = true }
 
 [dev-dependencies]
 criterion = "0.3"
 quickcheck = "0.9.2"
 rand = "0.7.3"
-
-[features]
-test = ["quickcheck", "rand"]
 
 [[bench]]
 name = "multihash"

@@ -16,15 +16,15 @@ macro_rules! assert_encode {
         $(
             let hex = hex_to_bytes($expect);
             assert_eq!(
-                <$alg>::digest($data).into_bytes(),
+                <$alg>::multi_digest($data).to_bytes(),
                 hex,
                 "{:?} encodes correctly", stringify!($alg)
             );
 
             let mut hasher = <$alg>::default();
-            &mut hasher.input($data);
+            hasher.write($data);
             assert_eq!(
-                hasher.result().into_bytes(),
+                hasher.multi_sum().to_bytes(),
                 hex,
                 "{:?} encodes correctly", stringify!($alg)
             );
@@ -37,8 +37,8 @@ macro_rules! assert_encode {
 fn multihash_encode() {
     assert_encode! {
         // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
-        Identity, b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz", "00a1016162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a";
-        Identity, b"beep boop", "00096265657020626f6f70";
+        //Identity256, b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz", "00a1016162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a";
+        //Identity256, b"beep boop", "00096265657020626f6f70";
         Sha1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         Sha2_256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         Sha2_256, b"beep boop", "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -63,7 +63,7 @@ macro_rules! assert_decode {
         $(
             let hash = hex_to_bytes($hash);
             assert_eq!(
-                MultihashRef::from_slice(&hash).unwrap().algorithm(),
+                Multihash::from_bytes(&hash).unwrap().code(),
                 <$alg>::CODE,
                 "{:?} decodes correctly", stringify!($alg)
             );
@@ -74,7 +74,7 @@ macro_rules! assert_decode {
 #[test]
 fn assert_decode() {
     assert_decode! {
-        Identity, "000a68656c6c6f776f726c64";
+        //Identity256, "000a68656c6c6f776f726c64";
         Sha1, "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         Sha2_256, "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         Sha2_256, "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -98,18 +98,18 @@ macro_rules! assert_roundtrip {
     ($( $alg:ident ),*) => {
         $(
             {
-                let hash: Vec<u8> = $alg::digest(b"helloworld").into_bytes();
+                let hash = $alg::multi_digest(b"helloworld").to_bytes();
                 assert_eq!(
-                    MultihashRef::from_slice(&hash).unwrap().algorithm(),
+                    Multihash::from_bytes(&hash).unwrap().code(),
                     $alg::CODE
                 );
             }
             {
                 let mut hasher = $alg::default();
-                &mut hasher.input(b"helloworld");
-                let hash: Vec<u8> = hasher.result().into_bytes();
+                hasher.write(b"helloworld");
+                let hash = hasher.multi_sum().to_bytes();
                 assert_eq!(
-                    MultihashRef::from_slice(&hash).unwrap().algorithm(),
+                    Multihash::from_bytes(&hash).unwrap().code(),
                     $alg::CODE
                 );
             }
@@ -121,42 +121,36 @@ macro_rules! assert_roundtrip {
 #[test]
 fn assert_roundtrip() {
     assert_roundtrip!(
-        Identity, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Keccak224,
-        Keccak256, Keccak384, Keccak512, Blake2b512, Blake2s256
+        Identity256,
+        Sha1,
+        Sha2_256,
+        Sha2_512,
+        Sha3_224,
+        Sha3_256,
+        Sha3_384,
+        Sha3_512,
+        Keccak224,
+        Keccak256,
+        Keccak384,
+        Keccak512,
+        Blake2b512,
+        Blake2s256
     );
 }
 
 /// Testing the public interface of `Multihash` and `MultihashRef`
-fn test_methods(hash: impl MultihashDigest<Code>, prefix: &str, digest: &str) {
+fn test_methods(hasher: impl Multihasher<Code>, prefix: &str, digest: &str) {
     let expected_bytes = hex_to_bytes(&format!("{}{}", prefix, digest));
-    let multihash = hash.digest(b"hello world");
-    assert_eq!(
-        Multihash::from_bytes(expected_bytes.clone()).unwrap(),
-        multihash
-    );
-    assert_eq!(multihash.as_bytes(), &expected_bytes[..]);
-    assert_eq!(multihash.algorithm(), hash.code());
+    let multihash = hasher.code().digest(b"hello world");
+    assert_eq!(Multihash::from_bytes(&expected_bytes).unwrap(), multihash);
+    assert_eq!(multihash.to_bytes(), &expected_bytes[..]);
+    assert_eq!(multihash.code(), hasher.code());
     assert_eq!(multihash.digest(), &hex_to_bytes(digest)[..]);
-
-    let multihash_ref = multihash.as_ref();
-    assert_eq!(multihash, multihash_ref);
-    assert_eq!(multihash_ref, multihash);
-    assert_eq!(
-        MultihashRef::from_slice(&expected_bytes[..]).unwrap(),
-        multihash_ref
-    );
-    assert_eq!(multihash_ref.algorithm(), multihash.algorithm());
-    assert_eq!(multihash_ref.digest(), multihash.digest());
-    assert_eq!(multihash_ref.as_bytes(), multihash.as_bytes());
-
-    let multihash_clone = multihash_ref.to_owned();
-    assert_eq!(multihash, multihash_clone);
-    assert_eq!(multihash.into_bytes(), &expected_bytes[..]);
 }
 
 #[test]
 fn multihash_methods() {
-    test_methods(Identity::default(), "000b", "68656c6c6f20776f726c64");
+    //test_methods(Identity256::default(), "000b", "68656c6c6f20776f726c64");
     test_methods(
         Sha1::default(),
         "1114",
@@ -229,77 +223,35 @@ fn multihash_methods() {
 }
 
 #[test]
+#[should_panic]
 fn test_long_identity_hash() {
     // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
     let input = b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz";
-    let multihash = Identity::digest(input);
-    assert_eq!(multihash.digest().to_vec(), input.to_vec());
+    Identity256::multi_digest(input);
 }
 
 #[test]
 fn multihash_errors() {
     assert!(
-        Multihash::from_bytes(Vec::new()).is_err(),
+        Multihash::from_bytes(&[]).is_err(),
         "Should error on empty data"
     );
     assert!(
-        Multihash::from_bytes(vec![1, 2, 3]).is_err(),
+        Multihash::from_bytes(&[1, 2, 3]).is_err(),
         "Should error on invalid multihash"
     );
     assert!(
-        Multihash::from_bytes(vec![1, 2, 3]).is_err(),
+        Multihash::from_bytes(&[1, 2, 3]).is_err(),
         "Should error on invalid prefix"
     );
     assert!(
-        Multihash::from_bytes(vec![0x12, 0x20, 0xff]).is_err(),
+        Multihash::from_bytes(&[0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
-    let identity_code = <u64>::from(Identity::CODE) as u8;
+    let identity_code = <u64>::from(Identity256::CODE) as u8;
     let identity_length = 3;
     assert!(
-        Multihash::from_bytes(vec![identity_code, identity_length, 1, 2, 3, 4]).is_err(),
+        Multihash::from_bytes(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
     );
-}
-
-#[test]
-fn multihash_ref_errors() {
-    assert!(
-        MultihashRef::from_slice(&[]).is_err(),
-        "Should error on empty data"
-    );
-    assert!(
-        MultihashRef::from_slice(&[1, 2, 3]).is_err(),
-        "Should error on invalid multihash"
-    );
-    assert!(
-        MultihashRef::from_slice(&[0x12, 0xff, 0x03]).is_err(),
-        "Should error on invalid prefix"
-    );
-    assert!(
-        MultihashRef::from_slice(&[0x12, 0x20, 0xff]).is_err(),
-        "Should error on correct prefix with wrong digest"
-    );
-    let identity_code = <u64>::from(Identity::CODE) as u8;
-    let identity_length = 3;
-    assert!(
-        MultihashRef::from_slice(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
-        "Should error on wrong hash length"
-    );
-}
-
-#[test]
-fn wrap() {
-    let mh = Sha2_256::digest(b"hello world");
-    let digest = mh.digest();
-    let wrapped: Multihash = multihash::wrap(Code::Sha2_256, &digest);
-    assert_eq!(wrapped.algorithm(), Code::Sha2_256);
-}
-
-#[test]
-fn wrap_generic() {
-    let mh = Sha2_256::digest(b"hello world");
-    let digest = mh.digest();
-    let wrapped: MultihashGeneric<u64> = multihash::wrap(124, &digest);
-    assert_eq!(wrapped.algorithm(), 124);
 }
