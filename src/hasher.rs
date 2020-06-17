@@ -20,7 +20,7 @@ impl<Size: ArrayLength<u8>> AsRef<[u8]> for Digest<Size> {
 /// Trait implemented by a hash function implementation.
 pub trait Hasher: Default {
     /// Digest size.
-    type Size: ArrayLength<u8>;
+    type Size: ArrayLength<u8> + core::fmt::Debug + Eq;
 
     /// Consume input and update internal state.
     fn write(&mut self, input: &[u8]);

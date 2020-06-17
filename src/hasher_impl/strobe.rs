@@ -5,13 +5,13 @@ use generic_array::{ArrayLength, GenericArray};
 use strobe_rs::{SecParam, Strobe};
 
 /// Strobe hasher.
-pub struct StrobeHasher<Size: ArrayLength<u8>> {
+pub struct StrobeHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq> {
     _marker: PhantomData<Size>,
     strobe: Strobe,
     initialized: bool,
 }
 
-impl<Size: ArrayLength<u8>> Default for StrobeHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq> Default for StrobeHasher<Size> {
     fn default() -> Self {
         Self {
             _marker: PhantomData,
@@ -21,7 +21,7 @@ impl<Size: ArrayLength<u8>> Default for StrobeHasher<Size> {
     }
 }
 
-impl<Size: ArrayLength<u8>> Hasher for StrobeHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq> Hasher for StrobeHasher<Size> {
     type Size = Size;
 
     fn write(&mut self, input: &[u8]) {

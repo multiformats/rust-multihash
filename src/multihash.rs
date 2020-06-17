@@ -8,7 +8,7 @@ use generic_array::ArrayLength;
 pub struct MultihashArray<Code, Size>
 where
     Code: MultihashCode,
-    Size: ArrayLength<u8>,
+    Size: ArrayLength<u8> + core::fmt::Debug + Eq,
 {
     code: Code,
     digest: Digest<Size>,
@@ -17,7 +17,7 @@ where
 impl<Code, Size> MultihashArray<Code, Size>
 where
     Code: MultihashCode,
-    Size: ArrayLength<u8>,
+    Size: ArrayLength<u8> + core::fmt::Debug + Eq,
 {
     /// Create a multihash from a code and a digest.
     pub fn new(code: Code, digest: Digest<Size>) -> Self {
@@ -26,7 +26,7 @@ where
 }
 
 /// Trait for a multihash digest.
-pub trait MultihashDigest<Code: MultihashCode>: Clone {
+pub trait MultihashDigest<Code: MultihashCode>: Clone + core::fmt::Debug + Eq {
     /// Returns the code of the multihash.
     fn code(&self) -> Code;
 
@@ -68,7 +68,7 @@ pub trait MultihashDigest<Code: MultihashCode>: Clone {
 impl<Code, Size> MultihashDigest<Code> for MultihashArray<Code, Size>
 where
     Code: MultihashCode,
-    Size: ArrayLength<u8>,
+    Size: ArrayLength<u8> + core::fmt::Debug + Eq,
 {
     fn code(&self) -> Code {
         self.code
@@ -98,7 +98,7 @@ where
 }
 
 /// Trait to compute the digest of a multihash code.
-pub trait MultihashCode: Into<u64> + TryFrom<u64, Error = Error> + Copy {
+pub trait MultihashCode: Into<u64> + TryFrom<u64, Error = Error> + Copy + core::fmt::Debug + Eq {
     /// Multihash type.
     type Multihash: MultihashDigest<Self>;
 
@@ -124,7 +124,7 @@ pub trait MultihasherCode<Code: MultihashCode>: Hasher {
 pub trait Multihasher<Code>: MultihasherCode<Code>
 where
     Code: MultihashCode,
-    <Self as Hasher>::Size: ArrayLength<u8>,
+    <Self as Hasher>::Size: ArrayLength<u8> + core::fmt::Debug + Eq,
 {
     /// Returns the multihash of the input.
     fn multi_digest(input: &[u8]) -> MultihashArray<Code, <Self as Hasher>::Size>;
@@ -136,7 +136,7 @@ where
 impl<Code, H: MultihasherCode<Code>> Multihasher<Code> for H
 where
     Code: MultihashCode,
-    H::Size: ArrayLength<u8>,
+    H::Size: ArrayLength<u8> + core::fmt::Debug + Eq,
 {
     fn multi_digest(input: &[u8]) -> MultihashArray<Code, <Self as Hasher>::Size> {
         let digest = <H as Hasher>::digest(input);
@@ -190,7 +190,7 @@ pub fn read_mh<R, C, S>(mut r: R, code: C) -> Result<MultihashArray<C, S>, Error
 where
     R: std::io::Read,
     C: MultihashCode,
-    S: ArrayLength<u8>,
+    S: ArrayLength<u8> + core::fmt::Debug + Eq,
 {
     use generic_array::GenericArray;
     use unsigned_varint::io::read_u64;

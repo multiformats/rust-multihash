@@ -4,12 +4,12 @@ use generic_array::{ArrayLength, GenericArray};
 
 /// Identity hasher.
 #[derive(Default)]
-pub struct IdentityHasher<Size: ArrayLength<u8>> {
+pub struct IdentityHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq> {
     bytes: GenericArray<u8, Size>,
     i: usize,
 }
 
-impl<Size: ArrayLength<u8>> Hasher for IdentityHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq> Hasher for IdentityHasher<Size> {
     type Size = Size;
 
     fn write(&mut self, input: &[u8]) {
