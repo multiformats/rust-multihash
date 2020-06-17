@@ -26,7 +26,7 @@ where
 }
 
 /// Trait for a multihash digest.
-pub trait MultihashDigest<Code: MultihashCode> {
+pub trait MultihashDigest<Code: MultihashCode>: Clone {
     /// Returns the code of the multihash.
     fn code(&self) -> Code;
 
