@@ -5,12 +5,12 @@ use generic_array::typenum::{U32, U64};
 use generic_array::{ArrayLength, GenericArray};
 
 /// Blake2b hasher.
-pub struct Blake2bHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq> {
+pub struct Blake2bHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> {
     _marker: PhantomData<Size>,
     state: State,
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq> Default for Blake2bHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Default for Blake2bHasher<Size> {
     fn default() -> Self {
         let mut params = Params::new();
         params.hash_length(Size::to_usize());
@@ -21,7 +21,7 @@ impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq> Default for Blake2bHasher<Si
     }
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq> Hasher for Blake2bHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher for Blake2bHasher<Size> {
     type Size = Size;
 
     fn write(&mut self, input: &[u8]) {

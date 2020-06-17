@@ -2,16 +2,16 @@ use generic_array::{ArrayLength, GenericArray};
 
 /// Stack allocated digest.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Digest<Size: ArrayLength<u8>>(GenericArray<u8, Size>);
+pub struct Digest<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static>(GenericArray<u8, Size>);
 
-impl<Size: ArrayLength<u8>> Digest<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Digest<Size> {
     /// Creates a new digest from an array.
     pub fn new(digest: GenericArray<u8, Size>) -> Self {
         Self(digest)
     }
 }
 
-impl<Size: ArrayLength<u8>> AsRef<[u8]> for Digest<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> AsRef<[u8]> for Digest<Size> {
     fn as_ref(&self) -> &[u8] {
         &self.0
     }
@@ -20,7 +20,7 @@ impl<Size: ArrayLength<u8>> AsRef<[u8]> for Digest<Size> {
 /// Trait implemented by a hash function implementation.
 pub trait Hasher: Default {
     /// Digest size.
-    type Size: ArrayLength<u8> + core::fmt::Debug + Eq;
+    type Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static;
 
     /// Consume input and update internal state.
     fn write(&mut self, input: &[u8]);
