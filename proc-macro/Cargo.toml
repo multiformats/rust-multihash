@@ -3,6 +3,9 @@ name = "tiny-multihash-proc-macro"
 version = "0.1.0"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
+description = "Proc macro for deriving custom multihash tables."
+license = "MIT"
+repository = "https://github.com/ipfs-rust/tiny-multihash"
 
 [lib]
 proc-macro = true
