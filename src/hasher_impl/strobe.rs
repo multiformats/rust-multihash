@@ -11,7 +11,9 @@ pub struct StrobeHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + S
     initialized: bool,
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Default for StrobeHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Default
+    for StrobeHasher<Size>
+{
     fn default() -> Self {
         Self {
             _marker: PhantomData,
@@ -21,18 +23,26 @@ impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Defa
     }
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher for StrobeHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher
+    for StrobeHasher<Size>
+{
     type Size = Size;
 
-    fn write(&mut self, input: &[u8]) {
+    fn update(&mut self, input: &[u8]) {
         self.strobe.ad(input, self.initialized);
         self.initialized = true;
     }
 
-    fn sum(mut self) -> Digest<Self::Size> {
+    fn finalize(&self) -> Digest<Self::Size> {
         let mut hash = GenericArray::default();
-        self.strobe.prf(&mut hash, false);
+        self.strobe.clone().prf(&mut hash, false);
         Digest::new(hash)
+    }
+
+    fn reset(&mut self) {
+        let Self { strobe, .. } = Self::default();
+        self.strobe = strobe;
+        self.initialized = false;
     }
 }
 
@@ -50,8 +60,8 @@ mod tests {
     fn test_strobe_256() {
         let hash = Strobe256::digest(b"hello world");
         let mut hasher = Strobe256::default();
-        hasher.write(b"hello world");
-        let hash2 = hasher.sum();
+        hasher.update(b"hello world");
+        let hash2 = hasher.finalize();
         assert_eq!(hash, hash2);
     }
 
@@ -59,8 +69,8 @@ mod tests {
     fn test_strobe_512() {
         let hash = Strobe512::digest(b"hello world");
         let mut hasher = Strobe512::default();
-        hasher.write(b"hello world");
-        let hash2 = hasher.sum();
+        hasher.update(b"hello world");
+        let hash2 = hasher.finalize();
         assert_eq!(hash, hash2);
     }
 }

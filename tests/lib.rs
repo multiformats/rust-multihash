@@ -22,9 +22,9 @@ macro_rules! assert_encode {
             );
 
             let mut hasher = <$alg>::default();
-            hasher.write($data);
+            hasher.update($data);
             assert_eq!(
-                hasher.multi_sum().to_bytes(),
+                hasher.multi_finalize().to_bytes(),
                 hex,
                 "{:?} encodes correctly", stringify!($alg)
             );
@@ -106,8 +106,8 @@ macro_rules! assert_roundtrip {
             }
             {
                 let mut hasher = $alg::default();
-                hasher.write(b"helloworld");
-                let hash = hasher.multi_sum().to_bytes();
+                hasher.update(b"helloworld");
+                let hash = hasher.multi_finalize().to_bytes();
                 assert_eq!(
                     Multihash::from_bytes(&hash).unwrap().code(),
                     $alg::CODE

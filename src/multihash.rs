@@ -26,7 +26,9 @@ where
 }
 
 /// Trait for a multihash digest.
-pub trait MultihashDigest<Code: MultihashCode>: Clone + core::fmt::Debug + Eq + Send + Sync + 'static {
+pub trait MultihashDigest<Code: MultihashCode>:
+    Clone + core::fmt::Debug + Eq + Send + Sync + 'static
+{
     /// Returns the code of the multihash.
     fn code(&self) -> Code;
 
@@ -98,7 +100,9 @@ where
 }
 
 /// Trait to compute the digest of a multihash code.
-pub trait MultihashCode: Into<u64> + TryFrom<u64, Error = Error> + Copy + core::fmt::Debug + Eq + Send + Sync + 'static {
+pub trait MultihashCode:
+    Into<u64> + TryFrom<u64, Error = Error> + Copy + core::fmt::Debug + Eq + Send + Sync + 'static
+{
     /// Multihash type.
     type Multihash: MultihashDigest<Self>;
 
@@ -130,7 +134,7 @@ where
     fn multi_digest(input: &[u8]) -> MultihashArray<Code, <Self as Hasher>::Size>;
 
     /// Returns the multihash of the internal state.
-    fn multi_sum(self) -> MultihashArray<Code, <Self as Hasher>::Size>;
+    fn multi_finalize(&self) -> MultihashArray<Code, <Self as Hasher>::Size>;
 }
 
 impl<Code, H: MultihasherCode<Code>> Multihasher<Code> for H
@@ -144,8 +148,8 @@ where
         MultihashArray::new(code, digest)
     }
 
-    fn multi_sum(self) -> MultihashArray<Code, <Self as Hasher>::Size> {
-        let sum = Hasher::sum(self);
+    fn multi_finalize(&self) -> MultihashArray<Code, <Self as Hasher>::Size> {
+        let sum = Hasher::finalize(self);
         let code = <H as MultihasherCode<Code>>::CODE;
         MultihashArray::new(code, sum)
     }

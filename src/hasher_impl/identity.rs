@@ -9,18 +9,25 @@ pub struct IdentityHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send +
     i: usize,
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher for IdentityHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher
+    for IdentityHasher<Size>
+{
     type Size = Size;
 
-    fn write(&mut self, input: &[u8]) {
+    fn update(&mut self, input: &[u8]) {
         let start = self.i;
         let end = start + input.len();
         self.bytes[start..end].copy_from_slice(input);
         self.i = end;
     }
 
-    fn sum(self) -> Digest<Self::Size> {
-        Digest::new(self.bytes)
+    fn finalize(&self) -> Digest<Self::Size> {
+        Digest::new(self.bytes.clone())
+    }
+
+    fn reset(&mut self) {
+        self.bytes = Default::default();
+        self.i = 0;
     }
 }
 
@@ -35,8 +42,8 @@ mod tests {
     fn test_identity() {
         let hash = Identity256::digest(b"hello world");
         let mut hasher = Identity256::default();
-        hasher.write(b"hello world");
-        let hash2 = hasher.sum();
+        hasher.update(b"hello world");
+        let hash2 = hasher.finalize();
         assert_eq!(hash, hash2);
     }
 }

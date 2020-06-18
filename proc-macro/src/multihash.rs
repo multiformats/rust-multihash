@@ -182,7 +182,10 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
             abort!(ident, "Missing code attribute: #[mh(code = 0x42)]");
         });
         let module = module.unwrap_or_else(|| {
-            abort!(ident, "Missing module attribute: #[mh(module = multihash::Sha2_256)]");
+            abort!(
+                ident,
+                "Missing module attribute: #[mh(module = multihash::Sha2_256)]"
+            );
         });
         Self {
             ident,

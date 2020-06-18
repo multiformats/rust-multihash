@@ -10,7 +10,9 @@ pub struct Blake2sHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + 
     state: State,
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Default for Blake2sHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Default
+    for Blake2sHasher<Size>
+{
     fn default() -> Self {
         let mut params = Params::new();
         params.hash_length(Size::to_usize());
@@ -21,17 +23,24 @@ impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Defa
     }
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher for Blake2sHasher<Size> {
+impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher
+    for Blake2sHasher<Size>
+{
     type Size = Size;
 
-    fn write(&mut self, input: &[u8]) {
+    fn update(&mut self, input: &[u8]) {
         self.state.update(input);
     }
 
-    fn sum(self) -> Digest<Self::Size> {
+    fn finalize(&self) -> Digest<Self::Size> {
         Digest::new(GenericArray::clone_from_slice(
             self.state.finalize().as_bytes(),
         ))
+    }
+
+    fn reset(&mut self) {
+        let Self { state, .. } = Self::default();
+        self.state = state;
     }
 }
 
@@ -49,8 +58,8 @@ mod tests {
     fn test_blake2s128() {
         let hash = Blake2s128::digest(b"hello world");
         let mut hasher = Blake2s128::default();
-        hasher.write(b"hello world");
-        let hash2 = hasher.sum();
+        hasher.update(b"hello world");
+        let hash2 = hasher.finalize();
         assert_eq!(hash, hash2);
     }
 
@@ -58,8 +67,8 @@ mod tests {
     fn test_blake2s256() {
         let hash = Blake2s256::digest(b"hello world");
         let mut hasher = Blake2s256::default();
-        hasher.write(b"hello world");
-        let hash2 = hasher.sum();
+        hasher.update(b"hello world");
+        let hash2 = hasher.finalize();
         assert_eq!(hash, hash2);
     }
 }

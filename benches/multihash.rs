@@ -31,9 +31,9 @@ macro_rules! group_stream {
                         let mut hasher = <$hash>::default();
                         for i in 0..3 {
                             let start = i * 256;
-                            hasher.write(&$input[start..(start + 256)]);
+                            hasher.update(&$input[start..(start + 256)]);
                         }
-                        hasher.sum()
+                        hasher.finalize()
                     });
                 })
             });

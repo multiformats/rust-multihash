@@ -10,14 +10,19 @@ macro_rules! digest {
         impl $crate::hasher::Hasher for $name {
             type Size = $size;
 
-            fn write(&mut self, input: &[u8]) {
+            fn update(&mut self, input: &[u8]) {
                 use digest::Digest;
                 self.state.update(input)
             }
 
-            fn sum(self) -> $crate::hasher::Digest<Self::Size> {
+            fn finalize(&self) -> $crate::hasher::Digest<Self::Size> {
                 use digest::Digest;
-                $crate::hasher::Digest::new(self.state.finalize())
+                $crate::hasher::Digest::new(self.state.clone().finalize())
+            }
+
+            fn reset(&mut self) {
+                use digest::Digest;
+                self.state.reset();
             }
         }
     };
@@ -38,8 +43,8 @@ pub mod sha1 {
         fn test_sha1() {
             let hash = Sha1::digest(b"hello world");
             let mut hasher = Sha1::default();
-            hasher.write(b"hello world");
-            let hash2 = hasher.sum();
+            hasher.update(b"hello world");
+            let hash2 = hasher.finalize();
             assert_eq!(hash, hash2);
         }
     }
@@ -61,8 +66,8 @@ pub mod sha2 {
         fn test_sha2_256() {
             let hash = Sha2_256::digest(b"hello world");
             let mut hasher = Sha2_256::default();
-            hasher.write(b"hello world");
-            let hash2 = hasher.sum();
+            hasher.update(b"hello world");
+            let hash2 = hasher.finalize();
             assert_eq!(hash, hash2);
         }
     }
@@ -91,8 +96,8 @@ pub mod sha3 {
         fn test_sha3_256() {
             let hash = Sha3_256::digest(b"hello world");
             let mut hasher = Sha3_256::default();
-            hasher.write(b"hello world");
-            let hash2 = hasher.sum();
+            hasher.update(b"hello world");
+            let hash2 = hasher.finalize();
             assert_eq!(hash, hash2);
         }
     }
