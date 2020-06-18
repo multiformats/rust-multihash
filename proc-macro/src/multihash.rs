@@ -158,6 +158,11 @@ impl Hash {
             }
         }
     }
+
+    fn from_multihash_array(&self, params: &Params) -> TokenStream {
+        let ident = &self.ident;
+        self.match_arm_code(params, quote!(Self::#ident(mh)))
+    }
 }
 
 impl<'a> From<&'a VariantInfo<'a>> for Hash {
@@ -215,6 +220,7 @@ pub fn multihash(s: Structure) -> TokenStream {
     let digest_digest = hashes.iter().map(|h| h.digest_digest(&params));
     let digest_read = hashes.iter().map(|h| h.digest_read(&params));
     let digest_write = hashes.iter().map(|h| h.digest_write(&params));
+    let from_multihash_array = hashes.iter().map(|h| h.from_multihash_array(&params));
     let code_size = hashes.iter().map(|h| h.code_size(&params));
     let code_digest = hashes.iter().map(|h| h.code_digest(&params));
     let multihasher_code = hashes.iter().map(|h| h.multihasher_code(&params));
@@ -279,6 +285,18 @@ pub fn multihash(s: Structure) -> TokenStream {
             fn write<W: std::io::Write>(&self, w: W) -> Result<(), #mh::Error> {
                 match self {
                     #(#digest_write,)*
+                }
+            }
+        }
+
+        impl<Size> From<#mh::MultihashArray<#code, Size>> for #digest
+        where
+            Size: #mh::generic_array::ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
+        {
+            fn from(mh: #mh::MultihashArray<#code, Size>) -> Self {
+                use #mh::MultihashDigest;
+                match mh.code() {
+                    #(#from_multihash_array,)*
                 }
             }
         }
@@ -398,6 +416,19 @@ mod tests {
                         Multihash::Identity256(mh) => mh.write(w),
                         #[cfg(feature = "strobe")]
                         Multihash::Strobe256(mh) => mh.write(w),
+                    }
+                }
+            }
+
+            impl<Size> From<multihash::MultihashArray<Code, Size>> for Multihash
+            where
+                Size: multihash::generic_array::ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
+            {
+                fn from(mh: multihash::MultihashArray<Code, Size>) -> Self {
+                    match mh.code() {
+                        Code::Identity256 => Self::Identity256(mh),
+                        #[cfg(feature = "strobe")]
+                        Code::Strobe256 => Self::Strobe256(mh),
                     }
                 }
             }

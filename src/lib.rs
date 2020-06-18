@@ -22,6 +22,8 @@ pub use crate::multihash::{read_code, read_mh, write_mh};
 pub use crate::multihash::{
     MultihashArray, MultihashCode, MultihashDigest, Multihasher, MultihasherCode,
 };
+#[cfg(feature = "derive")]
+pub use generic_array;
 pub use generic_array::typenum;
 #[cfg(feature = "derive")]
 pub use generic_array::typenum::marker_traits::Unsigned;
