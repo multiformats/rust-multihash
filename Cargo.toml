@@ -3,7 +3,7 @@ members = ["proc-macro", "."]
 
 [package]
 name = "tiny-multihash"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Implementation of the multihash format"
@@ -12,6 +12,9 @@ documentation = "https://docs.rs/tiny-multihash"
 readme = "README.md"
 keywords = ["multihash", "ipfs"]
 license = "MIT"
+
+[lib]
+name = "multihash"
 
 [features]
 default = ["std", "all", "derive"]
