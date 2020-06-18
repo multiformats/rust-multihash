@@ -179,10 +179,10 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
         }
         let ident = bi.ast().ident.clone();
         let code = code.unwrap_or_else(|| {
-            abort!(ident, "Missing code attribute");
+            abort!(ident, "Missing code attribute: #[mh(code = 0x42)]");
         });
         let module = module.unwrap_or_else(|| {
-            abort!(ident, "Missing module attribute");
+            abort!(ident, "Missing module attribute: #[mh(module = multihash::Sha2_256)]");
         });
         Self {
             ident,
