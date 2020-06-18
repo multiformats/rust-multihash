@@ -100,39 +100,32 @@ impl Hash {
         let ident = &self.ident;
         let module = &self.module;
         let mh = &params.mh;
-        let code = &params.code;
         quote! {
             /// Multihash array for hash function.
             #cfg
-            #ident(#mh::MultihashArray<#code, <#module as #mh::Hasher>::Size>)
+            #ident(<#module as #mh::Hasher>::Digest)
         }
     }
 
     fn digest_code(&self, params: &Params) -> TokenStream {
-        self.match_arm_digest(params, quote!(mh.code()))
-    }
-
-    fn digest_size(&self, params: &Params) -> TokenStream {
-        self.match_arm_digest(params, quote!(mh.size()))
+        let code = &params.code;
+        let ident = &self.ident;
+        self.match_arm_digest(params, quote!(#code::#ident))
     }
 
     fn digest_digest(&self, params: &Params) -> TokenStream {
-        self.match_arm_digest(params, quote!(mh.digest()))
+        self.match_arm_digest(params, quote!(mh.as_ref()))
     }
 
     fn digest_read(&self, params: &Params) -> TokenStream {
         let ident = &self.ident;
         let mh = &params.mh;
-        self.match_arm_code(params, quote!(Ok(Self::#ident(#mh::read_mh(r, code)?))))
-    }
-
-    fn digest_write(&self, params: &Params) -> TokenStream {
-        self.match_arm_digest(params, quote!(mh.write(w)))
+        self.match_arm_code(params, quote!(Ok(Self::#ident(#mh::read_digest(r)?))))
     }
 
     fn code_size(&self, params: &Params) -> TokenStream {
         let module = &self.module;
-        self.match_arm_code(params, quote!(<#module as Hasher>::Size::to_u8()))
+        self.match_arm_code(params, quote!(#module::size()))
     }
 
     fn code_digest(&self, params: &Params) -> TokenStream {
@@ -141,27 +134,24 @@ impl Hash {
         let module = &self.module;
         self.match_arm_code(
             params,
-            quote!(#digest::#ident(#module::multi_digest(input))),
+            quote!(#digest::#ident(#module::digest(input))),
         )
     }
 
-    fn multihasher_code(&self, params: &Params) -> TokenStream {
+    fn from_digest(&self, params: &Params) -> TokenStream {
         let cfg = self.cfg();
         let ident = &self.ident;
         let module = &self.module;
         let mh = &params.mh;
-        let code = &params.code;
+        let digest = &params.digest;
         quote! {
             #cfg
-            impl #mh::MultihasherCode<#code> for #module {
-                const CODE: #code = #code::#ident;
+            impl From<<#module as #mh::Hasher>::Digest> for #digest {
+                fn from(digest: <#module as #mh::Hasher>::Digest) -> Self {
+                    Self::#ident(digest)
+                }
             }
         }
-    }
-
-    fn from_multihash_array(&self, params: &Params) -> TokenStream {
-        let ident = &self.ident;
-        self.match_arm_code(params, quote!(Self::#ident(mh)))
     }
 }
 
@@ -216,14 +206,11 @@ pub fn multihash(s: Structure) -> TokenStream {
     let try_from_u64 = hashes.iter().map(|h| h.try_from_u64(&params));
     let multihash = hashes.iter().map(|h| h.multihash(&params));
     let digest_code = hashes.iter().map(|h| h.digest_code(&params));
-    let digest_size = hashes.iter().map(|h| h.digest_size(&params));
     let digest_digest = hashes.iter().map(|h| h.digest_digest(&params));
     let digest_read = hashes.iter().map(|h| h.digest_read(&params));
-    let digest_write = hashes.iter().map(|h| h.digest_write(&params));
-    let from_multihash_array = hashes.iter().map(|h| h.from_multihash_array(&params));
+    let from_digest = hashes.iter().map(|h| h.from_digest(&params));
     let code_size = hashes.iter().map(|h| h.code_size(&params));
     let code_digest = hashes.iter().map(|h| h.code_digest(&params));
-    let multihasher_code = hashes.iter().map(|h| h.multihasher_code(&params));
 
     quote! {
         impl From<#code> for u64 {
@@ -258,12 +245,6 @@ pub fn multihash(s: Structure) -> TokenStream {
                 }
             }
 
-            fn size(&self) -> u8 {
-                match self {
-                    #(#digest_size,)*
-                }
-            }
-
             fn digest(&self) -> &[u8] {
                 match self {
                     #(#digest_digest,)*
@@ -280,46 +261,27 @@ pub fn multihash(s: Structure) -> TokenStream {
                     #(#digest_read,)*
                 }
             }
-
-            #[cfg(feature = "std")]
-            fn write<W: std::io::Write>(&self, w: W) -> Result<(), #mh::Error> {
-                match self {
-                    #(#digest_write,)*
-                }
-            }
         }
 
-        impl<Size> From<#mh::MultihashArray<#code, Size>> for #digest
-        where
-            Size: #mh::generic_array::ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
-        {
-            fn from(mh: #mh::MultihashArray<#code, Size>) -> Self {
-                use #mh::MultihashDigest;
-                match mh.code() {
-                    #(#from_multihash_array,)*
-                }
-            }
-        }
+        #(#from_digest)*
 
         impl #mh::MultihashCode for #code {
             type Multihash = Multihash;
 
             fn size(&self) -> u8 {
-                use #mh::{Hasher, Unsigned};
+                use #mh::Hasher;
                 match self {
                     #(#code_size,)*
                 }
             }
 
             fn digest(&self, input: &[u8]) -> Self::Multihash {
-                use #mh::Multihasher;
+                use #mh::Hasher;
                 match self {
                     #(#code_digest,)*
                 }
             }
         }
-
-        #(#multihasher_code)*
     }
 }
 
@@ -366,34 +328,26 @@ mod tests {
             #[derive(Clone, Debug, Eq, PartialEq)]
             pub enum Multihash {
                 /// Multihash array for hash function.
-                Identity256(multihash::MultihashArray<Code, <multihash::Identity256 as multihash::Hasher>::Size>),
+                Identity256(<multihash::Identity256 as multihash::Hasher>::Digest),
                 /// Multihash array for hash function.
                 #[cfg(feature = "strobe")]
-                Strobe256(multihash::MultihashArray<Code, <multihash::Strobe256 as multihash::Hasher>::Size>),
+                Strobe256(<multihash::Strobe256 as multihash::Hasher>::Digest),
             }
 
             impl multihash::MultihashDigest<Code> for Multihash {
                 fn code(&self) -> Code {
                     match self {
-                        Multihash::Identity256(mh) => mh.code(),
+                        Multihash::Identity256(mh) => Code::Identity256,
                         #[cfg(feature = "strobe")]
-                        Multihash::Strobe256(mh) => mh.code(),
-                    }
-                }
-
-                fn size(&self) -> u8 {
-                    match self {
-                        Multihash::Identity256(mh) => mh.size(),
-                        #[cfg(feature = "strobe")]
-                        Multihash::Strobe256(mh) => mh.size(),
+                        Multihash::Strobe256(mh) => Code::Strobe256,
                     }
                 }
 
                 fn digest(&self) -> &[u8] {
                     match self {
-                        Multihash::Identity256(mh) => mh.digest(),
+                        Multihash::Identity256(mh) => mh.as_ref(),
                         #[cfg(feature = "strobe")]
-                        Multihash::Strobe256(mh) => mh.digest(),
+                        Multihash::Strobe256(mh) => mh.as_ref(),
                     }
                 }
 
@@ -404,32 +358,23 @@ mod tests {
                 {
                     let code = multihash::read_code(&mut r)?;
                     match code {
-                        Code::Identity256 => Ok(Self::Identity256(multihash::read_mh(r, code)?)),
+                        Code::Identity256 => Ok(Self::Identity256(multihash::read_digest(r)?)),
                         #[cfg(feature = "strobe")]
-                        Code::Strobe256 => Ok(Self::Strobe256(multihash::read_mh(r, code)?)),
-                    }
-                }
-
-                #[cfg(feature = "std")]
-                fn write<W: std::io::Write>(&self, w: W) -> Result<(), multihash::Error> {
-                    match self {
-                        Multihash::Identity256(mh) => mh.write(w),
-                        #[cfg(feature = "strobe")]
-                        Multihash::Strobe256(mh) => mh.write(w),
+                        Code::Strobe256 => Ok(Self::Strobe256(multihash::read_digest(r)?)),
                     }
                 }
             }
 
-            impl<Size> From<multihash::MultihashArray<Code, Size>> for Multihash
-            where
-                Size: multihash::generic_array::ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
-            {
-                fn from(mh: multihash::MultihashArray<Code, Size>) -> Self {
-                    match mh.code() {
-                        Code::Identity256 => Self::Identity256(mh),
-                        #[cfg(feature = "strobe")]
-                        Code::Strobe256 => Self::Strobe256(mh),
-                    }
+            impl From<<multihash::Identity256 as multihash::Hasher>::Digest> for Multihash {
+                fn from(digest: <multihash::Identity256 as multihash::Hasher>::Digest) -> Self {
+                    Self::Identity256(digest)
+                }
+            }
+
+            #[cfg(feature = "strobe")]
+            impl From<<multihash::Strobe256 as multihash::Hasher>::Digest> for Multihash {
+                fn from(digest: <multihash::Strobe256 as multihash::Hasher>::Digest) -> Self {
+                    Self::Strobe256(digest)
                 }
             }
 
@@ -437,31 +382,22 @@ mod tests {
                 type Multihash = Multihash;
 
                 fn size(&self) -> u8 {
-                    use multihash::{Hasher, Unsigned};
+                    use multihash::Hasher;
                     match self {
-                        Code::Identity256 => <multihash::Identity256 as Hasher>::Size::to_u8(),
+                        Code::Identity256 => multihash::Identity256::size(),
                         #[cfg(feature = "strobe")]
-                        Code::Strobe256 => <multihash::Strobe256 as Hasher>::Size::to_u8(),
+                        Code::Strobe256 => multihash::Strobe256::size(),
                     }
                 }
 
                 fn digest(&self, input: &[u8]) -> Self::Multihash {
-                    use multihash::Multihasher;
+                    use multihash::Hasher;
                     match self {
-                        Code::Identity256 => Multihash::Identity256(multihash::Identity256::multi_digest(input)),
+                        Code::Identity256 => Multihash::Identity256(multihash::Identity256::digest(input)),
                         #[cfg(feature = "strobe")]
-                        Code::Strobe256 => Multihash::Strobe256(multihash::Strobe256::multi_digest(input)),
+                        Code::Strobe256 => Multihash::Strobe256(multihash::Strobe256::digest(input)),
                     }
                 }
-            }
-
-            impl multihash::MultihasherCode<Code> for multihash::Identity256 {
-                const CODE: Code = Code::Identity256;
-            }
-
-            #[cfg(feature = "strobe")]
-            impl multihash::MultihasherCode<Code> for multihash::Strobe256 {
-                const CODE: Code = Code::Strobe256;
             }
         };
         let derive_input = syn::parse2(input).unwrap();

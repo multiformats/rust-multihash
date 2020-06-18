@@ -16,7 +16,7 @@ macro_rules! assert_encode {
         $(
             let hex = hex_to_bytes($expect);
             assert_eq!(
-                <$alg>::multi_digest($data).to_bytes(),
+                Multihash::from(<$alg>::digest($data)).to_bytes(),
                 hex,
                 "{:?} encodes correctly", stringify!($alg)
             );
@@ -24,7 +24,7 @@ macro_rules! assert_encode {
             let mut hasher = <$alg>::default();
             hasher.update($data);
             assert_eq!(
-                hasher.multi_finalize().to_bytes(),
+                Multihash::from(hasher.finalize()).to_bytes(),
                 hex,
                 "{:?} encodes correctly", stringify!($alg)
             );
@@ -59,12 +59,12 @@ fn multihash_encode() {
 }
 
 macro_rules! assert_decode {
-    {$( $alg:ty, $hash:expr; )*} => {
+    {$( $alg:ident, $hash:expr; )*} => {
         $(
             let hash = hex_to_bytes($hash);
             assert_eq!(
                 Multihash::from_bytes(&hash).unwrap().code(),
-                <$alg>::CODE,
+                Code::$alg,
                 "{:?} decodes correctly", stringify!($alg)
             );
         )*
@@ -98,19 +98,19 @@ macro_rules! assert_roundtrip {
     ($( $alg:ident ),*) => {
         $(
             {
-                let hash = $alg::multi_digest(b"helloworld").to_bytes();
+                let hash = Multihash::from($alg::digest(b"helloworld"));
                 assert_eq!(
-                    Multihash::from_bytes(&hash).unwrap().code(),
-                    $alg::CODE
+                    Multihash::from_bytes(&hash.to_bytes()).unwrap().code(),
+                    hash.code()
                 );
             }
             {
                 let mut hasher = $alg::default();
                 hasher.update(b"helloworld");
-                let hash = hasher.multi_finalize().to_bytes();
+                let hash = Multihash::from(hasher.finalize());
                 assert_eq!(
-                    Multihash::from_bytes(&hash).unwrap().code(),
-                    $alg::CODE
+                    Multihash::from_bytes(&hash.to_bytes()).unwrap().code(),
+                    hash.code()
                 );
             }
         )*
@@ -137,14 +137,14 @@ fn assert_roundtrip() {
         Blake2s256
     );
 }
-
+/*
 /// Testing the public interface of `Multihash` and `MultihashRef`
-fn test_methods(hasher: impl Multihasher<Code>, prefix: &str, digest: &str) {
+fn test_methods(hasher: impl MultihasherCode<Code>, prefix: &str, digest: &str) {
     let expected_bytes = hex_to_bytes(&format!("{}{}", prefix, digest));
-    let multihash = hasher.code().digest(b"hello world");
+    hasher.update(b"hello world");
+    let multihash = Multihash::from(hasher.finalize());
     assert_eq!(Multihash::from_bytes(&expected_bytes).unwrap(), multihash);
     assert_eq!(multihash.to_bytes(), &expected_bytes[..]);
-    assert_eq!(multihash.code(), hasher.code());
     assert_eq!(multihash.digest(), &hex_to_bytes(digest)[..]);
 }
 
@@ -220,14 +220,14 @@ fn multihash_methods() {
         "d0e40210",
         "37deae0226c30da2ab424a7b8ee14e83",
     );
-}
+}*/
 
 #[test]
 #[should_panic]
 fn test_long_identity_hash() {
     // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
     let input = b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz";
-    Identity256::multi_digest(input);
+    Identity256::digest(input);
 }
 
 #[test]
@@ -248,7 +248,7 @@ fn multihash_errors() {
         Multihash::from_bytes(&[0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
-    let identity_code = <u64>::from(Identity256::CODE) as u8;
+    let identity_code = <u64>::from(Code::Identity256) as u8;
     let identity_length = 3;
     assert!(
         Multihash::from_bytes(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),

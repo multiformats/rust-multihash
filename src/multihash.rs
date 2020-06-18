@@ -1,38 +1,18 @@
 use crate::error::Error;
-use crate::hasher::{Digest, Hasher};
+use crate::hasher::{Digest, Hasher, Size};
 use core::convert::TryFrom;
 use core::fmt::Debug;
-use generic_array::ArrayLength;
-
-/// Stack allocated multihash storage backend for codes up to 127.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct MultihashArray<Code, Size>
-where
-    Code: MultihashCode,
-    Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
-{
-    code: Code,
-    digest: Digest<Size>,
-}
-
-impl<Code, Size> MultihashArray<Code, Size>
-where
-    Code: MultihashCode,
-    Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
-{
-    /// Create a multihash from a code and a digest.
-    pub fn new(code: Code, digest: Digest<Size>) -> Self {
-        Self { code, digest }
-    }
-}
+use generic_array::GenericArray;
 
 /// Trait for a multihash digest.
-pub trait MultihashDigest<Code: MultihashCode>: Clone + Debug + Eq + Send + Sync + 'static {
+pub trait MultihashDigest<C: MultihashCode>: Clone + Debug + Eq + Send + Sync + 'static {
     /// Returns the code of the multihash.
-    fn code(&self) -> Code;
+    fn code(&self) -> C;
 
     /// Returns the size of the digest.
-    fn size(&self) -> u8;
+    fn size(&self) -> u8 {
+        self.code().size()
+    }
 
     /// Returns the digest.
     fn digest(&self) -> &[u8];
@@ -54,7 +34,9 @@ pub trait MultihashDigest<Code: MultihashCode>: Clone + Debug + Eq + Send + Sync
 
     /// Writes a multihash to a byte stream.
     #[cfg(feature = "std")]
-    fn write<W: std::io::Write>(&self, w: W) -> Result<(), Error>;
+    fn write<W: std::io::Write>(&self, w: W) -> Result<(), Error> {
+        write_mh(w, self)
+    }
 
     /// Returns the bytes of a multihash.
     #[cfg(feature = "std")]
@@ -63,38 +45,6 @@ pub trait MultihashDigest<Code: MultihashCode>: Clone + Debug + Eq + Send + Sync
         self.write(&mut bytes)
             .expect("writing to a vec should never fail");
         bytes
-    }
-}
-
-impl<Code, Size> MultihashDigest<Code> for MultihashArray<Code, Size>
-where
-    Code: MultihashCode,
-    Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
-{
-    fn code(&self) -> Code {
-        self.code
-    }
-
-    fn size(&self) -> u8 {
-        Size::to_u8()
-    }
-
-    fn digest(&self) -> &[u8] {
-        self.digest.as_ref()
-    }
-
-    #[cfg(feature = "std")]
-    fn read<R: std::io::Read>(mut r: R) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
-        let code = read_code(&mut r)?;
-        read_mh(r, code)
-    }
-
-    #[cfg(feature = "std")]
-    fn write<W: std::io::Write>(&self, w: W) -> Result<(), Error> {
-        write_mh(w, self)
     }
 }
 
@@ -113,44 +63,13 @@ pub trait MultihashCode:
 }
 
 /// Trait to extend a `Hasher` with support for a code.
-pub trait MultihasherCode<Code: MultihashCode>: Hasher {
+pub trait MultihasherCode<C: MultihashCode>: Hasher {
     /// The code of the hash function.
-    const CODE: Code;
+    const CODE: C;
 
     /// Get the code at runtime.
-    fn code(&self) -> Code {
+    fn code(&self) -> C {
         Self::CODE
-    }
-}
-
-/// Trait that extends a `Hasher` with support for multihashes.
-pub trait Multihasher<Code>: MultihasherCode<Code>
-where
-    Code: MultihashCode,
-    <Self as Hasher>::Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
-{
-    /// Returns the multihash of the input.
-    fn multi_digest(input: &[u8]) -> MultihashArray<Code, <Self as Hasher>::Size>;
-
-    /// Returns the multihash of the internal state.
-    fn multi_finalize(&self) -> MultihashArray<Code, <Self as Hasher>::Size>;
-}
-
-impl<Code, H: MultihasherCode<Code>> Multihasher<Code> for H
-where
-    Code: MultihashCode,
-    H::Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
-{
-    fn multi_digest(input: &[u8]) -> MultihashArray<Code, <Self as Hasher>::Size> {
-        let digest = <H as Hasher>::digest(input);
-        let code = <H as MultihasherCode<Code>>::CODE;
-        MultihashArray::new(code, digest)
-    }
-
-    fn multi_finalize(&self) -> MultihashArray<Code, <Self as Hasher>::Size> {
-        let sum = Hasher::finalize(self);
-        let code = <H as MultihasherCode<Code>>::CODE;
-        MultihashArray::new(code, sum)
     }
 }
 
@@ -189,38 +108,36 @@ where
 
 /// Reads a multihash from a byte stream.
 #[cfg(feature = "std")]
-pub fn read_mh<R, C, S>(mut r: R, code: C) -> Result<MultihashArray<C, S>, Error>
+pub fn read_digest<R, S, D>(mut r: R) -> Result<D, Error>
 where
     R: std::io::Read,
-    C: MultihashCode,
-    S: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
+    S: Size,
+    D: Digest<S>,
 {
-    use generic_array::GenericArray;
     use unsigned_varint::io::read_u64;
 
     let size = read_u64(&mut r)?;
     if size != S::to_u64() {
         return Err(Error::InvalidSize(size));
     }
-    let mut buf = GenericArray::default();
-    r.read_exact(&mut buf)?;
-    let digest = Digest::new(buf);
-    Ok(MultihashArray::new(code, digest))
+    let mut digest = GenericArray::default();
+    r.read_exact(&mut digest)?;
+    Ok(D::from(digest))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::code::Code;
+    use crate::code::Multihash;
     use crate::hasher_impl::strobe::Strobe256;
 
     #[test]
     fn roundtrip() {
         let digest = Strobe256::digest(b"hello world");
-        let hash = MultihashArray::new(Code::Strobe256, digest);
+        let hash = Multihash::from(digest);
         let mut buf = [0u8; 35];
         hash.write(&mut buf[..]).unwrap();
-        let hash2 = MultihashArray::read(&buf[..]).unwrap();
+        let hash2 = Multihash::read(&buf[..]).unwrap();
         assert_eq!(hash, hash2);
     }
 }

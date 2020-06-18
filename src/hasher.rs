@@ -1,41 +1,51 @@
 use core::fmt::Debug;
 use generic_array::{ArrayLength, GenericArray};
+use generic_array::typenum::marker_traits::Unsigned;
 
-/// Stack allocated digest.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Digest<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static>(
-    GenericArray<u8, Size>,
-);
+/// Size marker trait.
+pub trait Size: ArrayLength<u8> + Debug + Default + Eq + Send + Sync + 'static {}
 
-impl<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static> Digest<Size> {
-    /// Creates a new digest from an array.
-    pub fn new(digest: GenericArray<u8, Size>) -> Self {
-        Self(digest)
-    }
-}
+impl<T: ArrayLength<u8> + Debug + Default + Eq + Send + Sync + 'static> Size for T {}
 
-impl<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static> AsRef<[u8]> for Digest<Size> {
-    fn as_ref(&self) -> &[u8] {
-        &self.0
-    }
+/// Stack allocated digest trait.
+pub trait Digest<S: Size>:
+    AsRef<[u8]>
+    + From<GenericArray<u8, S>>
+    + Into<GenericArray<u8, S>>
+    + Clone
+    + Debug
+    + Default
+    + Eq
+    + Send
+    + Sync
+    + 'static
+{
 }
 
 /// Trait implemented by a hash function implementation.
 pub trait Hasher: Default {
     /// Digest size.
-    type Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static;
+    type Size: Size;
+
+    /// Digest type.
+    type Digest: Digest<Self::Size>;
 
     /// Consume input and update internal state.
     fn update(&mut self, input: &[u8]);
 
     /// Returns the internal state digest.
-    fn finalize(&self) -> Digest<Self::Size>;
+    fn finalize(&self) -> Self::Digest;
 
     /// Reset the internal hasher state.
     fn reset(&mut self);
 
+    /// Returns the size of the digest.
+    fn size() -> u8 {
+        Self::Size::to_u8()
+    }
+
     /// Returns the digest of the input.
-    fn digest(input: &[u8]) -> Digest<Self::Size>
+    fn digest(input: &[u8]) -> Self::Digest
     where
         Self: Sized,
     {

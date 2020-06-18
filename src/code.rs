@@ -64,40 +64,27 @@ mod tests {
     use super::*;
     use crate::hasher::Hasher;
     use crate::hasher_impl::strobe::{Strobe256, Strobe512};
-    use crate::multihash::{MultihashArray, MultihashCode, MultihashDigest, Multihasher};
+    use crate::multihash::{MultihashCode, MultihashDigest};
 
     #[test]
     fn test_hasher_256() {
         let digest = Strobe256::digest(b"hello world");
-        let hash = MultihashArray::new(Code::Strobe256, digest.clone());
+        let hash = Multihash::from(digest.clone());
+        let hash2 = Code::Strobe256.digest(b"hello world");
         assert_eq!(hash.code(), Code::Strobe256);
         assert_eq!(hash.size(), 32);
         assert_eq!(hash.digest(), digest.as_ref());
+        assert_eq!(hash, hash2);
     }
 
     #[test]
     fn test_hasher_512() {
         let digest = Strobe512::digest(b"hello world");
-        let hash = MultihashArray::new(Code::Strobe512, digest.clone());
+        let hash = Multihash::from(digest.clone());
+        let hash2 = Code::Strobe512.digest(b"hello world");
         assert_eq!(hash.code(), Code::Strobe512);
         assert_eq!(hash.size(), 64);
         assert_eq!(hash.digest(), digest.as_ref());
-    }
-
-    #[test]
-    fn test_multihasher() {
-        let hash = Strobe256::multi_digest(b"hello world");
-        assert_eq!(hash.code(), Code::Strobe256);
-        assert_eq!(hash.size(), 32);
-        assert_eq!(hash.digest(), Strobe256::digest(b"hello world").as_ref());
-    }
-
-    #[test]
-    fn test_code_digest() {
-        let digest = Strobe256::multi_digest(b"hello world");
-        let digest2 = Code::Strobe256.digest(b"hello world");
-        assert_eq!(digest.code(), digest2.code());
-        assert_eq!(digest.size(), digest2.size());
-        assert_eq!(digest.digest(), digest2.digest());
+        assert_eq!(hash, hash2);
     }
 }
