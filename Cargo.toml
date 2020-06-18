@@ -2,13 +2,13 @@
 members = ["proc-macro", "."]
 
 [package]
-name = "multihash"
-version = "0.11.2"
-authors = ["dignifiedquire <dignifiedquire@gmail.com>", "David Craven <david@craven.ch>"]
+name = "tiny-multihash"
+version = "0.1.0"
+authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Implementation of the multihash format"
-repository = "https://github.com/multiformats/rust-multihash"
-documentation = "https://docs.rs/multihash"
+repository = "https://github.com/ipfs-rust/tiny-multihash"
+documentation = "https://docs.rs/tiny-multihash"
 readme = "README.md"
 keywords = ["multihash", "ipfs"]
 license = "MIT"
@@ -16,7 +16,7 @@ license = "MIT"
 [features]
 default = ["std", "all", "derive"]
 std = []
-derive = ["multihash-proc-macro"]
+derive = ["tiny-multihash-proc-macro"]
 test = ["quickcheck", "rand"]
 all = ["blake2b", "blake2s", "sha1", "sha2", "sha3", "strobe"]
 
@@ -29,7 +29,7 @@ strobe = ["strobe-rs"]
 
 [dependencies]
 generic-array = "0.14.2"
-multihash-proc-macro = { path = "proc-macro", optional = true }
+tiny-multihash-proc-macro = { path = "proc-macro", optional = true }
 quickcheck = { version = "0.9.2", optional = true }
 rand = { version = "0.7.3", optional = true }
 unsigned-varint = "0.4.0"
