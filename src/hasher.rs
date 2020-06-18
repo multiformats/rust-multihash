@@ -1,6 +1,6 @@
 use core::fmt::Debug;
-use generic_array::{ArrayLength, GenericArray};
 use generic_array::typenum::marker_traits::Unsigned;
+use generic_array::{ArrayLength, GenericArray};
 
 /// Size marker trait.
 pub trait Size: ArrayLength<u8> + Debug + Default + Eq + Send + Sync + 'static {}

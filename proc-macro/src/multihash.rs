@@ -132,10 +132,7 @@ impl Hash {
         let digest = &params.digest;
         let ident = &self.ident;
         let module = &self.module;
-        self.match_arm_code(
-            params,
-            quote!(#digest::#ident(#module::digest(input))),
-        )
+        self.match_arm_code(params, quote!(#digest::#ident(#module::digest(input))))
     }
 
     fn from_digest(&self, params: &Params) -> TokenStream {

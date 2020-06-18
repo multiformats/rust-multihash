@@ -1,8 +1,7 @@
 use crate::error::Error;
-use crate::hasher::{Digest, Hasher, Size};
+use crate::hasher::Hasher;
 use core::convert::TryFrom;
 use core::fmt::Debug;
-use generic_array::GenericArray;
 
 /// Trait for a multihash digest.
 pub trait MultihashDigest<C: MultihashCode>: Clone + Debug + Eq + Send + Sync + 'static {
@@ -111,9 +110,10 @@ where
 pub fn read_digest<R, S, D>(mut r: R) -> Result<D, Error>
 where
     R: std::io::Read,
-    S: Size,
-    D: Digest<S>,
+    S: crate::hasher::Size,
+    D: crate::hasher::Digest<S>,
 {
+    use generic_array::GenericArray;
     use unsigned_varint::io::read_u64;
 
     let size = read_u64(&mut r)?;

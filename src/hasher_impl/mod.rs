@@ -1,5 +1,4 @@
 use crate::hasher::{Digest, Hasher, Size};
-use core::marker::PhantomData;
 use generic_array::GenericArray;
 
 macro_rules! derive_digest {
@@ -76,6 +75,7 @@ macro_rules! derive_hasher_blake {
 #[cfg(feature = "blake2b")]
 pub mod blake2b {
     use super::*;
+    use core::marker::PhantomData;
     use generic_array::typenum::{U32, U64};
 
     derive_hasher_blake!(blake2b_simd, Blake2bHasher, Blake2bDigest);
@@ -90,6 +90,7 @@ pub mod blake2b {
 #[cfg(feature = "blake2s")]
 pub mod blake2s {
     use super::*;
+    use core::marker::PhantomData;
     use generic_array::typenum::{U16, U32};
 
     derive_hasher_blake!(blake2s_simd, Blake2sHasher, Blake2sDigest);
@@ -210,6 +211,7 @@ pub mod identity {
 #[cfg(feature = "strobe")]
 pub mod strobe {
     use super::*;
+    use core::marker::PhantomData;
     use generic_array::typenum::{U32, U64};
     use strobe_rs::{SecParam, Strobe};
 
