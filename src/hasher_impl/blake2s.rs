@@ -1,18 +1,17 @@
 use crate::hasher::{Digest, Hasher};
 use blake2s_simd::{Params, State};
+use core::fmt::Debug;
 use core::marker::PhantomData;
 use generic_array::typenum::{U16, U32};
 use generic_array::{ArrayLength, GenericArray};
 
 /// Blake2s hasher.
-pub struct Blake2sHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> {
+pub struct Blake2sHasher<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static> {
     _marker: PhantomData<Size>,
     state: State,
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Default
-    for Blake2sHasher<Size>
-{
+impl<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static> Default for Blake2sHasher<Size> {
     fn default() -> Self {
         let mut params = Params::new();
         params.hash_length(Size::to_usize());
@@ -23,9 +22,7 @@ impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Defa
     }
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher
-    for Blake2sHasher<Size>
-{
+impl<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static> Hasher for Blake2sHasher<Size> {
     type Size = Size;
 
     fn update(&mut self, input: &[u8]) {

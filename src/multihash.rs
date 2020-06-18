@@ -1,6 +1,7 @@
 use crate::error::Error;
 use crate::hasher::{Digest, Hasher};
 use core::convert::TryFrom;
+use core::fmt::Debug;
 use generic_array::ArrayLength;
 
 /// Stack allocated multihash storage backend for codes up to 127.
@@ -8,7 +9,7 @@ use generic_array::ArrayLength;
 pub struct MultihashArray<Code, Size>
 where
     Code: MultihashCode,
-    Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
+    Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
 {
     code: Code,
     digest: Digest<Size>,
@@ -17,7 +18,7 @@ where
 impl<Code, Size> MultihashArray<Code, Size>
 where
     Code: MultihashCode,
-    Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
+    Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
 {
     /// Create a multihash from a code and a digest.
     pub fn new(code: Code, digest: Digest<Size>) -> Self {
@@ -26,9 +27,7 @@ where
 }
 
 /// Trait for a multihash digest.
-pub trait MultihashDigest<Code: MultihashCode>:
-    Clone + core::fmt::Debug + Eq + Send + Sync + 'static
-{
+pub trait MultihashDigest<Code: MultihashCode>: Clone + Debug + Eq + Send + Sync + 'static {
     /// Returns the code of the multihash.
     fn code(&self) -> Code;
 
@@ -70,7 +69,7 @@ pub trait MultihashDigest<Code: MultihashCode>:
 impl<Code, Size> MultihashDigest<Code> for MultihashArray<Code, Size>
 where
     Code: MultihashCode,
-    Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
+    Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
 {
     fn code(&self) -> Code {
         self.code
@@ -101,7 +100,7 @@ where
 
 /// Trait to compute the digest of a multihash code.
 pub trait MultihashCode:
-    Into<u64> + TryFrom<u64, Error = Error> + Copy + core::fmt::Debug + Eq + Send + Sync + 'static
+    Into<u64> + TryFrom<u64, Error = Error> + Copy + Debug + Eq + Send + Sync + 'static
 {
     /// Multihash type.
     type Multihash: MultihashDigest<Self>;
@@ -128,7 +127,7 @@ pub trait MultihasherCode<Code: MultihashCode>: Hasher {
 pub trait Multihasher<Code>: MultihasherCode<Code>
 where
     Code: MultihashCode,
-    <Self as Hasher>::Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
+    <Self as Hasher>::Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
 {
     /// Returns the multihash of the input.
     fn multi_digest(input: &[u8]) -> MultihashArray<Code, <Self as Hasher>::Size>;
@@ -140,7 +139,7 @@ where
 impl<Code, H: MultihasherCode<Code>> Multihasher<Code> for H
 where
     Code: MultihashCode,
-    H::Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
+    H::Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
 {
     fn multi_digest(input: &[u8]) -> MultihashArray<Code, <Self as Hasher>::Size> {
         let digest = <H as Hasher>::digest(input);
@@ -194,7 +193,7 @@ pub fn read_mh<R, C, S>(mut r: R, code: C) -> Result<MultihashArray<C, S>, Error
 where
     R: std::io::Read,
     C: MultihashCode,
-    S: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static,
+    S: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static,
 {
     use generic_array::GenericArray;
     use unsigned_varint::io::read_u64;

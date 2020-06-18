@@ -1,19 +1,18 @@
 use crate::hasher::{Digest, Hasher};
+use core::fmt::Debug;
 use core::marker::PhantomData;
 use generic_array::typenum::{U32, U64};
 use generic_array::{ArrayLength, GenericArray};
 use strobe_rs::{SecParam, Strobe};
 
 /// Strobe hasher.
-pub struct StrobeHasher<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> {
+pub struct StrobeHasher<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static> {
     _marker: PhantomData<Size>,
     strobe: Strobe,
     initialized: bool,
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Default
-    for StrobeHasher<Size>
-{
+impl<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static> Default for StrobeHasher<Size> {
     fn default() -> Self {
         Self {
             _marker: PhantomData,
@@ -23,9 +22,7 @@ impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Defa
     }
 }
 
-impl<Size: ArrayLength<u8> + core::fmt::Debug + Eq + Send + Sync + 'static> Hasher
-    for StrobeHasher<Size>
-{
+impl<Size: ArrayLength<u8> + Debug + Eq + Send + Sync + 'static> Hasher for StrobeHasher<Size> {
     type Size = Size;
 
     fn update(&mut self, input: &[u8]) {
