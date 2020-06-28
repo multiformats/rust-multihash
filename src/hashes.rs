@@ -2,7 +2,6 @@ use std::convert::TryFrom;
 
 use blake2b_simd::{Params as Blake2bParams, State as Blake2b};
 use blake2s_simd::{Params as Blake2sParams, State as Blake2s};
-use digest::Digest;
 
 use crate::digests::{wrap, Multihash, MultihashDigest, Multihasher};
 use crate::errors::DecodeError;
@@ -81,7 +80,7 @@ macro_rules! derive_digest {
                 /// Hash some input and return the Multihash digest.
                 #[inline]
                 pub fn digest(data: &[u8]) -> Multihash {
-                    let digest = <$type>::digest(&data);
+                    let digest = <$type as digest::Digest>::digest(&data);
                     wrap(Self::CODE, &digest)
                 }
             }
@@ -103,19 +102,19 @@ macro_rules! derive_digest {
                 }
                 #[inline]
                 fn input(&mut self, data: &[u8]) {
-                    self.0.input(data)
+                    <$type as digest::Digest>::update(&mut self.0, data)
                 }
                 #[inline]
                 fn result(self) -> Multihash {
-                    wrap(Self::CODE, self.0.result().as_slice())
+                    wrap(Self::CODE, <$type as digest::Digest>::finalize(self.0).as_slice())
                 }
                 #[inline]
                 fn result_reset(&mut self) -> Multihash {
-                    wrap(Self::CODE, self.0.result_reset().as_slice())
+                    wrap(Self::CODE, <$type as digest::Digest>::finalize_reset(&mut self.0).as_slice())
                 }
                 #[inline]
                 fn reset(&mut self) {
-                    self.0.reset()
+                    <$type as digest::Digest>::reset(&mut self.0)
                 }
             }
             impl ::std::io::Write for $name {
@@ -212,7 +211,7 @@ macro_rules! derive_digest {
     )*) => {
         $(
             #[$doc]
-            #[derive(Clone, Debug)]
+            #[derive(Clone, Debug, Default)]
             pub struct $name($type);
             impl $name {
                 #[doc = $code_doc]
@@ -228,11 +227,6 @@ macro_rules! derive_digest {
                 #[inline]
                 fn digest(data: &[u8]) -> Multihash {
                     Self::digest(data)
-                }
-            }
-            impl Default for $name {
-                fn default() -> Self {
-                    $name(blake3::Hasher::new())
                 }
             }
             impl MultihashDigest<Code> for $name {
@@ -321,6 +315,17 @@ impl_code! {
 /// The Identity hasher.
 #[derive(Clone, Debug, Default)]
 pub struct Identity(Vec<u8>);
+impl Identity {
+    /// The code of the Identity hasher, 0x00.
+    pub const CODE: Code = Code::Identity;
+    /// Hash some input and return the raw binary digest.
+    pub fn digest(data: &[u8]) -> Multihash {
+        if (data.len() as u64) >= u64::from(std::u32::MAX) {
+            panic!("Input data for identity hash is too large, it needs to be less than 2^32.")
+        }
+        wrap(Self::CODE, data)
+    }
+}
 impl Multihasher<Code> for Identity {
     const CODE: Code = Code::Identity;
     #[inline]
@@ -359,15 +364,15 @@ impl MultihashDigest<Code> for Identity {
         self.0.clear()
     }
 }
-impl Identity {
-    /// The code of the Identity hasher, 0x00.
-    pub const CODE: Code = Code::Identity;
-    /// Hash some input and return the raw binary digest.
-    pub fn digest(data: &[u8]) -> Multihash {
-        if (data.len() as u64) >= u64::from(std::u32::MAX) {
-            panic!("Input data for identity hash is too large, it needs to be less than 2^32.")
-        }
-        wrap(Self::CODE, data)
+impl ::std::io::Write for Identity {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
+        <Identity as MultihashDigest<Code>>::input(self, buf);
+        Ok(buf.len())
+    }
+    #[inline]
+    fn flush(&mut self) -> ::std::io::Result<()> {
+        Ok(())
     }
 }
 

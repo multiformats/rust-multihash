@@ -435,7 +435,7 @@ pub trait MultihashDigest<T: TryFrom<u64>> {
     /// Panics if the digest length is bigger than 2^32. This only happens for identity hasing.
     fn digest(&self, data: &[u8]) -> MultihashGeneric<T>;
 
-    /// Digest input data.
+    /// Digest data, updating the internal state.
     ///
     /// This method can be called repeatedly for use with streaming messages.
     ///
