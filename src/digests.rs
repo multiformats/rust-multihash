@@ -321,7 +321,9 @@ impl<'a, T: TryFrom<u64>> MultihashRefGeneric<'a, T> {
             return Err(DecodeError::BadInputLength);
         }
 
-        let (_code, bytes) = varint_decode::u64(&input).map_err(|_| DecodeError::BadInputLength)?;
+        let (code, bytes) = varint_decode::u64(&input).map_err(|_| DecodeError::BadInputLength)?;
+        // Make sure it's a code that is part of the codec table
+        T::try_from(code).map_err(|_| DecodeError::UnknownCode)?;
 
         let (hash_len, bytes) =
             varint_decode::u64(&bytes).map_err(|_| DecodeError::BadInputLength)?;
