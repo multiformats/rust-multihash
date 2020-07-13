@@ -286,6 +286,14 @@ fn multihash_ref_errors() {
         MultihashRef::from_slice(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
     );
+
+    let unsupported_code = 0x04;
+    let hash_length = 3;
+    assert_eq!(
+        MultihashRef::from_slice(&[unsupported_code, hash_length, 1, 2, 3]),
+        Err(DecodeError::UnknownCode),
+        "Should error on codes that are not part of the code table"
+    );
 }
 
 #[test]
