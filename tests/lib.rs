@@ -1,23 +1,12 @@
 use multihash::*;
 
-/// Helper function to convert a hex-encoded byte array back into a bytearray
-fn hex_to_bytes(s: &str) -> Vec<u8> {
-    let mut c = 0;
-    let mut v = Vec::new();
-    while c < s.len() {
-        v.push(u8::from_str_radix(&s[c..c + 2], 16).unwrap());
-        c += 2;
-    }
-    v
-}
-
 macro_rules! assert_encode {
     {$( $alg:ty, $data:expr, $expect:expr; )*} => {
         $(
-            let hex = hex_to_bytes($expect);
+            let bytes = hex::decode($expect).unwrap();
             assert_eq!(
                 <$alg>::digest($data).into_bytes(),
-                hex,
+                bytes,
                 "{:?} encodes correctly", stringify!($alg)
             );
 
@@ -25,7 +14,7 @@ macro_rules! assert_encode {
             &mut hasher.input($data);
             assert_eq!(
                 hasher.result().into_bytes(),
-                hex,
+                bytes,
                 "{:?} encodes correctly", stringify!($alg)
             );
         )*
@@ -55,14 +44,14 @@ fn multihash_encode() {
         Blake2s256, b"hello world", "e0e402209aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b";
         Blake2b256, b"hello world", "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
         Blake2s128, b"hello world", "d0e4021037deae0226c30da2ab424a7b8ee14e83";
-        Blake3, b"hello world", "d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
+        // Blake3, b"hello world", "d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
     }
 }
 
 macro_rules! assert_decode {
     {$( $alg:ty, $hash:expr; )*} => {
         $(
-            let hash = hex_to_bytes($hash);
+            let hash = hex::decode($hash).unwrap();
             assert_eq!(
                 MultihashRef::from_slice(&hash).unwrap().algorithm(),
                 <$alg>::CODE,
@@ -92,6 +81,7 @@ fn assert_decode() {
         Blake2s256, "e0e402209aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b";
         Blake2b256, "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
         Blake2s128, "d0e4021037deae0226c30da2ab424a7b8ee14e83";
+        // Blake3, "d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
     }
 }
 
@@ -129,7 +119,7 @@ fn assert_roundtrip() {
 
 /// Testing the public interface of `Multihash` and `MultihashRef`
 fn test_methods(hash: impl MultihashDigest<Code>, prefix: &str, digest: &str) {
-    let expected_bytes = hex_to_bytes(&format!("{}{}", prefix, digest));
+    let expected_bytes = hex::decode(&format!("{}{}", prefix, digest)).unwrap();
     let multihash = hash.digest(b"hello world");
     assert_eq!(
         Multihash::from_bytes(expected_bytes.clone()).unwrap(),
@@ -137,7 +127,7 @@ fn test_methods(hash: impl MultihashDigest<Code>, prefix: &str, digest: &str) {
     );
     assert_eq!(multihash.as_bytes(), &expected_bytes[..]);
     assert_eq!(multihash.algorithm(), hash.code());
-    assert_eq!(multihash.digest(), &hex_to_bytes(digest)[..]);
+    assert_eq!(multihash.digest(), hex::decode(digest).unwrap().as_slice());
 
     let multihash_ref = multihash.as_ref();
     assert_eq!(multihash, multihash_ref);
