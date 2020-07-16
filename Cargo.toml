@@ -13,6 +13,7 @@ edition = "2018"
 [dependencies]
 blake2b_simd = { version = "0.5.9", default-features = false }
 blake2s_simd = { version = "0.5.9", default-features = false }
+blake3 = "0.3.5"
 digest = { version = "0.8", default-features = false }
 sha-1 = { version = "0.8", default-features = false }
 sha2 = { version = "0.8", default-features = false }

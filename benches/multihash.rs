@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::Rng;
 
 use multihash::{
-    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Identity, Keccak224, Keccak256, Keccak384,
+    Blake3, Blake2b256, Blake2b512, Blake2s128, Blake2s256, Identity, Keccak224, Keccak256, Keccak384,
     Keccak512, MultihashDigest, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
 };
 
@@ -61,6 +61,7 @@ fn bench_digest(c: &mut Criterion) {
         "blake2b_512" => Blake2b512, &data
         "blake2s_128" => Blake2s128, &data
         "blake2s_256" => Blake2s256, &data
+        "blake3" => Blake3, &data
     );
 }
 
@@ -85,6 +86,7 @@ fn bench_stream(c: &mut Criterion) {
         "blake2b_512" => Blake2b512, &data
         "blake2s_128" => Blake2s128, &data
         "blake2s_256" => Blake2s256, &data
+        "blake3" => Blake3, &data
     );
 }
 
