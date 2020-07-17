@@ -21,7 +21,7 @@ pub type MultihashRef<'a> = MultihashRefGeneric<'a, Code>;
 ///
 /// # Example
 ///
-/// ```no-run
+/// ```ignore
 /// let hasher1: BoxedMultihashDigest = Code::Sha3_512.into();
 /// let hasher2: BoxedMultihashDigest<_> = MyCodecTable::MyHash.into();
 /// ```
