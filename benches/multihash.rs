@@ -2,8 +2,9 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::Rng;
 
 use multihash::{
-    Blake3, Blake2b256, Blake2b512, Blake2s128, Blake2s256, Identity, Keccak224, Keccak256, Keccak384,
-    Keccak512, MultihashDigest, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
+    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3, Identity, Keccak224, Keccak256,
+    Keccak384, Keccak512, MultihashDigest, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384,
+    Sha3_512,
 };
 
 macro_rules! group_digest {
