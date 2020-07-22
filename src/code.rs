@@ -7,55 +7,72 @@ pub enum Code {
     #[mh(code = 0x00, module = crate::Identity256)]
     Identity256,
     /// SHA-1 (20-byte hash size)
-    #[mh(code = 0x11, feature = "sha1", module = crate::Sha1)]
+    #[cfg(feature = "sha1")]
+    #[mh(code = 0x11, module = crate::Sha1)]
     Sha1,
     /// SHA-256 (32-byte hash size)
-    #[mh(code = 0x12, feature = "sha2", module = crate::Sha2_256)]
+    #[cfg(feature = "sha2")]
+    #[mh(code = 0x12, module = crate::Sha2_256)]
     Sha2_256,
     /// SHA-512 (64-byte hash size)
-    #[mh(code = 0x13, feature = "sha2", module = crate::Sha2_512)]
+    #[cfg(feature = "sha2")]
+    #[mh(code = 0x13, module = crate::Sha2_512)]
     Sha2_512,
     /// SHA3-224 (28-byte hash size)
-    #[mh(code = 0x17, feature = "sha3", module = crate::Sha3_224)]
+    #[cfg(feature = "sha3")]
+    #[mh(code = 0x17, module = crate::Sha3_224)]
     Sha3_224,
     /// SHA3-256 (32-byte hash size)
-    #[mh(code = 0x16, feature = "sha3", module = crate::Sha3_256)]
+    #[cfg(feature = "sha3")]
+    #[mh(code = 0x16, module = crate::Sha3_256)]
     Sha3_256,
     /// SHA3-384 (48-byte hash size)
-    #[mh(code = 0x15, feature = "sha3", module = crate::Sha3_384)]
+    #[cfg(feature = "sha3")]
+    #[mh(code = 0x15, module = crate::Sha3_384)]
     Sha3_384,
     /// SHA3-512 (64-byte hash size)
-    #[mh(code = 0x14, feature = "sha3", module = crate::Sha3_512)]
+    #[cfg(feature = "sha3")]
+    #[mh(code = 0x14, module = crate::Sha3_512)]
     Sha3_512,
     /// Keccak-224 (28-byte hash size)
-    #[mh(code = 0x1a, feature = "sha3", module = crate::Keccak224)]
+    #[cfg(feature = "sha3")]
+    #[mh(code = 0x1a, module = crate::Keccak224)]
     Keccak224,
     /// Keccak-256 (32-byte hash size)
-    #[mh(code = 0x1b, feature = "sha3", module = crate::Keccak256)]
+    #[cfg(feature = "sha3")]
+    #[mh(code = 0x1b, module = crate::Keccak256)]
     Keccak256,
     /// Keccak-384 (48-byte hash size)
-    #[mh(code = 0x1c, feature = "sha3", module = crate::Keccak384)]
+    #[cfg(feature = "sha3")]
+    #[mh(code = 0x1c, module = crate::Keccak384)]
     Keccak384,
     /// Keccak-512 (64-byte hash size)
-    #[mh(code = 0x1d, feature = "sha3", module = crate::Keccak512)]
+    #[cfg(feature = "sha3")]
+    #[mh(code = 0x1d, module = crate::Keccak512)]
     Keccak512,
     /// BLAKE2b-256 (32-byte hash size)
-    #[mh(code = 0xb220, feature = "blake2b", module = crate::Blake2b256)]
+    #[cfg(feature = "blake2b")]
+    #[mh(code = 0xb220, module = crate::Blake2b256)]
     Blake2b256,
     /// BLAKE2b-512 (64-byte hash size)
-    #[mh(code = 0xb240, feature = "blake2b", module = crate::Blake2b512)]
+    #[cfg(feature = "blake2b")]
+    #[mh(code = 0xb240, module = crate::Blake2b512)]
     Blake2b512,
     /// BLAKE2s-128 (16-byte hash size)
-    #[mh(code = 0xb250, feature = "blake2s", module = crate::Blake2s128)]
+    #[cfg(feature = "blake2s")]
+    #[mh(code = 0xb250, module = crate::Blake2s128)]
     Blake2s128,
     /// BLAKE2s-256 (32-byte hash size)
-    #[mh(code = 0xb260, feature = "blake2s", module = crate::Blake2s256)]
+    #[cfg(feature = "blake2s")]
+    #[mh(code = 0xb260, module = crate::Blake2s256)]
     Blake2s256,
     /// Strobe 256 (32-byte hash size)
-    #[mh(code = 0xa0, feature = "strobe", module = crate::Strobe256)]
+    #[cfg(feature = "strobe")]
+    #[mh(code = 0xa0, module = crate::Strobe256)]
     Strobe256,
     /// Strobe 512 (64-byte hash size)
-    #[mh(code = 0xa1, feature = "strobe", module = crate::Strobe512)]
+    #[cfg(feature = "strobe")]
+    #[mh(code = 0xa1, module = crate::Strobe512)]
     Strobe512,
 }
 

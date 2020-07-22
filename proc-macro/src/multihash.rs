@@ -9,7 +9,6 @@ mod kw {
     use syn::custom_keyword;
 
     custom_keyword!(code);
-    custom_keyword!(feature);
     custom_keyword!(mh);
     custom_keyword!(module);
 }
@@ -17,7 +16,6 @@ mod kw {
 #[derive(Debug)]
 enum MhAttr {
     Code(utils::Attr<kw::code, syn::LitInt>),
-    Feature(utils::Attr<kw::feature, syn::LitStr>),
     Module(utils::Attr<kw::module, syn::Path>),
 }
 
@@ -25,8 +23,6 @@ impl Parse for MhAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         if input.peek(kw::code) {
             Ok(MhAttr::Code(input.parse()?))
-        } else if input.peek(kw::feature) {
-            Ok(MhAttr::Feature(input.parse()?))
         } else {
             Ok(MhAttr::Module(input.parse()?))
         }
@@ -43,44 +39,29 @@ struct Params {
 struct Hash {
     ident: syn::Ident,
     code: syn::LitInt,
-    feature: Option<syn::LitStr>,
     module: syn::Path,
 }
 
 impl Hash {
-    fn cfg(&self) -> TokenStream {
-        if let Some(feature) = self.feature.as_ref() {
-            quote!(#[cfg(feature = #feature)])
-        } else {
-            quote!()
-        }
-    }
-
     fn match_arm_u64(&self, tokens: TokenStream) -> TokenStream {
-        let cfg = self.cfg();
         let code = &self.code;
         quote! {
-            #cfg
             #code => #tokens
         }
     }
 
     fn match_arm_code(&self, params: &Params, tokens: TokenStream) -> TokenStream {
-        let cfg = self.cfg();
         let ident = &self.ident;
         let code = &params.code;
         quote! {
-            #cfg
             #code::#ident => #tokens
         }
     }
 
     fn match_arm_digest(&self, params: &Params, tokens: TokenStream) -> TokenStream {
-        let cfg = self.cfg();
         let ident = &self.ident;
         let digest = &params.digest;
         quote! {
-            #cfg
             #digest::#ident(mh) => #tokens
         }
     }
@@ -96,13 +77,11 @@ impl Hash {
     }
 
     fn multihash(&self, params: &Params) -> TokenStream {
-        let cfg = self.cfg();
         let ident = &self.ident;
         let module = &self.module;
         let mh = &params.mh;
         quote! {
             /// Multihash array for hash function.
-            #cfg
             #ident(<#module as #mh::Hasher>::Digest)
         }
     }
@@ -136,13 +115,11 @@ impl Hash {
     }
 
     fn from_digest(&self, params: &Params) -> TokenStream {
-        let cfg = self.cfg();
         let ident = &self.ident;
         let module = &self.module;
         let mh = &params.mh;
         let digest = &params.digest;
         quote! {
-            #cfg
             impl From<<#module as #mh::Hasher>::Digest> for #digest {
                 fn from(digest: <#module as #mh::Hasher>::Digest) -> Self {
                     Self::#ident(digest)
@@ -155,7 +132,6 @@ impl Hash {
 impl<'a> From<&'a VariantInfo<'a>> for Hash {
     fn from(bi: &'a VariantInfo<'a>) -> Self {
         let mut code = None;
-        let mut feature = None;
         let mut module = None;
         for attr in bi.ast().attrs {
             let attr: Result<utils::Attrs<MhAttr>, _> = syn::parse2(attr.tokens.clone());
@@ -163,7 +139,6 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
                 for attr in attr.attrs {
                     match attr {
                         MhAttr::Code(attr) => code = Some(attr.value),
-                        MhAttr::Feature(attr) => feature = Some(attr.value),
                         MhAttr::Module(attr) => module = Some(attr.value),
                     }
                 }
@@ -182,7 +157,6 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
         Self {
             ident,
             code,
-            feature,
             module,
         }
     }
