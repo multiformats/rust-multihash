@@ -1,4 +1,4 @@
-use tiny_multihash_proc_macro::Multihash;
+use multihash_proc_macro::Multihash;
 
 /// Default code enum.
 #[derive(Clone, Copy, Debug, Eq, Hash, Multihash, PartialEq)]

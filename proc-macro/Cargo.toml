@@ -1,5 +1,5 @@
 [package]
-name = "tiny-multihash-proc-macro"
+name = "multihash-proc-macro"
 version = "0.1.0"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
@@ -20,4 +20,4 @@ synstructure = "0.12.4"
 
 [dev-dependencies]
 pretty_assertions = "0.6.1"
-tiny-multihash = { path = "..", default-features = false }
+multihash = { path = "..", default-features = false }

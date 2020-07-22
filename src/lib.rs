@@ -22,7 +22,7 @@ pub use crate::multihash::{read_code, read_digest, write_mh};
 pub use crate::multihash::{MultihashCode, MultihashDigest};
 pub use generic_array::typenum;
 #[cfg(feature = "derive")]
-pub use tiny_multihash_proc_macro::Multihash;
+pub use multihash_proc_macro::Multihash;
 
 #[cfg(feature = "blake2b")]
 pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bDigest, Blake2bHasher};
