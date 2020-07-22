@@ -1,7 +1,8 @@
 use quickcheck::{Arbitrary, Gen};
 use rand::seq::SliceRandom;
 
-use crate::{Code, Code::*, Multihash, MultihashCode};
+use crate::code::{Code, Code::*, Multihash};
+use crate::multihash::MultihashCode;
 
 const HASHES: [Code; 16] = [
     Identity256,
