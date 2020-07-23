@@ -1,5 +1,5 @@
-use multihash::*;
 use multihash::code::*;
+use multihash::*;
 
 /// Helper function to convert a hex-encoded byte array back into a bytearray
 fn hex_to_bytes(s: &str) -> Vec<u8> {

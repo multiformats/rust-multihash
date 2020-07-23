@@ -144,7 +144,7 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
         }
         let ident = bi.ast().ident.clone();
         let code = code.unwrap_or_else(|| {
-            let msg =  "Missing code attribute: #[mh(code = 0x42)]";
+            let msg = "Missing code attribute: #[mh(code = 0x42)]";
             #[cfg(test)]
             panic!(msg);
             #[cfg(not(test))]
