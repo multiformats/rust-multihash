@@ -205,6 +205,80 @@ macro_rules! derive_digest {
             }
         )*
     };
+    ($(
+        #[$doc:meta]
+        @blake3 $type:ty as $name:ident;
+            @code_doc $code_doc:literal,
+    )*) => {
+        $(
+            #[$doc]
+            #[derive(Clone, Debug)]
+            pub struct $name($type);
+            impl $name {
+                #[doc = $code_doc]
+                pub const CODE: Code = Code::$name;
+                /// Hash some input and return the Multihash digest.
+                pub fn digest(data: &[u8]) -> Multihash {
+                    let digest = blake3::hash(data);
+                    wrap(Self::CODE, digest.as_bytes())
+                }
+            }
+            impl Multihasher<Code> for $name {
+                const CODE: Code = Code::$name;
+                #[inline]
+                fn digest(data: &[u8]) -> Multihash {
+                    Self::digest(data)
+                }
+            }
+            impl Default for $name {
+                fn default() -> Self {
+                    $name(blake3::Hasher::new())
+                }
+            }
+            impl MultihashDigest<Code> for $name {
+                #[inline]
+                fn code(&self) -> Code {
+                    Self::CODE
+                }
+                #[inline]
+                fn digest(&self, data: &[u8]) -> Multihash {
+                    Self::digest(data)
+                }
+                #[inline]
+                fn input(&mut self, data: &[u8]) {
+                    self.0.update(data);
+                }
+                #[inline]
+                fn result(self) -> Multihash {
+                    let digest = self.0.finalize();
+                    wrap(Self::CODE, digest.as_bytes())
+                }
+                #[inline]
+                fn result_reset(&mut self) -> Multihash {
+                    let digest = self.0.finalize();
+                    let hash = wrap(Self::CODE, digest.as_bytes());
+                    self.0.reset();
+                    hash
+                }
+                #[inline]
+                fn reset(&mut self) {
+                    self.0.reset();
+                }
+            }
+            impl ::std::io::Write for $name {
+                #[inline]
+                fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
+                    <$name as MultihashDigest<Code>>::input(self, buf);
+                    Ok(buf.len())
+                }
+                #[inline]
+                fn flush(&mut self) -> ::std::io::Result<()> {
+                    self.0.finalize();
+                    Ok(())
+                }
+            }
+        )*
+    }
 }
 
 impl_code! {
@@ -240,6 +314,8 @@ impl_code! {
     Blake2s128 => 0xb250,
     /// BLAKE2s-256 (32-byte hash size)
     Blake2s256 => 0xb260,
+    /// BLAKE3 (32-byte hash size)
+    Blake3 => 0x1e,
 }
 
 /// The Identity hasher.
@@ -343,4 +419,9 @@ derive_digest! {
     /// The Blake2s-256 hasher.
     @blake Blake2s | Blake2sParams as Blake2s256 32;
         @code_doc "The code of the Blake2-256 hasher, 0xb260.",
+}
+derive_digest! {
+    /// The Blake3 hasher.
+    @blake3 blake3::Hasher as Blake3;
+        @code_doc "The code of the Blake3 hasher, 0x1e.",
 }
