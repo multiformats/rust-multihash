@@ -1,47 +1,38 @@
 use quickcheck::{Arbitrary, Gen};
 use rand::seq::SliceRandom;
 
-use crate::code::{Code, Code::*, Multihash};
-use crate::multihash::MultihashCode;
+use crate::code::*;
+use crate::MultihashCreate;
 
-const HASHES: [Code; 16] = [
-    Identity256,
-    Sha1,
-    Sha2_256,
-    Sha2_512,
-    Sha3_512,
-    Sha3_384,
-    Sha3_256,
-    Sha3_224,
-    Keccak224,
-    Keccak256,
-    Keccak384,
-    Keccak512,
-    Blake2b256,
-    Blake2b512,
-    Blake2s128,
-    Blake2s256,
+const HASHES: [u64; 16] = [
+    IDENTITY,
+    SHA1,
+    SHA2_256,
+    SHA2_512,
+    SHA3_512,
+    SHA3_384,
+    SHA3_256,
+    SHA3_224,
+    KECCAK_224,
+    KECCAK_256,
+    KECCAK_384,
+    KECCAK_512,
+    BLAKE2B_256,
+    BLAKE2B_512,
+    BLAKE2S_128,
+    BLAKE2S_256,
 ];
-
-/// Generates a random hash algorithm.
-///
-/// The more exotic ones will be generated just as frequently as the common ones.
-impl Arbitrary for Code {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        *HASHES.choose(g).unwrap()
-    }
-}
 
 /// Generates a random valid multihash.
 ///
 /// This is done by encoding a random piece of data.
 impl Arbitrary for Multihash {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        let code: Code = Arbitrary::arbitrary(g);
+        let code = *HASHES.choose(g).unwrap();
         let data: Vec<u8> = Arbitrary::arbitrary(g);
         // encoding an actual random piece of data might be better than just choosing
         // random numbers of the appropriate size, since some hash algos might produce
         // a limited set of values
-        code.digest(&data)
+        Multihash::new(code, &data).unwrap()
     }
 }

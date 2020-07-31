@@ -208,6 +208,11 @@ pub mod identity {
     pub type Identity256 = IdentityHasher<U32>;
 }
 
+pub mod unknown {
+    use super::*;
+    derive_digest!(UnknownDigest);
+}
+
 #[cfg(feature = "strobe")]
 pub mod strobe {
     use super::*;
