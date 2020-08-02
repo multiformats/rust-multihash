@@ -4,12 +4,12 @@
 
 #[cfg(any(test, feature = "test"))]
 mod arb;
-#[cfg(feature = "code")]
-pub mod code;
 mod error;
 mod hasher;
 mod hasher_impl;
 mod multihash;
+#[cfg(feature = "multihash-impl")]
+mod multihash_impl;
 
 pub use crate::error::{Error, Result};
 #[cfg(feature = "std")]
@@ -20,13 +20,13 @@ pub use crate::multihash::{read_code, read_digest, write_mh};
 pub use crate::multihash::{MultihashCreate, MultihashDigest, RawMultihash};
 pub use generic_array::typenum::{self, U16, U20, U28, U32, U48, U64};
 #[cfg(feature = "derive")]
-pub use multihash_proc_macro::Multihash;
+pub use multihash_proc_macro as derive;
 
-#[cfg(feature = "code")]
-pub use crate::code::{
-    BLAKE2B_256, BLAKE2B_512, BLAKE2S_128, BLAKE2S_256, IDENTITY, KECCAK_224, KECCAK_256,
-    KECCAK_384, KECCAK_512, SHA1, SHA2_256, SHA2_512, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
-    STROBE_256, STROBE_512,
+#[cfg(feature = "multihash-impl")]
+pub use crate::multihash_impl::{
+    Multihash, BLAKE2B_256, BLAKE2B_512, BLAKE2S_128, BLAKE2S_256, IDENTITY, KECCAK_224,
+    KECCAK_256, KECCAK_384, KECCAK_512, SHA1, SHA2_256, SHA2_512, SHA3_224, SHA3_256, SHA3_384,
+    SHA3_512, STROBE_256, STROBE_512,
 };
 
 #[cfg(feature = "blake2b")]

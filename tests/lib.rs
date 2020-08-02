@@ -1,5 +1,10 @@
-use multihash::code::*;
-use multihash::*;
+use multihash::{
+    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Hasher, Identity256, Keccak224, Keccak256,
+    Keccak384, Keccak512, Multihash, MultihashDigest, RawMultihash, Sha1, Sha2_256, Sha2_512,
+    Sha3_224, Sha3_256, Sha3_384, Sha3_512, BLAKE2B_256, BLAKE2B_512, BLAKE2S_128, BLAKE2S_256,
+    KECCAK_224, KECCAK_256, KECCAK_384, KECCAK_512, SHA1, SHA2_256, SHA2_512, SHA3_224, SHA3_256,
+    SHA3_384, SHA3_512,
+};
 
 /// Helper function to convert a hex-encoded byte array back into a bytearray
 fn hex_to_bytes(s: &str) -> Vec<u8> {

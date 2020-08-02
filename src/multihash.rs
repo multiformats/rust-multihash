@@ -192,9 +192,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::code::Multihash;
     use crate::hasher::Hasher;
     use crate::hasher_impl::strobe::Strobe256;
+    use crate::multihash_impl::Multihash;
 
     #[test]
     fn roundtrip() {

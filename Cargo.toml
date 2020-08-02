@@ -14,11 +14,11 @@ keywords = ["multihash", "ipfs"]
 license = "MIT"
 
 [features]
-default = ["std", "all", "derive", "code"]
+default = ["std", "all", "derive", "multihash-impl"]
 std = []
-code = ["derive"]
+multihash-impl = ["derive", "all"]
 derive = ["multihash-proc-macro"]
-test = ["code", "quickcheck", "rand"]
+test = ["multihash-impl", "quickcheck", "rand"]
 all = ["blake2b", "blake2s", "sha1", "sha2", "sha3", "strobe"]
 
 blake2b = ["blake2b_simd"]
