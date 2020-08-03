@@ -1,7 +1,7 @@
 //! Default Code and Multihash implementation.
 use crate::hasher::Hasher;
 use crate::multihash::MultihashDigest;
-use multihash_proc_macro::Multihash;
+use multihash_derive::Multihash;
 
 /// Multihash code for Identity.
 pub const IDENTITY: u64 = 0x00;
@@ -104,7 +104,7 @@ mod tests {
     use super::*;
     use crate::hasher::Hasher;
     use crate::hasher_impl::strobe::{Strobe256, Strobe512};
-    use crate::multihash::{MultihashCreate, MultihashDigest};
+    use crate::multihash::MultihashDigest;
 
     #[test]
     fn test_hasher_256() {

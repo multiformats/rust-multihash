@@ -1,5 +1,5 @@
 use multihash::derive::Multihash;
-use multihash::{read_code, read_digest, Error, Hasher, MultihashCreate, MultihashDigest};
+use multihash::{read_code, read_digest, Digest, Error, Hasher, MultihashDigest};
 
 const FOO: u64 = 0x01;
 const BAR: u64 = 0x02;

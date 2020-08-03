@@ -1,4 +1,5 @@
 use crate::error::Error;
+use crate::hasher::Digest;
 use core::fmt::Debug;
 
 /// Trait for reading and writhing Multihashes.
@@ -6,7 +7,11 @@ use core::fmt::Debug;
 /// This traits operates on existing hashes. Creation of new hashes is done by the
 /// [`MultihashCreate`] trait.
 pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
-    //const CODE: u64;
+    /// Returns the hash of the input.
+    fn new(code: u64, input: &[u8]) -> Result<Self, Error>;
+
+    /// Wraps the digest in a multihash.
+    fn wrap(code: u64, digest: &[u8]) -> Result<Self, Error>;
 
     /// Returns the code of the multihash.
     fn code(&self) -> u64;
@@ -35,7 +40,7 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
     /// Writes a multihash to a byte stream.
     #[cfg(feature = "std")]
     fn write<W: std::io::Write>(&self, w: W) -> Result<(), Error> {
-        write_mh(w, self)
+        write_multihash(w, self.code(), self.size(), self.digest())
     }
 
     /// Returns the bytes of a multihash.
@@ -46,12 +51,11 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
             .expect("writing to a vec should never fail");
         bytes
     }
-}
 
-/// Trait that makes it possible to create a new hash from some data.
-pub trait MultihashCreate: Clone + Debug + Eq + Send + Sync + 'static {
-    /// Returns the hash of the input.
-    fn new(code: u64, input: &[u8]) -> Result<Self, Error>;
+    /// Returns the RawMultihash.
+    fn to_raw(&self) -> Result<RawMultihash, Error> {
+        RawMultihash::from_mh(self)
+    }
 }
 
 /// A Multihash instance that only supports the basic functionality and no hashing.
@@ -85,47 +89,105 @@ pub struct RawMultihash {
     digest: crate::UnknownDigest<crate::U32>,
 }
 
-impl MultihashDigest for RawMultihash {
-    fn code(&self) -> u64 {
+impl RawMultihash {
+    /// Wraps the digest in a multihash.
+    pub fn wrap(code: u64, digest: &[u8]) -> Result<Self, Error> {
+        Ok(Self {
+            code,
+            size: digest.len() as _,
+            digest: Digest::wrap(digest)?,
+        })
+    }
+
+    /// Returns the code of the multihash.
+    pub fn code(&self) -> u64 {
         self.code
     }
 
-    fn size(&self) -> u8 {
+    /// Returns the size of the digest.
+    pub fn size(&self) -> u8 {
         self.size
     }
 
-    fn digest(&self) -> &[u8] {
+    /// Returns the digest.
+    pub fn digest(&self) -> &[u8] {
         self.digest.as_ref()
     }
 
+    /// Reads a multihash from a byte stream.
     #[cfg(feature = "std")]
-    fn read<R: std::io::Read>(r: R) -> Result<Self, Error>
+    pub fn read<R: std::io::Read>(r: R) -> Result<Self, Error>
     where
         Self: Sized,
     {
         let (code, size, digest) = read_multihash(r)?;
         Ok(Self { code, size, digest })
     }
+
+    /// Parses a multihash from a bytes.
+    #[cfg(feature = "std")]
+    pub fn from_bytes(mut bytes: &[u8]) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        Self::read(&mut bytes)
+    }
+
+    /// Writes a multihash to a byte stream.
+    #[cfg(feature = "std")]
+    pub fn write<W: std::io::Write>(&self, w: W) -> Result<(), Error> {
+        write_multihash(w, self.code(), self.size(), self.digest())
+    }
+
+    /// Returns the bytes of a multihash.
+    #[cfg(feature = "std")]
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut bytes = vec![];
+        self.write(&mut bytes)
+            .expect("writing to a vec should never fail");
+        bytes
+    }
+
+    /// From Multihash.
+    pub fn from_mh<MH: MultihashDigest>(mh: &MH) -> Result<Self, Error> {
+        use generic_array::GenericArray;
+
+        // raw multihash is backed by a [u8; 32]
+        if mh.size() > 32 {
+            return Err(Error::InvalidSize(mh.size() as _));
+        }
+        let mut digest = GenericArray::default();
+        digest[..mh.size() as _].copy_from_slice(mh.digest());
+        Ok(Self {
+            code: mh.code(),
+            size: mh.size(),
+            digest: digest.into(),
+        })
+    }
+
+    /// To Multihash.
+    pub fn to_mh<MH: MultihashDigest>(&self) -> Result<MH, Error> {
+        MH::wrap(self.code(), self.digest())
+    }
 }
 
 /// Writes the multihash to a byte stream.
 #[cfg(feature = "std")]
-pub fn write_mh<W, D>(mut w: W, mh: &D) -> Result<(), Error>
+pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<(), Error>
 where
     W: std::io::Write,
-    D: MultihashDigest,
 {
     use unsigned_varint::encode as varint_encode;
 
     let mut code_buf = varint_encode::u64_buffer();
-    let code = varint_encode::u64(mh.code(), &mut code_buf);
+    let code = varint_encode::u64(code, &mut code_buf);
 
     let mut size_buf = varint_encode::u8_buffer();
-    let size = varint_encode::u8(mh.size(), &mut size_buf);
+    let size = varint_encode::u8(size, &mut size_buf);
 
     w.write_all(code)?;
     w.write_all(size)?;
-    w.write_all(mh.digest())?;
+    w.write_all(digest)?;
     Ok(())
 }
 

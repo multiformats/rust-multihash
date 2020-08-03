@@ -1,5 +1,5 @@
 [workspace]
-members = ["proc-macro", "."]
+members = ["derive", "."]
 
 [package]
 name = "multihash"
@@ -17,7 +17,7 @@ license = "MIT"
 default = ["std", "all", "derive", "multihash-impl"]
 std = []
 multihash-impl = ["derive", "all"]
-derive = ["multihash-proc-macro"]
+derive = ["multihash-derive"]
 test = ["multihash-impl", "quickcheck", "rand"]
 all = ["blake2b", "blake2s", "sha1", "sha2", "sha3", "strobe"]
 
@@ -30,7 +30,7 @@ strobe = ["strobe-rs"]
 
 [dependencies]
 generic-array = "0.14.2"
-multihash-proc-macro = { version = "0.1.0", path = "proc-macro", optional = true }
+multihash-derive = { version = "0.1.0", path = "derive", optional = true }
 quickcheck = { version = "0.9.2", optional = true }
 rand = { version = "0.7.3", optional = true }
 unsigned-varint = "0.4.0"

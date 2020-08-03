@@ -1,5 +1,5 @@
 [package]
-name = "multihash-proc-macro"
+name = "multihash-derive"
 version = "0.1.0"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"

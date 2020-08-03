@@ -1,3 +1,4 @@
+use crate::error::Error;
 use core::fmt::Debug;
 use generic_array::typenum::marker_traits::Unsigned;
 use generic_array::{ArrayLength, GenericArray};
@@ -20,6 +21,15 @@ pub trait Digest<S: Size>:
     + Sync
     + 'static
 {
+    /// Wraps the digest bytes.
+    fn wrap(digest: &[u8]) -> Result<Self, Error> {
+        if digest.len() != S::to_u8() as _ {
+            return Err(Error::InvalidSize(digest.len() as _));
+        }
+        let mut array = GenericArray::default();
+        array.copy_from_slice(digest);
+        Ok(array.into())
+    }
 }
 
 /// Trait implemented by a hash function implementation.
