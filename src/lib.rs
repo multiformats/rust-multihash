@@ -1,4 +1,34 @@
 //! Multihash implementation.
+//!
+//! Feature Flags
+//! -------------
+//!
+//! Multihash has lots of [feature flags], by default, all features (except for `test`) are
+//! enabled.
+//!
+//! Some of them are about specific hash functions, these are:
+//!
+//!  - `blake2b`: Enable Blake2b hashers
+//!  - `blake2s`: Enable Blake2s hashers
+//!  - `sha1`: Enable SHA-1 hashers
+//!  - `sha2`: Enable SHA-2 hashers
+//!  - `sha3`: Enable SHA-3 hashers
+//!  - `strobe`: Enable Strobe hashers
+//!
+//! In order to enable all hashers, you can set the `all` feature flag.
+//!
+//! The library has support for `no_std`, if you disable the `std` feature flag.
+//!
+//! The `multihash-impl` feature flag enables a default Multihash implementation that contains all
+//! bundled hashers (which may be disabled via the feature flags mentioned above). If only want a
+//! specific subset of hash algorithms or add one which isn't supporte by default, you will likely
+//! disable that feature and enable `derive` in order to be able to use the [`Multihash` derive].
+//!
+//! The `test` feature flag enables property based testing features.
+//!
+//! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
+//! [`Multihash` derive]: crate::derive
+
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 

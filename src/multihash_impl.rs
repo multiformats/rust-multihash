@@ -1,4 +1,3 @@
-//! Default Code and Multihash implementation.
 use crate::hasher::Hasher;
 use crate::multihash::MultihashDigest;
 use multihash_derive::Multihash;
@@ -40,7 +39,12 @@ pub const STROBE_256: u64 = 0xa0;
 /// Multihash code for STROBE-512.
 pub const STROBE_512: u64 = 0xa1;
 
-/// An implementation of Multihash.
+/// Default Multihash implementation.
+///
+/// This is a default set of hashing algorithms. Usually applications would use their own subset of
+/// algorithms. See the [`Multihash` derive] for more information.
+///
+/// [`Multihash` derive]: crate::derive
 #[derive(Clone, Debug, Eq, Multihash, PartialEq)]
 pub enum Multihash {
     /// Multihash array for hash function.

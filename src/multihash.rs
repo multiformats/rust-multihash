@@ -4,8 +4,9 @@ use core::fmt::Debug;
 
 /// Trait for reading and writhing Multihashes.
 ///
-/// This traits operates on existing hashes. Creation of new hashes is done by the
-/// [`MultihashCreate`] trait.
+/// It is usually derived from a list of hashers by the [`Multihash` derive].
+///
+/// [`Multihash` derive]: crate::derive
 pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
     /// Returns the hash of the input.
     fn new(code: u64, input: &[u8]) -> Result<Self, Error>;
@@ -16,7 +17,7 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
     /// Returns the code of the multihash.
     fn code(&self) -> u64;
 
-    /// Returns the size of the digest.
+    /// Returns the actual size of the digest, that will be returned by `digest()`.
     fn size(&self) -> u8;
 
     /// Returns the digest.

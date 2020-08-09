@@ -3,7 +3,7 @@ use generic_array::GenericArray;
 
 macro_rules! derive_digest {
     ($name:ident) => {
-        /// $name digest.
+        /// Multihash digest.
         #[derive(Clone, Debug, Default, Eq, PartialEq)]
         pub struct $name<S: Size>(GenericArray<u8, S>);
 
@@ -34,7 +34,7 @@ macro_rules! derive_hasher_blake {
     ($module:ident, $name:ident, $digest:ident) => {
         derive_digest!($digest);
 
-        /// $name hasher.
+        /// Multihash hasher.
         pub struct $name<S: Size> {
             _marker: PhantomData<S>,
             state: $module::State,
@@ -105,7 +105,7 @@ pub mod blake2s {
 #[cfg(feature = "digest")]
 macro_rules! derive_hasher_sha {
     ($module:ty, $name:ident, $size:ty, $digest:ident) => {
-        /// $name hasher.
+        /// Multihash hasher.
         #[derive(Default)]
         pub struct $name {
             state: $module,
@@ -204,7 +204,7 @@ pub mod identity {
         }
     }
 
-    /// 256 bit identity
+    /// 256 bit Identity hasher.
     pub type Identity256 = IdentityHasher<U32>;
 }
 
