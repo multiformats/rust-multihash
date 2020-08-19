@@ -1,6 +1,6 @@
 [package]
-name = "multihash-derive"
-version = "0.1.0"
+name = "tiny-multihash-derive"
+version = "0.3.0"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Proc macro for deriving custom multihash tables."
@@ -20,4 +20,4 @@ synstructure = "0.12.4"
 
 [dev-dependencies]
 pretty_assertions = "0.6.1"
-multihash = { path = "..", default-features = false }
+tiny-multihash = { path = "..", default-features = false }

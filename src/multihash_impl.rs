@@ -1,6 +1,6 @@
 use crate::hasher::Hasher;
 use crate::multihash::MultihashDigest;
-use multihash_derive::Multihash;
+use tiny_multihash_derive::Multihash;
 
 /// Multihash code for Identity.
 pub const IDENTITY: u64 = 0x00;

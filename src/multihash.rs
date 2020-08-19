@@ -67,7 +67,7 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
 /// # Example
 ///
 /// ```
-/// use multihash::{MultihashDigest, RawMultihash};
+/// use tiny_multihash::{MultihashDigest, RawMultihash};
 ///
 /// const Sha3_256: u64 = 0x16;
 /// let digest_bytes = [

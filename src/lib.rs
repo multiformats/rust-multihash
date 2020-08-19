@@ -50,7 +50,7 @@ pub use crate::multihash::{read_code, read_digest};
 pub use crate::multihash::{MultihashDigest, RawMultihash};
 pub use generic_array::typenum::{self, U16, U20, U28, U32, U48, U64};
 #[cfg(feature = "derive")]
-pub use multihash_derive as derive;
+pub use tiny_multihash_derive as derive;
 
 #[cfg(feature = "multihash-impl")]
 pub use crate::multihash_impl::{
