@@ -5,7 +5,10 @@
 //! A `Multihash` is a structure that contains a hashing algorithm, plus some hashed data.
 //! A `MultihashRef` is the same as a `Multihash`, except that it doesn't own its data.
 
+#![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
+
+extern crate alloc;
 
 mod digests;
 mod errors;

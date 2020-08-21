@@ -1,7 +1,11 @@
-use std::borrow::Borrow;
+#[cfg(not(feature = "std"))]
+use core as std;
+
+use alloc::{borrow::Borrow, boxed::Box, fmt, vec::Vec};
+
 use std::convert::{Into, TryFrom};
 use std::marker::PhantomData;
-use std::{cmp, fmt, hash, ops};
+use std::{cmp, hash, ops};
 
 use unsigned_varint::{decode as varint_decode, encode as varint_encode};
 

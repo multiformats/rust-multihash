@@ -3,6 +3,8 @@ use rand::seq::SliceRandom;
 
 use crate::{Code, Code::*, Multihash, MultihashDigest};
 
+use alloc::{boxed::Box, vec::Vec};
+
 const HASHES: [Code; 17] = [
     Identity, Sha1, Sha2_256, Sha2_512, Sha3_512, Sha3_384, Sha3_256, Sha3_224, Keccak224,
     Keccak256, Keccak384, Keccak512, Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3,

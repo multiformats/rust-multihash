@@ -1,5 +1,9 @@
-use std::{error, fmt};
+#[cfg(not(feature = "std"))]
+use core as std;
 
+use std::fmt;
+
+use alloc::vec::Vec;
 /// Error that can happen when encoding some bytes into a multihash.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum EncodeError {
@@ -22,7 +26,8 @@ impl fmt::Display for EncodeError {
     }
 }
 
-impl error::Error for EncodeError {}
+#[cfg(feature = "std")]
+impl std::error::Error for EncodeError {}
 
 /// Error that can happen when decoding some bytes.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -43,7 +48,8 @@ impl fmt::Display for DecodeError {
     }
 }
 
-impl error::Error for DecodeError {}
+#[cfg(feature = "std")]
+impl std::error::Error for DecodeError {}
 
 /// Error that can happen when decoding some bytes.
 ///
@@ -63,4 +69,5 @@ impl fmt::Display for DecodeOwnedError {
     }
 }
 
-impl error::Error for DecodeOwnedError {}
+#[cfg(feature = "std")]
+impl std::error::Error for DecodeOwnedError {}

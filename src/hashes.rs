@@ -1,3 +1,7 @@
+#[cfg(not(feature = "std"))]
+use core as std;
+
+use alloc::{boxed::Box, vec::Vec};
 use std::convert::TryFrom;
 
 use blake2b_simd::{Params as Blake2bParams, State as Blake2b};
@@ -117,6 +121,7 @@ macro_rules! derive_digest {
                     <$type as digest::Digest>::reset(&mut self.0)
                 }
             }
+            #[cfg(feature = "std")]
             impl ::std::io::Write for $name {
                 #[inline]
                 fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
@@ -190,6 +195,7 @@ macro_rules! derive_digest {
                     self.0 = Self::default().0;
                 }
             }
+            #[cfg(feature = "std")]
             impl ::std::io::Write for $name {
                 #[inline]
                 fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
@@ -259,6 +265,7 @@ macro_rules! derive_digest {
                     self.0.reset();
                 }
             }
+            #[cfg(feature = "std")]
             impl ::std::io::Write for $name {
                 #[inline]
                 fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {
@@ -364,6 +371,7 @@ impl MultihashDigest<Code> for Identity {
         self.0.clear()
     }
 }
+#[cfg(feature = "std")]
 impl ::std::io::Write for Identity {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> ::std::io::Result<usize> {

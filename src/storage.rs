@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use alloc::{sync::Arc, vec::Vec};
 
 /// MAX_INLINE is the maximum size of a multihash that can be stored inline
 ///
