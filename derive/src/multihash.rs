@@ -155,7 +155,7 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
 }
 
 pub fn multihash(s: Structure) -> TokenStream {
-    let mh_crate = utils::use_crate("multihash");
+    let mh_crate = utils::use_crate("tiny-multihash");
     let mh_enum = &s.ast().ident;
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
     let params = Params {
