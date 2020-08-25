@@ -3,7 +3,7 @@ members = ["derive", "."]
 
 [package]
 name = "tiny-multihash"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Implementation of the multihash format"
@@ -31,7 +31,7 @@ strobe = ["strobe-rs"]
 
 [dependencies]
 generic-array = "0.14.4"
-tiny-multihash-derive = { version = "0.3.0", path = "derive", optional = true }
+tiny-multihash-derive = { version = "0.4.0", path = "derive", optional = true }
 quickcheck = { version = "0.9.2", optional = true }
 rand = { version = "0.7.3", optional = true }
 unsigned-varint = { version = "0.5.0" }
