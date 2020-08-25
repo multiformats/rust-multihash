@@ -1,10 +1,71 @@
 use tiny_multihash::{
-    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Hasher, Identity256, Keccak224, Keccak256,
-    Keccak384, Keccak512, Multihash, MultihashDigest, RawMultihash, Sha1, Sha2_256, Sha2_512,
-    Sha3_224, Sha3_256, Sha3_384, Sha3_512, BLAKE2B_256, BLAKE2B_512, BLAKE2S_128, BLAKE2S_256,
-    KECCAK_224, KECCAK_256, KECCAK_384, KECCAK_512, SHA1, SHA2_256, SHA2_512, SHA3_224, SHA3_256,
-    SHA3_384, SHA3_512,
+    derive::Multihash, read_code, read_digest, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128,
+    Blake2s256, Blake2sDigest, Digest, Error, Hasher, Identity, IdentityDigest, Keccak224,
+    Keccak256, Keccak384, Keccak512, KeccakDigest, MultihashDigest, RawMultihash, Sha1, Sha1Digest,
+    Sha2Digest, Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
+    StatefulHasher, Strobe256, Strobe512, StrobeDigest, BLAKE2B_256, BLAKE2B_512, BLAKE2S_128,
+    BLAKE2S_256, IDENTITY, KECCAK_224, KECCAK_256, KECCAK_384, KECCAK_512, SHA1, SHA2_256,
+    SHA2_512, SHA3_224, SHA3_256, SHA3_384, SHA3_512, STROBE_256, STROBE_512, U128, U16, U20, U28,
+    U32, U48, U64,
 };
+
+#[derive(Clone, Debug, Eq, Multihash, PartialEq)]
+pub enum Multihash {
+    /// Multihash array for hash function.
+    #[mh(code = IDENTITY, hasher = Identity)]
+    Identity256(IdentityDigest<U128>),
+    /// Multihash array for hash function.
+    #[mh(code = SHA1, hasher = Sha1)]
+    Sha1(Sha1Digest<U20>),
+    /// Multihash array for hash function.
+    #[mh(code = SHA2_256, hasher = Sha2_256)]
+    Sha2_256(Sha2Digest<U32>),
+    /// Multihash array for hash function.
+    #[mh(code = SHA2_512, hasher = Sha2_512)]
+    Sha2_512(Sha2Digest<U64>),
+    /// Multihash array for hash function.
+    #[mh(code = SHA3_224, hasher = Sha3_224)]
+    Sha3_224(Sha3Digest<U28>),
+    /// Multihash array for hash function.
+    #[mh(code = SHA3_256, hasher = Sha3_256)]
+    Sha3_256(Sha3Digest<U32>),
+    /// Multihash array for hash function.
+    #[mh(code = SHA3_384, hasher = Sha3_384)]
+    Sha3_384(Sha3Digest<U48>),
+    /// Multihash array for hash function.
+    #[mh(code = SHA3_512, hasher = Sha3_512)]
+    Sha3_512(Sha3Digest<U64>),
+    /// Multihash array for hash function.
+    #[mh(code = KECCAK_224, hasher = Keccak224)]
+    Keccak224(KeccakDigest<U28>),
+    /// Multihash array for hash function.
+    #[mh(code = KECCAK_256, hasher = Keccak256)]
+    Keccak256(KeccakDigest<U32>),
+    /// Multihash array for hash function.
+    #[mh(code = KECCAK_384, hasher = Keccak384)]
+    Keccak384(KeccakDigest<U48>),
+    /// Multihash array for hash function.
+    #[mh(code = KECCAK_512, hasher = Keccak512)]
+    Keccak512(KeccakDigest<U64>),
+    /// Multihash array for hash function.
+    #[mh(code = BLAKE2B_256, hasher = Blake2b256)]
+    Blake2b256(Blake2bDigest<U32>),
+    /// Multihash array for hash function.
+    #[mh(code = BLAKE2B_512, hasher = Blake2b512)]
+    Blake2b512(Blake2bDigest<U64>),
+    /// Multihash array for hash function.
+    #[mh(code = BLAKE2S_128, hasher = Blake2s128)]
+    Blake2s128(Blake2sDigest<U16>),
+    /// Multihash array for hash function.
+    #[mh(code = BLAKE2S_256, hasher = Blake2s256)]
+    Blake2s256(Blake2sDigest<U32>),
+    /// Multihash array for hash function.
+    #[mh(code = STROBE_256, hasher = Strobe256)]
+    Strobe256(StrobeDigest<U32>),
+    /// Multihash array for hash function.
+    #[mh(code = STROBE_512, hasher = Strobe512)]
+    Strobe512(StrobeDigest<U64>),
+}
 
 /// Helper function to convert a hex-encoded byte array back into a bytearray
 fn hex_to_bytes(s: &str) -> Vec<u8> {
@@ -43,8 +104,8 @@ macro_rules! assert_encode {
 fn multihash_encode() {
     assert_encode! {
         // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
-        //Identity256, b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz", "00a1016162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a";
-        //Identity256, b"beep boop", "00096265657020626f6f70";
+        //Identity, b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz", "00a1016162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a";
+        Identity, b"beep boop", "00096265657020626f6f70";
         Sha1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         Sha2_256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         Sha2_256, b"beep boop", "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -80,7 +141,7 @@ macro_rules! assert_decode {
 #[test]
 fn assert_decode() {
     assert_decode! {
-        //Identity256, "000a68656c6c6f776f726c64";
+        IDENTITY, "000a68656c6c6f776f726c64";
         SHA1, "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         SHA2_256, "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         SHA2_256, "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -127,20 +188,8 @@ macro_rules! assert_roundtrip {
 #[test]
 fn assert_roundtrip() {
     assert_roundtrip!(
-        Identity256,
-        Sha1,
-        Sha2_256,
-        Sha2_512,
-        Sha3_224,
-        Sha3_256,
-        Sha3_384,
-        Sha3_512,
-        Keccak224,
-        Keccak256,
-        Keccak384,
-        Keccak512,
-        Blake2b512,
-        Blake2s256
+        Identity, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Keccak224,
+        Keccak256, Keccak384, Keccak512, Blake2b512, Blake2s256
     );
 }
 /*
@@ -233,7 +282,7 @@ fn multihash_methods() {
 fn test_long_identity_hash() {
     // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
     let input = b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz";
-    Identity256::digest(input);
+    Identity::digest(input);
 }
 
 #[test]
@@ -254,12 +303,12 @@ fn multihash_errors() {
         Multihash::from_bytes(&[0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
-    let identity_code: u8 = 0x00;
+    /*let identity_code: u8 = 0x00;
     let identity_length = 3;
     assert!(
         Multihash::from_bytes(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
-    );
+    );*/
 }
 
 #[test]

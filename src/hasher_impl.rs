@@ -1,15 +1,23 @@
-use crate::hasher::{Digest, Hasher, Size};
+use crate::hasher::{Digest, Size, StatefulHasher};
 use generic_array::GenericArray;
 
 macro_rules! derive_digest {
     ($name:ident) => {
         /// Multihash digest.
-        #[derive(Clone, Debug, Default, Eq, PartialEq)]
+        #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
         pub struct $name<S: Size>(GenericArray<u8, S>);
+
+        impl<S: Size> Copy for $name<S> where S::ArrayType: Copy {}
 
         impl<S: Size> AsRef<[u8]> for $name<S> {
             fn as_ref(&self) -> &[u8] {
                 &self.0
+            }
+        }
+
+        impl<S: Size> AsMut<[u8]> for $name<S> {
+            fn as_mut(&mut self) -> &mut [u8] {
+                &mut self.0
             }
         }
 
@@ -25,6 +33,25 @@ macro_rules! derive_digest {
             }
         }
 
+        #[cfg(feature = "scale-codec")]
+        impl<S: Size> parity_scale_codec::Encode for $name<S> {
+            fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
+                self.as_ref().using_encoded(f)
+            }
+        }
+
+        #[cfg(feature = "scale-codec")]
+        impl parity_scale_codec::Decode for $name<$crate::U64> {
+            fn decode<I: parity_scale_codec::Input>(
+                input: &mut I,
+            ) -> Result<Self, parity_scale_codec::Error> {
+                let digest = <[u8; 64]>::decode(input)?;
+                let mut array = GenericArray::default();
+                array.copy_from_slice(&digest[..]);
+                Ok(Self(array))
+            }
+        }
+
         impl<S: Size> Digest<S> for $name<S> {}
     };
 }
@@ -35,6 +62,7 @@ macro_rules! derive_hasher_blake {
         derive_digest!($digest);
 
         /// Multihash hasher.
+        #[derive(Debug)]
         pub struct $name<S: Size> {
             _marker: PhantomData<S>,
             state: $module::State,
@@ -51,7 +79,7 @@ macro_rules! derive_hasher_blake {
             }
         }
 
-        impl<S: Size> Hasher for $name<S> {
+        impl<S: Size> StatefulHasher for $name<S> {
             type Size = S;
             type Digest = $digest<Self::Size>;
 
@@ -106,12 +134,12 @@ pub mod blake2s {
 macro_rules! derive_hasher_sha {
     ($module:ty, $name:ident, $size:ty, $digest:ident) => {
         /// Multihash hasher.
-        #[derive(Default)]
+        #[derive(Debug, Default)]
         pub struct $name {
             state: $module,
         }
 
-        impl $crate::hasher::Hasher for $name {
+        impl $crate::hasher::StatefulHasher for $name {
             type Size = $size;
             type Digest = $digest<Self::Size>;
 
@@ -172,30 +200,62 @@ pub mod sha3 {
 
 pub mod identity {
     use super::*;
-    use generic_array::typenum::U32;
+    use generic_array::typenum::U128;
 
-    derive_digest!(IdentityDigest);
+    /// Multihash digest.
+    #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+    pub struct IdentityDigest<S: Size>(u8, GenericArray<u8, S>);
+
+    impl<S: Size> AsRef<[u8]> for IdentityDigest<S> {
+        fn as_ref(&self) -> &[u8] {
+            &self.1[..self.0 as usize]
+        }
+    }
+
+    impl<S: Size> AsMut<[u8]> for IdentityDigest<S> {
+        fn as_mut(&mut self) -> &mut [u8] {
+            &mut self.1[..self.0 as usize]
+        }
+    }
+
+    impl<S: Size> From<GenericArray<u8, S>> for IdentityDigest<S> {
+        fn from(array: GenericArray<u8, S>) -> Self {
+            Self(array.len() as u8, array)
+        }
+    }
+
+    impl<S: Size> From<IdentityDigest<S>> for GenericArray<u8, S> {
+        fn from(digest: IdentityDigest<S>) -> Self {
+            digest.1
+        }
+    }
+
+    impl<S: Size> Digest<S> for IdentityDigest<S> {
+        fn size(&self) -> u8 {
+            self.0
+        }
+    }
 
     /// Identity hasher.
-    #[derive(Default)]
+    #[derive(Debug, Default)]
     pub struct IdentityHasher<S: Size> {
         bytes: GenericArray<u8, S>,
         i: usize,
     }
 
-    impl<S: Size> Hasher for IdentityHasher<S> {
+    impl<S: Size> StatefulHasher for IdentityHasher<S> {
         type Size = S;
         type Digest = IdentityDigest<Self::Size>;
 
         fn update(&mut self, input: &[u8]) {
-            let start = self.i;
-            let end = start + input.len();
-            self.bytes[start..end].copy_from_slice(input);
+            let start = self.i.min(self.bytes.len());
+            let end = (self.i + input.len()).min(self.bytes.len());
+            self.bytes[start..end].copy_from_slice(&input);
             self.i = end;
         }
 
         fn finalize(&self) -> Self::Digest {
-            Self::Digest::from(self.bytes.clone())
+            IdentityDigest(self.i as u8, self.bytes.clone())
         }
 
         fn reset(&mut self) {
@@ -204,8 +264,8 @@ pub mod identity {
         }
     }
 
-    /// 256 bit Identity hasher.
-    pub type Identity256 = IdentityHasher<U32>;
+    /// 128 byte Identity hasher (constrained to 128 bytes).
+    pub type Identity = IdentityHasher<U128>;
 }
 
 pub mod unknown {
@@ -239,7 +299,7 @@ pub mod strobe {
         }
     }
 
-    impl<S: Size> Hasher for StrobeHasher<S> {
+    impl<S: Size> StatefulHasher for StrobeHasher<S> {
         type Size = S;
         type Digest = StrobeDigest<Self::Size>;
 

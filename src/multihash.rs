@@ -81,13 +81,15 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
 /// assert_eq!(mh.digest(), &digest_bytes[2..]);
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Decode))]
+#[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Encode))]
 pub struct RawMultihash {
     /// The code of the Multihash.
     code: u64,
     /// The actual size of the digest in bytes (not the allocated size).
     size: u8,
     /// The digest.
-    digest: crate::UnknownDigest<crate::U32>,
+    digest: crate::UnknownDigest<crate::U64>,
 }
 
 impl RawMultihash {
@@ -96,7 +98,7 @@ impl RawMultihash {
         Ok(Self {
             code,
             size: digest.len() as _,
-            digest: Digest::wrap(digest)?,
+            digest: Digest::extend(digest)?,
         })
     }
 
@@ -112,7 +114,7 @@ impl RawMultihash {
 
     /// Returns the digest.
     pub fn digest(&self) -> &[u8] {
-        self.digest.as_ref()
+        &self.digest.as_ref()[..self.size as usize]
     }
 
     /// Reads a multihash from a byte stream.
@@ -151,18 +153,11 @@ impl RawMultihash {
 
     /// From Multihash.
     pub fn from_mh<MH: MultihashDigest>(mh: &MH) -> Result<Self, Error> {
-        use generic_array::GenericArray;
-
-        // raw multihash is backed by a [u8; 32]
-        if mh.size() > 32 {
-            return Err(Error::InvalidSize(mh.size() as _));
-        }
-        let mut digest = GenericArray::default();
-        digest[..mh.size() as _].copy_from_slice(mh.digest());
+        let digest = Digest::extend(mh.digest())?;
         Ok(Self {
             code: mh.code(),
             size: mh.size(),
-            digest: digest.into(),
+            digest,
         })
     }
 
@@ -216,11 +211,11 @@ where
     use unsigned_varint::io::read_u64;
 
     let size = read_u64(&mut r)?;
-    if size != S::to_u64() {
+    if size > S::to_u64() || size > u8::MAX as u64 {
         return Err(Error::InvalidSize(size));
     }
     let mut digest = GenericArray::default();
-    r.read_exact(&mut digest)?;
+    r.read_exact(&mut digest[..size as usize])?;
     Ok(D::from(digest))
 }
 
@@ -248,7 +243,7 @@ where
     }
 
     let mut digest = GenericArray::default();
-    r.read_exact(&mut digest)?;
+    r.read_exact(&mut digest[..size as usize])?;
     Ok((code, size as u8, D::from(digest)))
 }
 

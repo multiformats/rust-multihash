@@ -16,7 +16,7 @@ mod kw {
 #[derive(Debug)]
 enum MhAttr {
     Code(utils::Attr<kw::code, syn::Path>),
-    Hasher(utils::Attr<kw::hasher, syn::Path>),
+    Hasher(utils::Attr<kw::hasher, Box<syn::Type>>),
 }
 
 impl Parse for MhAttr {
@@ -38,7 +38,7 @@ struct Params {
 struct Hash {
     ident: syn::Ident,
     code: syn::Path,
-    hasher: syn::Path,
+    hasher: Box<syn::Type>,
     digest: syn::Path,
 }
 
@@ -53,8 +53,8 @@ impl Hash {
     fn digest_size(&self, params: &Params) -> TokenStream {
         let ident = &self.ident;
         let mh_enum = &params.mh_enum;
-        let hasher = &self.hasher;
-        quote!(#mh_enum::#ident(_mh) => #hasher::size())
+        let mh = &params.mh_crate;
+        quote!(#mh_enum::#ident(mh) => #mh::Digest::size(mh))
     }
 
     fn digest_digest(&self, params: &Params) -> TokenStream {
@@ -237,11 +237,11 @@ mod tests {
         let input = quote! {
            #[derive(Clone, Multihash)]
            pub enum Multihash {
-               #[mh(code = multihash::IDENTITY, hasher = multihash::Identity256)]
-               Identity256(multihash::IdentityDigest<U32>),
+               #[mh(code = tiny_multihash::IDENTITY, hasher = tiny_multihash::Identity256)]
+               Identity256(tiny_multihash::IdentityDigest<U32>),
                /// Multihash array for hash function.
-               #[mh(code = multihash::STROBE_256, hasher = multihash::Strobe256)]
-               Strobe256(multihash::StrobeDigest<U32>),
+               #[mh(code = tiny_multihash::STROBE_256, hasher = tiny_multihash::Strobe256)]
+               Strobe256(tiny_multihash::StrobeDigest<U32>),
             }
         };
         let expected = quote! {
@@ -250,31 +250,31 @@ mod tests {
                     mh.code()
                 }
             }
-            impl multihash::MultihashDigest for Multihash {
-                fn new(code: u64, input: &[u8]) -> Result<Self, multihash::Error> {
+            impl tiny_multihash::MultihashDigest for Multihash {
+                fn new(code: u64, input: &[u8]) -> Result<Self, tiny_multihash::Error> {
                     match code {
-                        multihash::IDENTITY => Ok(Self::Identity256(multihash::Identity256::digest(input))),
-                        multihash::STROBE_256 => Ok(Self::Strobe256(multihash::Strobe256::digest(input))),
-                        _ => Err(multihash::Error::UnsupportedCode(code)),
+                        tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Identity256::digest(input))),
+                        tiny_multihash::STROBE_256 => Ok(Self::Strobe256(tiny_multihash::Strobe256::digest(input))),
+                        _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
                     }
                 }
-                fn wrap(code: u64, digest: &[u8]) -> Result<Self, multihash::Error> {
+                fn wrap(code: u64, digest: &[u8]) -> Result<Self, tiny_multihash::Error> {
                     match code {
-                        multihash::IDENTITY => Ok(Self::Identity256(multihash::Digest::wrap(digest)?)),
-                        multihash::STROBE_256 => Ok(Self::Strobe256(multihash::Digest::wrap(digest)?)),
-                        _ => Err(multihash::Error::UnsupportedCode(code)),
+                        tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Digest::wrap(digest)?)),
+                        tiny_multihash::STROBE_256 => Ok(Self::Strobe256(tiny_multihash::Digest::wrap(digest)?)),
+                        _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
                     }
                 }
                 fn code(&self) -> u64 {
                     match self {
-                        Multihash::Identity256(_mh) => multihash::IDENTITY,
-                        Multihash::Strobe256(_mh) => multihash::STROBE_256,
+                        Multihash::Identity256(_mh) => tiny_multihash::IDENTITY,
+                        Multihash::Strobe256(_mh) => tiny_multihash::STROBE_256,
                     }
                 }
                 fn size(&self) -> u8 {
                     match self {
-                        Multihash::Identity256(_mh) => multihash::Identity256::size(),
-                        Multihash::Strobe256(_mh) => multihash::Strobe256::size(),
+                        Multihash::Identity256(mh) => tiny_multihash::Digest::size(mh),
+                        Multihash::Strobe256(mh) => tiny_multihash::Digest::size(mh),
                     }
                 }
                 fn digest(&self) -> &[u8] {
@@ -284,25 +284,25 @@ mod tests {
                     }
                 }
                 #[cfg(feature = "std")]
-                fn read<R: std::io::Read>(mut r: R) -> Result<Self, multihash::Error>
+                fn read<R: std::io::Read>(mut r: R) -> Result<Self, tiny_multihash::Error>
                 where
                     Self: Sized
                 {
-                    let code = multihash::read_code(&mut r)?;
+                    let code = tiny_multihash::read_code(&mut r)?;
                     match code {
-                        multihash::IDENTITY => Ok(Self::Identity256(multihash::read_digest(r)?)),
-                        multihash::STROBE_256 => Ok(Self::Strobe256(multihash::read_digest(r)?)),
-                        _ => Err(multihash::Error::UnsupportedCode(code)),
+                        tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::read_digest(r)?)),
+                        tiny_multihash::STROBE_256 => Ok(Self::Strobe256(tiny_multihash::read_digest(r)?)),
+                        _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
                     }
                 }
             }
-            impl From<multihash::IdentityDigest<U32> > for Multihash {
-                fn from(digest: multihash::IdentityDigest<U32>) -> Self {
+            impl From<tiny_multihash::IdentityDigest<U32> > for Multihash {
+                fn from(digest: tiny_multihash::IdentityDigest<U32>) -> Self {
                     Self::Identity256(digest)
                 }
             }
-            impl From<multihash::StrobeDigest<U32> > for Multihash {
-                fn from(digest: multihash::StrobeDigest<U32>) -> Self {
+            impl From<tiny_multihash::StrobeDigest<U32> > for Multihash {
+                fn from(digest: tiny_multihash::StrobeDigest<U32>) -> Self {
                     Self::Strobe256(digest)
                 }
             }
