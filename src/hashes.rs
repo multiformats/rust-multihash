@@ -212,11 +212,13 @@ macro_rules! derive_digest {
         $(
             #[$doc]
             #[derive(Clone, Debug, Default)]
+            #[cfg(feature = "use_blake3")]
             pub struct $name($type);
             impl $name {
                 #[doc = $code_doc]
                 pub const CODE: Code = Code::$name;
                 /// Hash some input and return the Multihash digest.
+                #[cfg(feature = "use_blake3")]
                 pub fn digest(data: &[u8]) -> Multihash {
                     let digest = blake3::hash(data);
                     wrap(Self::CODE, digest.as_bytes())
@@ -275,6 +277,42 @@ macro_rules! derive_digest {
     }
 }
 
+#[cfg(not(feature = "use_blake3"))]
+impl_code! {
+    /// Identity (Raw binary)
+    Identity => 0x00,
+    /// SHA-1 (20-byte hash size)
+    Sha1 => 0x11,
+    /// SHA-256 (32-byte hash size)
+    Sha2_256 => 0x12,
+    /// SHA-512 (64-byte hash size)
+    Sha2_512 => 0x13,
+    /// SHA3-224 (28-byte hash size)
+    Sha3_224 => 0x17,
+    /// SHA3-256 (32-byte hash size)
+    Sha3_256 => 0x16,
+    /// SHA3-384 (48-byte hash size)
+    Sha3_384 => 0x15,
+    /// SHA3-512 (64-byte hash size)
+    Sha3_512 => 0x14,
+    /// Keccak-224 (28-byte hash size)
+    Keccak224 => 0x1a,
+    /// Keccak-256 (32-byte hash size)
+    Keccak256 => 0x1b,
+    /// Keccak-384 (48-byte hash size)
+    Keccak384 => 0x1c,
+    /// Keccak-512 (64-byte hash size)
+    Keccak512 => 0x1d,
+    /// BLAKE2b-256 (32-byte hash size)
+    Blake2b256 => 0xb220,
+    /// BLAKE2b-512 (64-byte hash size)
+    Blake2b512 => 0xb240,
+    /// BLAKE2s-128 (16-byte hash size)
+    Blake2s128 => 0xb250,
+    /// BLAKE2s-256 (32-byte hash size)
+    Blake2s256 => 0xb260,
+}
+#[cfg(feature = "use_blake3")]
 impl_code! {
     /// Identity (Raw binary)
     Identity => 0x00,
@@ -425,6 +463,7 @@ derive_digest! {
     @blake Blake2s | Blake2sParams as Blake2s256 32;
         @code_doc "The code of the Blake2-256 hasher, 0xb260.",
 }
+#[cfg(feature = "use_blake3")]
 derive_digest! {
     /// The Blake3 hasher.
     @blake3 blake3::Hasher as Blake3;
