@@ -3,7 +3,7 @@ members = ["derive", "."]
 
 [package]
 name = "tiny-multihash"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Implementation of the multihash format"

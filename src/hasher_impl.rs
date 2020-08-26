@@ -36,7 +36,9 @@ macro_rules! derive_digest {
         #[cfg(feature = "scale-codec")]
         impl<S: Size> parity_scale_codec::Encode for $name<S> {
             fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
-                self.as_ref().using_encoded(f)
+                let mut digest = [0; 64];
+                digest.copy_from_slice(self.as_ref());
+                digest.using_encoded(f)
             }
         }
 
