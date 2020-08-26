@@ -303,12 +303,12 @@ fn multihash_errors() {
         Multihash::from_bytes(&[0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
-    /*let identity_code: u8 = 0x00;
+    let identity_code: u8 = 0x00;
     let identity_length = 3;
     assert!(
         Multihash::from_bytes(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
-    );*/
+    );
 }
 
 #[test]

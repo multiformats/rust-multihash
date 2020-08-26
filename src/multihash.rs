@@ -1,6 +1,7 @@
 use crate::error::Error;
 use crate::hasher::Digest;
 use core::fmt::Debug;
+use std::convert::TryInto;
 
 /// Trait for reading and writhing Multihashes.
 ///
@@ -30,12 +31,23 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
         Self: Sized;
 
     /// Parses a multihash from a bytes.
+    ///
+    /// You need to make sure the passed in bytes have the correct length. The digest length
+    /// needs to match the `size` value of the multihash.
     #[cfg(feature = "std")]
     fn from_bytes(mut bytes: &[u8]) -> Result<Self, Error>
     where
         Self: Sized,
     {
-        Self::read(&mut bytes)
+        let result = Self::read(&mut bytes)?;
+        // There were more bytes supplied than read
+        if !bytes.is_empty() {
+            return Err(Error::InvalidSize(bytes.len().try_into().expect(
+                "Currently the maximum size is 255, therefore always fits into usize",
+            )));
+        }
+
+        Ok(result)
     }
 
     /// Writes a multihash to a byte stream.
@@ -128,12 +140,23 @@ impl RawMultihash {
     }
 
     /// Parses a multihash from a bytes.
+    ///
+    /// You need to make sure the passed in bytes have the correct length. The digest length
+    /// needs to match the `size` value of the multihash.
     #[cfg(feature = "std")]
     pub fn from_bytes(mut bytes: &[u8]) -> Result<Self, Error>
     where
         Self: Sized,
     {
-        Self::read(&mut bytes)
+        let result = Self::read(&mut bytes)?;
+        // There were more bytes supplied than read
+        if !bytes.is_empty() {
+            return Err(Error::InvalidSize(bytes.len().try_into().expect(
+                "Currently the maximum size is 255, therefore always fits into usize",
+            )));
+        }
+
+        Ok(result)
     }
 
     /// Writes a multihash to a byte stream.
