@@ -212,13 +212,11 @@ macro_rules! derive_digest {
         $(
             #[$doc]
             #[derive(Clone, Debug, Default)]
-            #[cfg(feature = "use_blake3")]
             pub struct $name($type);
             impl $name {
                 #[doc = $code_doc]
                 pub const CODE: Code = Code::$name;
                 /// Hash some input and return the Multihash digest.
-                #[cfg(feature = "use_blake3")]
                 pub fn digest(data: &[u8]) -> Multihash {
                     let digest = blake3::hash(data);
                     wrap(Self::CODE, digest.as_bytes())
