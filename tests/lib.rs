@@ -44,6 +44,10 @@ fn multihash_encode() {
         Blake2s256, b"hello world", "e0e402209aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b";
         Blake2b256, b"hello world", "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
         Blake2s128, b"hello world", "d0e4021037deae0226c30da2ab424a7b8ee14e83";
+    }
+
+    #[cfg(feature = "use_blake3")]
+    assert_encode! {
         Blake3, b"hello world", "1e20d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
     }
 }
@@ -81,6 +85,9 @@ fn assert_decode() {
         Blake2s256, "e0e402209aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b";
         Blake2b256, "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
         Blake2s128, "d0e4021037deae0226c30da2ab424a7b8ee14e83";
+    }
+    #[cfg(feature = "use_blake3")]
+    assert_decode! {
         Blake3, "1e20d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
     }
 }
@@ -217,6 +224,7 @@ fn multihash_methods() {
         "d0e40210",
         "37deae0226c30da2ab424a7b8ee14e83",
     );
+    #[cfg(feature = "use_blake3")]
     test_methods(
         Blake3::default(),
         "1e20",
