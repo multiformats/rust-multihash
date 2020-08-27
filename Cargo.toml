@@ -13,7 +13,7 @@ edition = "2018"
 [dependencies]
 blake2b_simd = { version = "0.5.9", default-features = false }
 blake2s_simd = { version = "0.5.9", default-features = false }
-blake3 = { version = "0.3.5", default-features = false }
+blake3 = { version = "0.3.5", default-features = false, optional = true }
 digest = { version = "0.9", default-features = false }
 sha-1 = { version = "0.9", default-features = false }
 sha2 = { version = "0.9", default-features = false }
@@ -30,6 +30,7 @@ rand = "0.7.3"
 
 [features]
 test = ["quickcheck", "rand"]
+use_blake3 = ["blake3"]
 
 [[bench]]
 name = "multihash"
