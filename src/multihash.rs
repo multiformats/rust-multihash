@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::hasher::Digest;
+use core::convert::TryInto;
 use core::fmt::Debug;
-use std::convert::TryInto;
 
 /// Trait for reading and writhing Multihashes.
 ///
