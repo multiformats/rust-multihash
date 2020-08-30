@@ -75,6 +75,56 @@ macro_rules! derive_digest {
             }
         }
 
+        #[cfg(feature = "serde-codec")]
+        impl<SZ: Size> serde::Serialize for $name<SZ> {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                use serde::ser::SerializeTuple;
+
+                let mut seq = serializer.serialize_tuple(self.0.len())?;
+                for elem in &self.0[..] {
+                    seq.serialize_element(elem)?;
+                }
+                seq.end()
+            }
+        }
+
+        #[cfg(feature = "serde-codec")]
+        impl<'de, S: Size> serde::Deserialize<'de> for $name<S> {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                use core::marker::PhantomData;
+
+                pub struct DigestVisitor<S: Size>(PhantomData<S>);
+
+                impl<'de, S: Size> serde::de::Visitor<'de> for DigestVisitor<S> {
+                    type Value = $name<S>;
+
+                    fn expecting(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+                        write!(f, "an array of length {}", S::to_u8())
+                    }
+
+                    fn visit_seq<A: serde::de::SeqAccess<'de>>(
+                        self,
+                        mut seq: A,
+                    ) -> Result<Self::Value, A::Error> {
+                        let mut arr = GenericArray::default();
+                        for (i, b) in arr.iter_mut().enumerate() {
+                            *b = seq
+                                .next_element()?
+                                .ok_or_else(|| serde::de::Error::invalid_length(i, &self))?;
+                        }
+                        Ok($name(arr))
+                    }
+                }
+                deserializer.deserialize_tuple(S::to_usize(), DigestVisitor(PhantomData))
+            }
+        }
+
         impl<S: Size> Digest<S> for $name<S> {}
     };
 }

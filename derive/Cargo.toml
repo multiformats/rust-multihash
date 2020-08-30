@@ -11,11 +11,11 @@ repository = "https://github.com/ipfs-rust/tiny-multihash"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1.0.18"
-proc-macro-crate = "0.1.4"
-proc-macro-error = "1.0.2"
+proc-macro2 = "1.0.19"
+proc-macro-crate = "0.1.5"
+proc-macro-error = "1.0.4"
 quote = "1.0.7"
-syn = "1.0.31"
+syn = "1.0.39"
 synstructure = "0.12.4"
 
 [dev-dependencies]

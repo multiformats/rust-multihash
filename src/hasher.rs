@@ -36,7 +36,7 @@ pub trait Digest<S: Size>:
 
     /// Wraps the digest bytes.
     fn wrap(digest: &[u8]) -> Result<Self, Error> {
-        if digest.len() != S::to_u8() as _ {
+        if digest.len() != S::to_usize() {
             return Err(Error::InvalidSize(digest.len() as _));
         }
         Ok(Self::fit(digest))
@@ -44,7 +44,7 @@ pub trait Digest<S: Size>:
 
     /// Extends the digest size to the required size.
     fn extend(digest: &[u8]) -> Result<Self, Error> {
-        if digest.len() > S::to_u8() as _ {
+        if digest.len() > S::to_usize() {
             return Err(Error::InvalidSize(digest.len() as _));
         }
         Ok(Self::fit(digest))
@@ -52,7 +52,7 @@ pub trait Digest<S: Size>:
 
     /// Wraps and the digest bytes.
     fn truncate(digest: &[u8]) -> Result<Self, Error> {
-        if digest.len() < S::to_u8() as _ {
+        if digest.len() < S::to_usize() {
             return Err(Error::InvalidSize(digest.len() as _));
         }
         Ok(Self::fit(digest))

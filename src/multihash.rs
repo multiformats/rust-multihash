@@ -92,9 +92,11 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
 /// assert_eq!(mh.size(), 32);
 /// assert_eq!(mh.digest(), &digest_bytes[2..]);
 /// ```
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Decode))]
 #[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Encode))]
+#[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
+#[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
 pub struct RawMultihash {
     /// The code of the Multihash.
     code: u64,
@@ -285,5 +287,25 @@ mod tests {
         hash.write(&mut buf[..]).unwrap();
         let hash2 = Multihash::read(&buf[..]).unwrap();
         assert_eq!(hash, hash2);
+    }
+
+    #[test]
+    #[cfg(feature = "scale-codec")]
+    fn test_scale() {
+        use parity_scale_codec::{Decode, Encode};
+
+        let mh = RawMultihash::default();
+        let bytes = mh.encode();
+        let mh2: RawMultihash = Decode::decode(&mut &bytes[..]).unwrap();
+        assert_eq!(mh, mh2);
+    }
+
+    #[test]
+    #[cfg(feature = "serde-codec")]
+    fn test_serde() {
+        let mh = RawMultihash::default();
+        let bytes = serde_json::to_string(&mh).unwrap();
+        let mh2 = serde_json::from_str(&bytes).unwrap();
+        assert_eq!(mh, mh2);
     }
 }
