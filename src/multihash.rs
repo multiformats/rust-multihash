@@ -1,5 +1,6 @@
 use crate::error::Error;
 use crate::hasher::Digest;
+#[cfg(feature = "std")]
 use core::convert::TryInto;
 use core::fmt::Debug;
 

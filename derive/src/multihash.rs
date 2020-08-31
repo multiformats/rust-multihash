@@ -77,6 +77,7 @@ impl Hash {
         quote!(#code => Ok(Self::#ident(#mh::Digest::wrap(digest)?)))
     }
 
+    #[cfg(feature = "std")]
     fn digest_read(&self, params: &Params) -> TokenStream {
         let code = &self.code;
         let ident = &self.ident;
@@ -168,8 +169,25 @@ pub fn multihash(s: Structure) -> TokenStream {
     let digest_digest = hashes.iter().map(|h| h.digest_digest(&params));
     let digest_new = hashes.iter().map(|h| h.digest_new());
     let digest_wrap = hashes.iter().map(|h| h.digest_wrap(&params));
+    #[cfg(feature = "std")]
     let digest_read = hashes.iter().map(|h| h.digest_read(&params));
     let from_digest = hashes.iter().map(|h| h.from_digest(&params));
+
+    #[cfg(feature = "std")]
+    let std_read = quote! {
+            fn read<R: std::io::Read>(mut r: R) -> Result<Self, #mh_crate::Error>
+            where
+               Self: Sized
+            {
+               let code = #mh_crate::read_code(&mut r)?;
+               match code {
+                   #(#digest_read,)*
+                   _ => Err(#mh_crate::Error::UnsupportedCode(code)),
+               }
+            }
+    };
+    #[cfg(not(feature = "std"))]
+    let std_read = quote! {};
 
     quote! {
         impl From<#mh_enum> for u64 {
@@ -211,17 +229,8 @@ pub fn multihash(s: Structure) -> TokenStream {
                 }
             }
 
-            #[cfg(feature = "std")]
-            fn read<R: std::io::Read>(mut r: R) -> Result<Self, #mh_crate::Error>
-            where
-                Self: Sized
-            {
-                let code = #mh_crate::read_code(&mut r)?;
-                match code {
-                    #(#digest_read,)*
-                    _ => Err(#mh_crate::Error::UnsupportedCode(code)),
-                }
-            }
+            #std_read
+
         }
 
         #(#from_digest)*
@@ -283,7 +292,6 @@ mod tests {
                         Multihash::Strobe256(mh) => mh.as_ref(),
                     }
                 }
-                #[cfg(feature = "std")]
                 fn read<R: std::io::Read>(mut r: R) -> Result<Self, tiny_multihash::Error>
                 where
                     Self: Sized

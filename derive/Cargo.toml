@@ -18,6 +18,10 @@ quote = "1.0.7"
 syn = "1.0.39"
 synstructure = "0.12.4"
 
+[features]
+default = ["std"]
+std = []
+
 [dev-dependencies]
 pretty_assertions = "0.6.1"
 tiny-multihash = { path = "..", default-features = false }
