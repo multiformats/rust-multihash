@@ -20,7 +20,7 @@ First add this to your `Cargo.toml`
 
 ```toml
 [dependencies]
-multihash = "*"
+tiny-multihash = "*"
 ```
 
 Then run `cargo build`.
@@ -28,10 +28,56 @@ Then run `cargo build`.
 ## Usage
 
 ```rust
-use multihash::Code;
+use tiny_multihash::{Multihash, MultihashDigest, SHA2_256};
 
 fn main() {
-    let hash = Code::Sha2_256.digest(b"my hash");
+    let hash = Multihash::new(SHA2_256, b"my hash");
+    println!("{:?}", hash);
+}
+```
+
+### Using a custom code table
+
+You need to add the `std` feature to your `Cargo.toml` in order to be able to use the Multihash derive.
+
+```toml
+[features]
+default = ["std"]
+std = []
+```
+
+Without you will get an error like:
+
+```
+error[E0046]: not all trait items implemented, missing: `read`
+ --> src/main.rs:7:28
+  |
+7 | #[derive(Clone, Debug, Eq, Multihash, PartialEq)]
+  |                            ^^^^^^^^^ missing `read` in implementation
+  |
+  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
+  = help: implement the missing item: `fn read<R, Self>(_: R) -> std::result::Result<Self, tiny_multihash::Error> where R: std::io::Read { todo!() }`
+```
+
+Then you can derive your own code table:
+
+```rust
+use tiny_multihash::derive::Multihash;
+use tiny_multihash::{Hasher, MultihashDigest};
+
+const FOO: u64 = 0x01;
+const BAR: u64 = 0x02;
+
+#[derive(Clone, Debug, Eq, Multihash, PartialEq)]
+pub enum Multihash {
+    #[mh(code = FOO, hasher = tiny_multihash::Sha2_256)]
+    Foo(tiny_multihash::Sha2Digest<tiny_multihash::U32>),
+    #[mh(code = BAR, hasher = tiny_multihash::Sha2_512)]
+    Bar(tiny_multihash::Sha2Digest<tiny_multihash::U64>),
+}
+
+fn main() {
+    let hash = Multihash::new(FOO, b"my hash");
     println!("{:?}", hash);
 }
 ```
