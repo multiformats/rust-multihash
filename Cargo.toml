@@ -14,7 +14,7 @@ keywords = ["multihash", "ipfs"]
 license = "MIT"
 
 [features]
-default = ["std", "all", "derive", "multihash-impl", "scale-codec", "serde-codec"]
+default = ["std", "all", "derive", "multihash-impl"]
 std = ["unsigned-varint/std", "tiny-multihash-derive/std"]
 multihash-impl = ["derive", "all"]
 derive = ["tiny-multihash-derive"]
