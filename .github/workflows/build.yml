@@ -63,3 +63,24 @@ jobs:
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.6
+
+  no-default-features:
+    name: Clippy with no default features (for no_std envs)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+
+      - name: Run cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --no-default-features --workspace -- -D warnings
