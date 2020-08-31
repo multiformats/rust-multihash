@@ -38,28 +38,7 @@ fn main() {
 
 ### Using a custom code table
 
-You need to add the `std` feature to your `Cargo.toml` in order to be able to use the Multihash derive.
-
-```toml
-[features]
-default = ["std"]
-std = []
-```
-
-Without you will get an error like:
-
-```
-error[E0046]: not all trait items implemented, missing: `read`
- --> src/main.rs:7:28
-  |
-7 | #[derive(Clone, Debug, Eq, Multihash, PartialEq)]
-  |                            ^^^^^^^^^ missing `read` in implementation
-  |
-  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
-  = help: implement the missing item: `fn read<R, Self>(_: R) -> std::result::Result<Self, tiny_multihash::Error> where R: std::io::Read { todo!() }`
-```
-
-Then you can derive your own code table:
+You can derive your own application specific code table:
 
 ```rust
 use tiny_multihash::derive::Multihash;
