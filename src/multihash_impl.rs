@@ -34,10 +34,6 @@ pub const BLAKE2B_512: u64 = 0xb240;
 pub const BLAKE2S_128: u64 = 0xb250;
 /// Multihash code for BLAKE2s-256.
 pub const BLAKE2S_256: u64 = 0xb260;
-/// Multihash code for STROBE-256.
-pub const STROBE_256: u64 = 0xa0;
-/// Multihash code for STROBE-512.
-pub const STROBE_512: u64 = 0xa1;
 
 /// Default (cryptographically secure) Multihash implementation.
 ///
@@ -89,27 +85,21 @@ pub enum Multihash {
     /// Multihash array for hash function.
     #[mh(code = self::BLAKE2S_256, hasher = crate::Blake2s256)]
     Blake2s256(crate::Blake2sDigest<crate::U32>),
-    /// Multihash array for hash function.
-    #[mh(code = self::STROBE_256, hasher = crate::Strobe256)]
-    Strobe256(crate::StrobeDigest<crate::U32>),
-    /// Multihash array for hash function.
-    #[mh(code = self::STROBE_512, hasher = crate::Strobe512)]
-    Strobe512(crate::StrobeDigest<crate::U64>),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::hasher::Hasher;
-    use crate::hasher_impl::strobe::{Strobe256, Strobe512};
+    use crate::hasher_impl::sha3::{Sha3_256, Sha3_512};
     use crate::multihash::MultihashDigest;
 
     #[test]
     fn test_hasher_256() {
-        let digest = Strobe256::digest(b"hello world");
+        let digest = Sha3_256::digest(b"hello world");
         let hash = Multihash::from(digest);
-        let hash2 = Multihash::new(STROBE_256, b"hello world").unwrap();
-        assert_eq!(hash.code(), STROBE_256);
+        let hash2 = Multihash::new(SHA3_256, b"hello world").unwrap();
+        assert_eq!(hash.code(), SHA3_256);
         assert_eq!(hash.size(), 32);
         assert_eq!(hash.digest(), digest.as_ref());
         assert_eq!(hash, hash2);
@@ -117,10 +107,10 @@ mod tests {
 
     #[test]
     fn test_hasher_512() {
-        let digest = Strobe512::digest(b"hello world");
+        let digest = Sha3_512::digest(b"hello world");
         let hash = Multihash::from(digest);
-        let hash2 = Multihash::new(STROBE_512, b"hello world").unwrap();
-        assert_eq!(hash.code(), STROBE_512);
+        let hash2 = Multihash::new(SHA3_512, b"hello world").unwrap();
+        assert_eq!(hash.code(), SHA3_512);
         assert_eq!(hash.size(), 64);
         assert_eq!(hash.digest(), digest.as_ref());
         assert_eq!(hash, hash2);

@@ -5,9 +5,11 @@ use tiny_multihash::{
     Sha2Digest, Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
     StatefulHasher, Strobe256, Strobe512, StrobeDigest, BLAKE2B_256, BLAKE2B_512, BLAKE2S_128,
     BLAKE2S_256, IDENTITY, KECCAK_224, KECCAK_256, KECCAK_384, KECCAK_512, SHA1, SHA2_256,
-    SHA2_512, SHA3_224, SHA3_256, SHA3_384, SHA3_512, STROBE_256, STROBE_512, U128, U16, U20, U28,
-    U32, U48, U64,
+    SHA2_512, SHA3_224, SHA3_256, SHA3_384, SHA3_512, U128, U16, U20, U28, U32, U48, U64,
 };
+
+const STROBE_256: u64 = 0x3312e7;
+const STROBE_512: u64 = 0x3312e8;
 
 #[derive(Clone, Debug, Eq, Multihash, PartialEq)]
 pub enum Multihash {

@@ -277,12 +277,12 @@ where
 mod tests {
     use super::*;
     use crate::hasher::Hasher;
-    use crate::hasher_impl::strobe::Strobe256;
+    use crate::hasher_impl::sha2::Sha2_256;
     use crate::multihash_impl::Multihash;
 
     #[test]
     fn roundtrip() {
-        let digest = Strobe256::digest(b"hello world");
+        let digest = Sha2_256::digest(b"hello world");
         let hash = Multihash::from(digest);
         let mut buf = [0u8; 35];
         hash.write(&mut buf[..]).unwrap();
