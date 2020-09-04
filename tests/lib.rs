@@ -105,8 +105,6 @@ macro_rules! assert_encode {
 #[test]
 fn multihash_encode() {
     assert_encode! {
-        // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
-        //Identity, b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz", "00a1016162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a";
         Identity256, b"beep boop", "00096265657020626f6f70";
         Sha1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         Sha2_256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
@@ -294,8 +292,8 @@ fn multihash_methods() {
 #[test]
 #[should_panic]
 fn test_long_identity_hash() {
-    // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
-    let input = b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz";
+    // The identity hash panics if the input size is bigger than the maximum size
+    let input = b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz";
     Identity256::digest(input);
 }
 

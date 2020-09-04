@@ -309,7 +309,11 @@ pub mod identity {
         }
     }
 
-    /// Identity hasher.
+    /// Identity hasher with a maximum size.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the input is bigger than the maximum size.
     #[derive(Debug, Default)]
     pub struct IdentityHasher<S: Size> {
         bytes: GenericArray<u8, S>,
@@ -338,6 +342,10 @@ pub mod identity {
     }
 
     /// 32 byte Identity hasher (constrained to 32 bytes).
+    ///
+    /// # Panics
+    ///
+    /// Panics if the input is bigger than 32 bytes.
     pub type Identity256 = IdentityHasher<U32>;
 }
 
