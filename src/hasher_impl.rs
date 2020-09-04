@@ -338,7 +338,7 @@ pub mod identity {
     }
 
     /// 128 byte Identity hasher (constrained to 128 bytes).
-    pub type Identity = IdentityHasher<U128>;
+    pub type Identity1024 = IdentityHasher<U128>;
 }
 
 pub mod unknown {

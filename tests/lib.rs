@@ -1,6 +1,6 @@
 use tiny_multihash::{
     derive::Multihash, read_code, read_digest, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128,
-    Blake2s256, Blake2sDigest, Digest, Error, Hasher, Identity, IdentityDigest, Keccak224,
+    Blake2s256, Blake2sDigest, Digest, Error, Hasher, Identity1024, IdentityDigest, Keccak224,
     Keccak256, Keccak384, Keccak512, KeccakDigest, MultihashDigest, RawMultihash, Sha1, Sha1Digest,
     Sha2Digest, Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
     StatefulHasher, Strobe256, Strobe512, StrobeDigest, BLAKE2B_256, BLAKE2B_512, BLAKE2S_128,
@@ -14,8 +14,8 @@ const STROBE_512: u64 = 0x3312e8;
 #[derive(Clone, Debug, Eq, Multihash, PartialEq)]
 pub enum Multihash {
     /// Multihash array for hash function.
-    #[mh(code = IDENTITY, hasher = Identity)]
-    Identity256(IdentityDigest<U128>),
+    #[mh(code = IDENTITY, hasher = Identity1024)]
+    Identity(IdentityDigest<U128>),
     /// Multihash array for hash function.
     #[mh(code = SHA1, hasher = Sha1)]
     Sha1(Sha1Digest<U20>),
@@ -107,7 +107,7 @@ fn multihash_encode() {
     assert_encode! {
         // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
         //Identity, b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz", "00a1016162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a206162636465666768696a6b6c6d6e6f707172737475767778797a";
-        Identity, b"beep boop", "00096265657020626f6f70";
+        Identity1024, b"beep boop", "00096265657020626f6f70";
         Sha1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         Sha2_256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         Sha2_256, b"beep boop", "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -190,8 +190,20 @@ macro_rules! assert_roundtrip {
 #[test]
 fn assert_roundtrip() {
     assert_roundtrip!(
-        Identity, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Keccak224,
-        Keccak256, Keccak384, Keccak512, Blake2b512, Blake2s256
+        Identity1024,
+        Sha1,
+        Sha2_256,
+        Sha2_512,
+        Sha3_224,
+        Sha3_256,
+        Sha3_384,
+        Sha3_512,
+        Keccak224,
+        Keccak256,
+        Keccak384,
+        Keccak512,
+        Blake2b512,
+        Blake2s256
     );
 }
 /*
@@ -284,7 +296,7 @@ fn multihash_methods() {
 fn test_long_identity_hash() {
     // A hash with a length bigger than 0x80, hence needing 2 bytes to encode the length
     let input = b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz";
-    Identity::digest(input);
+    Identity1024::digest(input);
 }
 
 #[test]

@@ -63,7 +63,7 @@ pub use crate::multihash_impl::{
 pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bDigest, Blake2bHasher};
 #[cfg(feature = "blake2s")]
 pub use crate::hasher_impl::blake2s::{Blake2s128, Blake2s256, Blake2sDigest, Blake2sHasher};
-pub use crate::hasher_impl::identity::{Identity, IdentityDigest, IdentityHasher};
+pub use crate::hasher_impl::identity::{Identity1024, IdentityDigest, IdentityHasher};
 #[cfg(feature = "sha1")]
 pub use crate::hasher_impl::sha1::{Sha1, Sha1Digest};
 #[cfg(feature = "sha2")]
