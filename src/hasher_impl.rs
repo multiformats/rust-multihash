@@ -273,7 +273,7 @@ pub mod sha3 {
 
 pub mod identity {
     use super::*;
-    use generic_array::typenum::U128;
+    use generic_array::typenum::U32;
 
     /// Multihash digest.
     #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
@@ -337,8 +337,8 @@ pub mod identity {
         }
     }
 
-    /// 128 byte Identity hasher (constrained to 128 bytes).
-    pub type Identity1024 = IdentityHasher<U128>;
+    /// 32 byte Identity hasher (constrained to 32 bytes).
+    pub type Identity256 = IdentityHasher<U32>;
 }
 
 pub mod unknown {
