@@ -5,11 +5,16 @@ use crate::{Code, Code::*, Multihash, MultihashDigest};
 
 use alloc::{boxed::Box, vec::Vec};
 
+#[cfg(not(feature = "use_blake3"))]
+const HASHES: [Code; 16] = [
+    Identity, Sha1, Sha2_256, Sha2_512, Sha3_512, Sha3_384, Sha3_256, Sha3_224, Keccak224,
+    Keccak256, Keccak384, Keccak512, Blake2b256, Blake2b512, Blake2s128, Blake2s256,
+];
+#[cfg(feature = "use_blake3")]
 const HASHES: [Code; 17] = [
     Identity, Sha1, Sha2_256, Sha2_512, Sha3_512, Sha3_384, Sha3_256, Sha3_224, Keccak224,
     Keccak256, Keccak384, Keccak512, Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3,
 ];
-
 /// Generates a random hash algorithm.
 ///
 /// The more exotic ones will be generated just as frequently as the common ones.
