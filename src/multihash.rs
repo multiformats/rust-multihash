@@ -77,6 +77,8 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
 /// With this Multihash implementation you can operate on Multihashes in a generic way, but
 /// no hasher implementation is associated with the code.
 ///
+/// The maximum size is currently 512 Bit.
+///
 /// # Example
 ///
 /// ```
@@ -211,38 +213,6 @@ where
     w.write_all(size)?;
     w.write_all(digest)?;
     Ok(())
-}
-
-/// Reads a code from a byte stream.
-#[cfg(feature = "std")]
-pub fn read_code<R>(mut r: R) -> Result<u64, Error>
-where
-    R: std::io::Read,
-{
-    use unsigned_varint::io::read_u64;
-    Ok(read_u64(&mut r)?)
-}
-
-/// Reads a multihash from a byte stream that contains the digest prefixed with the size.
-///
-/// The byte stream must not contain the code as prefix.
-#[cfg(feature = "std")]
-pub fn read_digest<R, S, D>(mut r: R) -> Result<D, Error>
-where
-    R: std::io::Read,
-    S: crate::hasher::Size,
-    D: crate::hasher::Digest<S>,
-{
-    use generic_array::GenericArray;
-    use unsigned_varint::io::read_u64;
-
-    let size = read_u64(&mut r)?;
-    if size > S::to_u64() || size > u8::MAX as u64 {
-        return Err(Error::InvalidSize(size));
-    }
-    let mut digest = GenericArray::default();
-    r.read_exact(&mut digest[..size as usize])?;
-    Ok(D::from(digest))
 }
 
 /// Reads a multihash from a byte stream that contains a full multihash (code, size and the digest)

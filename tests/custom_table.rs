@@ -1,5 +1,5 @@
 use tiny_multihash::derive::Multihash;
-use tiny_multihash::{read_code, read_digest, Digest, Error, Hasher, MultihashDigest};
+use tiny_multihash::{Digest, Error, Hasher, MultihashDigest};
 
 const FOO: u64 = 0x01;
 const BAR: u64 = 0x02;

@@ -1,7 +1,7 @@
 use tiny_multihash::{
-    derive::Multihash, read_code, read_digest, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128,
-    Blake2s256, Blake2sDigest, Digest, Error, Hasher, Identity256, IdentityDigest, Keccak224,
-    Keccak256, Keccak384, Keccak512, KeccakDigest, MultihashDigest, RawMultihash, Sha1, Sha1Digest,
+    derive::Multihash, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128, Blake2s256,
+    Blake2sDigest, Digest, Error, Hasher, Identity256, IdentityDigest, Keccak224, Keccak256,
+    Keccak384, Keccak512, KeccakDigest, MultihashDigest, RawMultihash, Sha1, Sha1Digest,
     Sha2Digest, Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
     StatefulHasher, Strobe256, Strobe512, StrobeDigest, BLAKE2B_256, BLAKE2B_512, BLAKE2S_128,
     BLAKE2S_256, IDENTITY, KECCAK_224, KECCAK_256, KECCAK_384, KECCAK_512, SHA1, SHA2_256,

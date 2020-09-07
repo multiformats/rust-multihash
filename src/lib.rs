@@ -45,8 +45,6 @@ pub use crate::error::{Error, Result};
 #[cfg(feature = "std")]
 pub use crate::hasher::WriteHasher;
 pub use crate::hasher::{Digest, Hasher, Size, StatefulHasher};
-#[cfg(feature = "std")]
-pub use crate::multihash::{read_code, read_digest};
 pub use crate::multihash::{MultihashDigest, RawMultihash};
 pub use generic_array::typenum::{self, U128, U16, U20, U28, U32, U48, U64};
 #[cfg(feature = "derive")]

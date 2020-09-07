@@ -273,6 +273,7 @@ pub mod sha3 {
 
 pub mod identity {
     use super::*;
+    use crate::error::Error;
     use generic_array::typenum::U32;
 
     /// Multihash digest.
@@ -306,6 +307,39 @@ pub mod identity {
     impl<S: Size> Digest<S> for IdentityDigest<S> {
         fn size(&self) -> u8 {
             self.0
+        }
+
+        // A custom implementation is needed as an identity hash value might be shorter than the
+        // allocated Digest.
+        fn wrap(digest: &[u8]) -> Result<Self, Error> {
+            Self::extend(digest)
+        }
+
+        // a custom implementation is needed as an identity hash also stores the actual size of
+        // the given digest.
+        fn fit(digest: &[u8]) -> Self {
+            let mut array = GenericArray::default();
+            let len = digest.len().min(array.len());
+            array[..len].copy_from_slice(&digest[..len]);
+            Self(len as u8, array)
+        }
+
+        // A custom implementation is needed as an identity hash also stores the actual size of
+        // the given digest.
+        #[cfg(feature = "std")]
+        fn from_reader<R>(mut r: R) -> Result<Self, Error>
+        where
+            R: std::io::Read,
+        {
+            use unsigned_varint::io::read_u64;
+
+            let size = read_u64(&mut r)?;
+            if size > S::to_u64() || size > u8::MAX as u64 {
+                return Err(Error::InvalidSize(size));
+            }
+            let mut digest = GenericArray::default();
+            r.read_exact(&mut digest[..size as usize])?;
+            Ok(Self(size as u8, digest))
         }
     }
 

@@ -65,6 +65,25 @@ pub trait Digest<S: Size>:
         array[..len].copy_from_slice(&digest[..len]);
         array.into()
     }
+
+    /// Reads a multihash digest from a byte stream that contains the digest prefixed with the size.
+    ///
+    /// The byte stream must not contain the code as prefix.
+    #[cfg(feature = "std")]
+    fn from_reader<R>(mut r: R) -> Result<Self, Error>
+    where
+        R: std::io::Read,
+    {
+        use unsigned_varint::io::read_u64;
+
+        let size = read_u64(&mut r)?;
+        if size > S::to_u64() || size > u8::MAX as u64 {
+            return Err(Error::InvalidSize(size));
+        }
+        let mut digest = GenericArray::default();
+        r.read_exact(&mut digest[..size as usize])?;
+        Ok(Self::from(digest))
+    }
 }
 
 /// Trait implemented by a hash function implementation.

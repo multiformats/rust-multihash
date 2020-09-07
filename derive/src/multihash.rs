@@ -82,7 +82,7 @@ impl Hash {
         let code = &self.code;
         let ident = &self.ident;
         let mh = &params.mh_crate;
-        quote!(#code => Ok(Self::#ident(#mh::read_digest(r)?)))
+        quote!(#code => Ok(Self::#ident(#mh::Digest::from_reader(r)?)))
     }
 
     fn from_digest(&self, params: &Params) -> TokenStream {
@@ -179,7 +179,7 @@ pub fn multihash(s: Structure) -> TokenStream {
             where
                Self: Sized
             {
-               let code = #mh_crate::read_code(&mut r)?;
+               let code = unsigned_varint::io::read_u64(&mut r)?;
                match code {
                    #(#digest_read,)*
                    _ => Err(#mh_crate::Error::UnsupportedCode(code)),
@@ -296,10 +296,10 @@ mod tests {
                 where
                     Self: Sized
                 {
-                    let code = tiny_multihash::read_code(&mut r)?;
+                    let code = unsigned_varint::io::read_u64(&mut r)?;
                     match code {
-                        tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::read_digest(r)?)),
-                        tiny_multihash::STROBE_256 => Ok(Self::Strobe256(tiny_multihash::read_digest(r)?)),
+                        tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Digest::from_reader(r)?)),
+                        tiny_multihash::STROBE_256 => Ok(Self::Strobe256(tiny_multihash::Digest::from_reader(r)?)),
                         _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
                     }
                 }
