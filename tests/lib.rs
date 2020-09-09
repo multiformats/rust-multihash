@@ -1,3 +1,5 @@
+use std::io::Cursor;
+
 use tiny_multihash::{
     derive::Multihash, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128, Blake2s256,
     Blake2sDigest, Digest, Error, Hasher, Identity256, IdentityDigest, Keccak224, Keccak256,
@@ -81,47 +83,58 @@ fn hex_to_bytes(s: &str) -> Vec<u8> {
 }
 
 macro_rules! assert_encode {
-    {$( $alg:ty, $data:expr, $expect:expr; )*} => {
-        $(
-            let hex = hex_to_bytes($expect);
-            assert_eq!(
-                Multihash::from(<$alg>::digest($data)).to_bytes(),
-                hex,
-                "{:?} encodes correctly", stringify!($alg)
-            );
+   // Mutlihash enum member, Multihash code, input, Multihash as hex
+   {$( $alg:ty, $code:expr, $data:expr, $expect:expr; )*} => {
+       $(
+           let expected = hex_to_bytes($expect);
 
-            let mut hasher = <$alg>::default();
-            hasher.update($data);
-            assert_eq!(
-                Multihash::from(hasher.finalize()).to_bytes(),
-                hex,
-                "{:?} encodes correctly", stringify!($alg)
-            );
-        )*
-    }
+           // From code
+           assert_eq!(
+               Multihash::new($code, $data).unwrap().to_bytes(),
+               expected,
+               "{:?} encodes correctly (from code)", stringify!($alg)
+           );
+
+           // From digest
+           assert_eq!(
+               Multihash::from(<$alg>::digest($data)).to_bytes(),
+               expected,
+               "{:?} encodes correctly (from digest)", stringify!($alg)
+           );
+
+           // From hasher
+           let mut hasher = <$alg>::default();
+           hasher.update($data);
+           assert_eq!(
+               Multihash::from(hasher.finalize()).to_bytes(),
+               expected,
+               "{:?} encodes correctly (from hasher)", stringify!($alg)
+           );
+       )*
+   }
 }
 
 #[allow(clippy::cognitive_complexity)]
 #[test]
 fn multihash_encode() {
     assert_encode! {
-        Identity256, b"beep boop", "00096265657020626f6f70";
-        Sha1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
-        Sha2_256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
-        Sha2_256, b"beep boop", "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
-        Sha2_512, b"hello world", "1340309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f";
-        Sha3_224, b"hello world", "171Cdfb7f18c77e928bb56faeb2da27291bd790bc1045cde45f3210bb6c5";
-        Sha3_256, b"hello world", "1620644bcc7e564373040999aac89e7622f3ca71fba1d972fd94a31c3bfbf24e3938";
-        Sha3_384, b"hello world", "153083bff28dde1b1bf5810071c6643c08e5b05bdb836effd70b403ea8ea0a634dc4997eb1053aa3593f590f9c63630dd90b";
-        Sha3_512, b"hello world", "1440840006653e9ac9e95117a15c915caab81662918e925de9e004f774ff82d7079a40d4d27b1b372657c61d46d470304c88c788b3a4527ad074d1dccbee5dbaa99a";
-        Keccak224, b"hello world", "1A1C25f3ecfebabe99686282f57f5c9e1f18244cfee2813d33f955aae568";
-        Keccak256, b"hello world", "1B2047173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad";
-        Keccak384, b"hello world", "1C3065fc99339a2a40e99d3c40d695b22f278853ca0f925cde4254bcae5e22ece47e6441f91b6568425adc9d95b0072eb49f";
-        Keccak512, b"hello world", "1D403ee2b40047b8060f68c67242175660f4174d0af5c01d47168ec20ed619b0b7c42181f40aa1046f39e2ef9efc6910782a998e0013d172458957957fac9405b67d";
-        Blake2b512, b"hello world", "c0e40240021ced8799296ceca557832ab941a50b4a11f83478cf141f51f933f653ab9fbcc05a037cddbed06e309bf334942c4e58cdf1a46e237911ccd7fcf9787cbc7fd0";
-        Blake2s256, b"hello world", "e0e402209aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b";
-        Blake2b256, b"hello world", "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
-        Blake2s128, b"hello world", "d0e4021037deae0226c30da2ab424a7b8ee14e83";
+        Identity256, IDENTITY, b"beep boop", "00096265657020626f6f70";
+        Sha1, SHA1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
+        Sha2_256, SHA2_256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
+        Sha2_256, SHA2_256, b"beep boop", "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
+        Sha2_512, SHA2_512, b"hello world", "1340309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f";
+        Sha3_224, SHA3_224, b"hello world", "171Cdfb7f18c77e928bb56faeb2da27291bd790bc1045cde45f3210bb6c5";
+        Sha3_256, SHA3_256, b"hello world", "1620644bcc7e564373040999aac89e7622f3ca71fba1d972fd94a31c3bfbf24e3938";
+        Sha3_384, SHA3_384, b"hello world", "153083bff28dde1b1bf5810071c6643c08e5b05bdb836effd70b403ea8ea0a634dc4997eb1053aa3593f590f9c63630dd90b";
+        Sha3_512, SHA3_512, b"hello world", "1440840006653e9ac9e95117a15c915caab81662918e925de9e004f774ff82d7079a40d4d27b1b372657c61d46d470304c88c788b3a4527ad074d1dccbee5dbaa99a";
+        Keccak224, KECCAK_224, b"hello world", "1A1C25f3ecfebabe99686282f57f5c9e1f18244cfee2813d33f955aae568";
+        Keccak256, KECCAK_256, b"hello world", "1B2047173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad";
+        Keccak384, KECCAK_384, b"hello world", "1C3065fc99339a2a40e99d3c40d695b22f278853ca0f925cde4254bcae5e22ece47e6441f91b6568425adc9d95b0072eb49f";
+        Keccak512, KECCAK_512, b"hello world", "1D403ee2b40047b8060f68c67242175660f4174d0af5c01d47168ec20ed619b0b7c42181f40aa1046f39e2ef9efc6910782a998e0013d172458957957fac9405b67d";
+        Blake2b512, BLAKE2B_512, b"hello world", "c0e40240021ced8799296ceca557832ab941a50b4a11f83478cf141f51f933f653ab9fbcc05a037cddbed06e309bf334942c4e58cdf1a46e237911ccd7fcf9787cbc7fd0";
+        Blake2s256, BLAKE2S_256, b"hello world", "e0e402209aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b";
+        Blake2b256, BLAKE2B_256, b"hello world", "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
+        Blake2s128, BLAKE2S_128, b"hello world", "d0e4021037deae0226c30da2ab424a7b8ee14e83";
     }
 }
 
@@ -204,90 +217,95 @@ fn assert_roundtrip() {
         Blake2s256
     );
 }
-/*
-/// Testing the public interface of `Multihash` and `MultihashRef`
-fn test_methods(hasher: impl MultihasherCode<Code>, prefix: &str, digest: &str) {
-    let expected_bytes = hex_to_bytes(&format!("{}{}", prefix, digest));
-    hasher.update(b"hello world");
-    let multihash = Multihash::from(hasher.finalize());
+
+/// Testing the public interface of `MultihashDigest`
+fn multihash_methods(code: u64, prefix: &str, digest_str: &str) {
+    let digest = hex_to_bytes(digest_str);
+    let expected_bytes = hex_to_bytes(&format!("{}{}", prefix, digest_str));
+    let mut expected_cursor = Cursor::new(&expected_bytes);
+    let multihash = Multihash::new(code, b"hello world").unwrap();
+
+    assert_eq!(Multihash::wrap(code, &digest).unwrap(), multihash);
+    assert_eq!(multihash.code(), code);
+    assert_eq!(multihash.size() as usize, digest.len());
+    assert_eq!(multihash.digest(), digest);
+    assert_eq!(Multihash::read(&mut expected_cursor).unwrap(), multihash);
     assert_eq!(Multihash::from_bytes(&expected_bytes).unwrap(), multihash);
-    assert_eq!(multihash.to_bytes(), &expected_bytes[..]);
-    assert_eq!(multihash.digest(), &hex_to_bytes(digest)[..]);
+    let mut written_buf = Vec::new();
+    multihash.write(&mut written_buf).unwrap();
+    assert_eq!(written_buf, expected_bytes);
+    assert_eq!(multihash.to_bytes(), expected_bytes);
+    assert_eq!(
+        multihash.to_raw().unwrap(),
+        RawMultihash::from_bytes(&expected_bytes).unwrap()
+    );
 }
 
 #[test]
-fn multihash_methods() {
-    //test_methods(Identity256::default(), "000b", "68656c6c6f20776f726c64");
-    test_methods(
-        Sha1::default(),
-        "1114",
-        "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed",
-    );
-    test_methods(
-        Sha2_256::default(),
+fn test_multihash_methods() {
+    multihash_methods(IDENTITY, "000b", "68656c6c6f20776f726c64");
+    multihash_methods(SHA1, "1114", "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+    multihash_methods(
+        SHA2_256,
         "1220",
         "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
     );
-    test_methods(
-        Sha2_512::default(),
-        "1340",
-        "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f");
-    test_methods(
-        Sha3_224::default(),
+    multihash_methods(
+        SHA2_512,
+       "1340",
+       "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f");
+    multihash_methods(
+        SHA3_224,
         "171C",
         "dfb7f18c77e928bb56faeb2da27291bd790bc1045cde45f3210bb6c5",
     );
-    test_methods(
-        Sha3_256::default(),
+    multihash_methods(
+        SHA3_256,
         "1620",
         "644bcc7e564373040999aac89e7622f3ca71fba1d972fd94a31c3bfbf24e3938",
     );
-    test_methods(
-        Sha3_384::default(),
-        "1530",
-        "83bff28dde1b1bf5810071c6643c08e5b05bdb836effd70b403ea8ea0a634dc4997eb1053aa3593f590f9c63630dd90b");
-    test_methods(
-        Sha3_512::default(),
-        "1440",
-        "840006653e9ac9e95117a15c915caab81662918e925de9e004f774ff82d7079a40d4d27b1b372657c61d46d470304c88c788b3a4527ad074d1dccbee5dbaa99a");
-    test_methods(
-        Keccak224::default(),
+    multihash_methods(
+       SHA3_384,
+       "1530",
+       "83bff28dde1b1bf5810071c6643c08e5b05bdb836effd70b403ea8ea0a634dc4997eb1053aa3593f590f9c63630dd90b");
+    multihash_methods(
+       SHA3_512,
+       "1440",
+       "840006653e9ac9e95117a15c915caab81662918e925de9e004f774ff82d7079a40d4d27b1b372657c61d46d470304c88c788b3a4527ad074d1dccbee5dbaa99a");
+    multihash_methods(
+        KECCAK_224,
         "1A1C",
         "25f3ecfebabe99686282f57f5c9e1f18244cfee2813d33f955aae568",
     );
-    test_methods(
-        Keccak256::default(),
+    multihash_methods(
+        KECCAK_256,
         "1B20",
         "47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad",
     );
-    test_methods(
-        Keccak384::default(),
-        "1C30",
-        "65fc99339a2a40e99d3c40d695b22f278853ca0f925cde4254bcae5e22ece47e6441f91b6568425adc9d95b0072eb49f");
-    test_methods(
-        Keccak512::default(),
-        "1D40",
-        "3ee2b40047b8060f68c67242175660f4174d0af5c01d47168ec20ed619b0b7c42181f40aa1046f39e2ef9efc6910782a998e0013d172458957957fac9405b67d");
-    test_methods(
-        Blake2b512::default(),
-        "c0e40240",
-        "021ced8799296ceca557832ab941a50b4a11f83478cf141f51f933f653ab9fbcc05a037cddbed06e309bf334942c4e58cdf1a46e237911ccd7fcf9787cbc7fd0");
-    test_methods(
-        Blake2s256::default(),
+    multihash_methods(
+       KECCAK_384,
+       "1C30",
+       "65fc99339a2a40e99d3c40d695b22f278853ca0f925cde4254bcae5e22ece47e6441f91b6568425adc9d95b0072eb49f");
+    multihash_methods(
+       KECCAK_512,
+       "1D40",
+       "3ee2b40047b8060f68c67242175660f4174d0af5c01d47168ec20ed619b0b7c42181f40aa1046f39e2ef9efc6910782a998e0013d172458957957fac9405b67d");
+    multihash_methods(
+       BLAKE2B_512,
+       "c0e40240",
+       "021ced8799296ceca557832ab941a50b4a11f83478cf141f51f933f653ab9fbcc05a037cddbed06e309bf334942c4e58cdf1a46e237911ccd7fcf9787cbc7fd0");
+    multihash_methods(
+        BLAKE2S_256,
         "e0e40220",
         "9aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b",
     );
-    test_methods(
-        Blake2b256::default(),
+    multihash_methods(
+        BLAKE2B_256,
         "a0e40220",
         "256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610",
     );
-    test_methods(
-        Blake2s128::default(),
-        "d0e40210",
-        "37deae0226c30da2ab424a7b8ee14e83",
-    );
-}*/
+    multihash_methods(BLAKE2S_128, "d0e40210", "37deae0226c30da2ab424a7b8ee14e83");
+}
 
 #[test]
 #[should_panic]
@@ -320,6 +338,18 @@ fn multihash_errors() {
     assert!(
         Multihash::from_bytes(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
+    );
+
+    let unsupported_code = 0x04;
+    let hash_length2 = 128;
+    let digest = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    let result = Multihash::from_bytes(&[&[unsupported_code, hash_length2], &digest[..]].concat());
+    assert!(
+        match result {
+            Err(Error::UnsupportedCode(0x04)) => true,
+            _ => false,
+        },
+        "Should error on codes that are not part of the code table"
     );
 }
 
