@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::utils;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -155,10 +157,53 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
     }
 }
 
+/// Return an error if the same code is used several times.
+///
+/// This only checks for string equality, though this should still catch most errors caused by
+/// copy and pasting.
+fn error_code_duplicates(hashes: &[Hash]) {
+    // Use a temporary store to determine whether a certain value is unique or not
+    let mut uniq = HashSet::new();
+
+    hashes.iter().for_each(|hash| {
+        let code = &hash.code;
+        let msg = format!(
+            "the #mh(code) attribute `{}` is defined multiple times",
+            quote!(#code)
+        );
+
+        // It's a duplicate
+        if !uniq.insert(code) {
+            #[cfg(test)]
+            panic!(msg);
+            #[cfg(not(test))]
+            {
+                let already_defined = uniq.get(code).unwrap();
+                let line = already_defined
+                    .segments
+                    .iter()
+                    .next()
+                    .unwrap()
+                    .ident
+                    .span()
+                    .start()
+                    .line;
+                proc_macro_error::emit_error!(
+                    &hash.code, msg;
+                    note = "previous definition of `{}` at line {}", quote!(#code), line;
+                );
+            }
+        }
+    });
+}
+
 pub fn multihash(s: Structure) -> TokenStream {
     let mh_crate = utils::use_crate("tiny-multihash");
     let mh_enum = &s.ast().ident;
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
+
+    error_code_duplicates(&hashes);
+
     let params = Params {
         mh_crate: mh_crate.clone(),
         mh_enum: mh_enum.clone(),
@@ -319,5 +364,24 @@ mod tests {
         let s = Structure::new(&derive_input);
         let result = multihash(s);
         utils::assert_proc_macro(result, expected);
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "the #mh(code) attribute `tiny_multihash :: SHA2_256` is defined multiple times"
+    )]
+    fn test_multihash_error_code_duplicates() {
+        let input = quote! {
+           #[derive(Clone, Multihash)]
+           pub enum Multihash {
+               #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256)]
+               Identity256(tiny_multihash::Sha2Digest<U32>),
+               #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256)]
+               Identity256(tiny_multihash::Sha2Digest<U32>),
+            }
+        };
+        let derive_input = syn::parse2(input).unwrap();
+        let s = Structure::new(&derive_input);
+        multihash(s);
     }
 }
