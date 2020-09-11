@@ -3,7 +3,11 @@ use std::collections::HashSet;
 use crate::utils;
 use proc_macro2::TokenStream;
 use quote::quote;
+#[cfg(not(test))]
+use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
+#[cfg(not(test))]
+use syn::spanned::Spanned;
 use synstructure::{Structure, VariantInfo};
 
 mod kw {
@@ -17,7 +21,7 @@ mod kw {
 
 #[derive(Debug)]
 enum MhAttr {
-    Code(utils::Attr<kw::code, syn::Path>),
+    Code(utils::Attr<kw::code, syn::Expr>),
     Hasher(utils::Attr<kw::hasher, Box<syn::Type>>),
 }
 
@@ -39,7 +43,7 @@ struct Params {
 #[derive(Debug)]
 struct Hash {
     ident: syn::Ident,
-    code: syn::Path,
+    code: syn::Expr,
     hasher: Box<syn::Type>,
     digest: syn::Path,
 }
@@ -179,15 +183,7 @@ fn error_code_duplicates(hashes: &[Hash]) {
             #[cfg(not(test))]
             {
                 let already_defined = uniq.get(code).unwrap();
-                let line = already_defined
-                    .segments
-                    .iter()
-                    .next()
-                    .unwrap()
-                    .ident
-                    .span()
-                    .start()
-                    .line;
+                let line = already_defined.to_token_stream().span().start().line;
                 proc_macro_error::emit_error!(
                     &hash.code, msg;
                     note = "previous definition of `{}` at line {}", quote!(#code), line;
@@ -294,7 +290,7 @@ mod tests {
                #[mh(code = tiny_multihash::IDENTITY, hasher = tiny_multihash::Identity256)]
                Identity256(tiny_multihash::IdentityDigest<U32>),
                /// Multihash array for hash function.
-               #[mh(code = tiny_multihash::STROBE_256, hasher = tiny_multihash::Strobe256)]
+               #[mh(code = 0x38b64f, hasher = tiny_multihash::Strobe256)]
                Strobe256(tiny_multihash::StrobeDigest<U32>),
             }
         };
@@ -308,21 +304,21 @@ mod tests {
                 fn new(code: u64, input: &[u8]) -> Result<Self, tiny_multihash::Error> {
                     match code {
                         tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Identity256::digest(input))),
-                        tiny_multihash::STROBE_256 => Ok(Self::Strobe256(tiny_multihash::Strobe256::digest(input))),
+                        0x38b64f => Ok(Self::Strobe256(tiny_multihash::Strobe256::digest(input))),
                         _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
                     }
                 }
                 fn wrap(code: u64, digest: &[u8]) -> Result<Self, tiny_multihash::Error> {
                     match code {
                         tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Digest::wrap(digest)?)),
-                        tiny_multihash::STROBE_256 => Ok(Self::Strobe256(tiny_multihash::Digest::wrap(digest)?)),
+                        0x38b64f => Ok(Self::Strobe256(tiny_multihash::Digest::wrap(digest)?)),
                         _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
                     }
                 }
                 fn code(&self) -> u64 {
                     match self {
                         Multihash::Identity256(_mh) => tiny_multihash::IDENTITY,
-                        Multihash::Strobe256(_mh) => tiny_multihash::STROBE_256,
+                        Multihash::Strobe256(_mh) => 0x38b64f,
                     }
                 }
                 fn size(&self) -> u8 {
@@ -344,7 +340,7 @@ mod tests {
                     let code = unsigned_varint::io::read_u64(&mut r)?;
                     match code {
                         tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Digest::from_reader(r)?)),
-                        tiny_multihash::STROBE_256 => Ok(Self::Strobe256(tiny_multihash::Digest::from_reader(r)?)),
+                        0x38b64f => Ok(Self::Strobe256(tiny_multihash::Digest::from_reader(r)?)),
                         _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
                     }
                 }
@@ -377,6 +373,23 @@ mod tests {
                #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256)]
                Identity256(tiny_multihash::Sha2Digest<U32>),
                #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256)]
+               Identity256(tiny_multihash::Sha2Digest<U32>),
+            }
+        };
+        let derive_input = syn::parse2(input).unwrap();
+        let s = Structure::new(&derive_input);
+        multihash(s);
+    }
+
+    #[test]
+    #[should_panic(expected = "the #mh(code) attribute `0x14` is defined multiple times")]
+    fn test_multihash_error_code_duplicates_numbers() {
+        let input = quote! {
+           #[derive(Clone, Multihash)]
+           pub enum Multihash {
+               #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256)]
+               Identity256(tiny_multihash::Sha2Digest<U32>),
+               #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256)]
                Identity256(tiny_multihash::Sha2Digest<U32>),
             }
         };

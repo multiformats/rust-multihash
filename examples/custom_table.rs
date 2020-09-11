@@ -39,6 +39,9 @@ pub enum Multihash {
     /// Example for using a hasher with a bit size that is not exported by default
     #[mh(code = BLAKE2B_200, hasher = tiny_multihash::Blake2bHasher::<U25>)]
     Blake2b200(tiny_multihash::Blake2bDigest<U25>),
+    /// Example of using a number as code value
+    #[mh(code = 0xb214, hasher = tiny_multihash::Blake2bHasher::<U20>)]
+    ByCode(tiny_multihash::Blake2bDigest<U20>),
 }
 
 fn main() {
