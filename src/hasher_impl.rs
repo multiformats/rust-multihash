@@ -1,4 +1,6 @@
+use crate::error::Error;
 use crate::hasher::{Digest, Size, StatefulHasher};
+use core::convert::TryFrom;
 use generic_array::GenericArray;
 
 macro_rules! derive_digest {
@@ -30,6 +32,17 @@ macro_rules! derive_digest {
         impl<S: Size> From<$name<S>> for GenericArray<u8, S> {
             fn from(digest: $name<S>) -> Self {
                 digest.0
+            }
+        }
+
+        /// Convert slice to `Digest`.
+        ///
+        /// It errors when the length of the slice does not match the size of the `Digest`.
+        impl<S: Size> TryFrom<&[u8]> for $name<S> {
+            type Error = Error;
+
+            fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+                Self::wrap(slice)
             }
         }
 
@@ -161,8 +174,8 @@ macro_rules! derive_hasher_blake {
             }
 
             fn finalize(&self) -> Self::Digest {
-                let digest = GenericArray::clone_from_slice(self.state.finalize().as_bytes());
-                Self::Digest::from(digest)
+                let digest = self.state.finalize();
+                Self::Digest::try_from(digest.as_bytes()).expect("digest sizes always match")
             }
 
             fn reset(&mut self) {
