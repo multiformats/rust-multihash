@@ -41,7 +41,7 @@ pub const BLAKE2S_256: u64 = 0xb260;
 /// algorithms. See the [`Multihash` derive] for more information.
 ///
 /// [`Multihash` derive]: crate::derive
-#[derive(Clone, Debug, Eq, Multihash, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
 pub enum Multihash {
     /// Multihash array for hash function.
     #[mh(code = self::SHA2_256, hasher = crate::Sha2_256)]

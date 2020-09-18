@@ -95,7 +95,7 @@ pub trait MultihashDigest: Clone + Debug + Eq + Send + Sync + 'static {
 /// assert_eq!(mh.size(), 32);
 /// assert_eq!(mh.digest(), &digest_bytes[2..]);
 /// ```
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Decode))]
 #[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Encode))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
@@ -234,7 +234,7 @@ where
     let code = read_u64(&mut r)?;
     let size = read_u64(&mut r)?;
 
-    if size > S::to_u64() || size > u8::MAX as u64 {
+    if size > S::to_u64() || size > u8::max_value() as u64 {
         return Err(Error::InvalidSize(size));
     }
 
