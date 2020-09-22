@@ -175,7 +175,7 @@ macro_rules! derive_hasher_blake {
 
             fn finalize(&self) -> Self::Digest {
                 let digest = self.state.finalize();
-                Self::Digest::try_from(digest.as_bytes()).expect("digest sizes always match")
+                GenericArray::clone_from_slice(digest.as_bytes()).into()
             }
 
             fn reset(&mut self) {
@@ -325,16 +325,13 @@ pub mod identity {
         // A custom implementation is needed as an identity hash value might be shorter than the
         // allocated Digest.
         fn wrap(digest: &[u8]) -> Result<Self, Error> {
-            Self::extend(digest)
-        }
-
-        // a custom implementation is needed as an identity hash also stores the actual size of
-        // the given digest.
-        fn fit(digest: &[u8]) -> Self {
+            if digest.len() > S::to_usize() {
+                return Err(Error::InvalidSize(digest.len() as _));
+            }
             let mut array = GenericArray::default();
             let len = digest.len().min(array.len());
             array[..len].copy_from_slice(&digest[..len]);
-            Self(len as u8, array)
+            Ok(Self(len as u8, array))
         }
 
         // A custom implementation is needed as an identity hash also stores the actual size of

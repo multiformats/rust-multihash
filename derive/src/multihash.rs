@@ -23,21 +23,24 @@ mod kw {
 enum MhAttr {
     Code(utils::Attr<kw::code, syn::Expr>),
     Hasher(utils::Attr<kw::hasher, Box<syn::Type>>),
+    Digest(utils::Attr<kw::digest, syn::Path>),
 }
 
 impl Parse for MhAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         if input.peek(kw::code) {
             Ok(MhAttr::Code(input.parse()?))
-        } else {
+        } else if input.peek(kw::hasher) {
             Ok(MhAttr::Hasher(input.parse()?))
+        } else {
+            Ok(MhAttr::Digest(input.parse()?))
         }
     }
 }
 
 struct Params {
     mh_crate: syn::Ident,
-    mh_enum: syn::Ident,
+    code_enum: syn::Ident,
 }
 
 #[derive(Debug)]
@@ -49,58 +52,40 @@ struct Hash {
 }
 
 impl Hash {
-    fn digest_code(&self, params: &Params) -> TokenStream {
+    fn code_into_u64(&self, params: &Params) -> TokenStream {
         let ident = &self.ident;
-        let mh_enum = &params.mh_enum;
+        let code_enum = &params.code_enum;
         let code = &self.code;
-        quote!(#mh_enum::#ident(_mh) => #code)
+        quote!(#code_enum::#ident => #code)
     }
 
-    fn digest_size(&self, params: &Params) -> TokenStream {
+    fn code_from_u64(&self) -> TokenStream {
         let ident = &self.ident;
-        let mh_enum = &params.mh_enum;
-        let mh = &params.mh_crate;
-        quote!(#mh_enum::#ident(mh) => #mh::Digest::size(mh))
-    }
-
-    fn digest_digest(&self, params: &Params) -> TokenStream {
-        let ident = &self.ident;
-        let mh_enum = &params.mh_enum;
-        quote!(#mh_enum::#ident(mh) => mh.as_ref())
-    }
-
-    fn digest_new(&self) -> TokenStream {
         let code = &self.code;
+        quote!(#code => Ok(Self::#ident))
+    }
+
+    fn code_digest(&self, params: &Params) -> TokenStream {
         let ident = &self.ident;
         let hasher = &self.hasher;
-        quote!(#code => Ok(Self::#ident(#hasher::digest(input))))
-    }
-
-    fn digest_wrap(&self, params: &Params) -> TokenStream {
         let code = &self.code;
-        let ident = &self.ident;
-        let mh = &params.mh_crate;
-        quote!(#code => Ok(Self::#ident(#mh::Digest::wrap(digest)?)))
-    }
-
-    #[cfg(feature = "std")]
-    fn digest_read(&self, params: &Params) -> TokenStream {
-        let code = &self.code;
-        let ident = &self.ident;
-        let mh = &params.mh_crate;
-        quote!(#code => Ok(Self::#ident(#mh::Digest::from_reader(r)?)))
+        let mh_crate = &params.mh_crate;
+        quote!(Self::#ident => {
+           let digest = #hasher::digest(input);
+           #mh_crate::Multihash::wrap(#code, &digest.as_ref()).unwrap()
+        })
     }
 
     fn from_digest(&self, params: &Params) -> TokenStream {
-        let ident = &self.ident;
         let digest = &self.digest;
-        let mh_enum = &params.mh_enum;
+        let code_enum = &params.code_enum;
+        let ident = &self.ident;
         quote! {
-            impl From<#digest> for #mh_enum {
-                fn from(digest: #digest) -> Self {
-                    Self::#ident(digest)
-                }
-            }
+           impl From<#digest> for #code_enum {
+               fn from(digest: #digest) -> Self {
+                   Self::#ident
+               }
+           }
         }
     }
 }
@@ -117,15 +102,8 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
                     match attr {
                         MhAttr::Code(attr) => code = Some(attr.value),
                         MhAttr::Hasher(attr) => hasher = Some(attr.value),
+                        MhAttr::Digest(attr) => digest = Some(attr.value),
                     }
-                }
-            }
-        }
-
-        if let syn::Fields::Unnamed(syn::FieldsUnnamed { unnamed, .. }) = bi.ast().fields {
-            if let Some(field) = unnamed.first() {
-                if let syn::Type::Path(path) = &field.ty {
-                    digest = Some(path.path.clone());
                 }
             }
         }
@@ -146,7 +124,7 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
             proc_macro_error::abort!(ident, msg);
         });
         let digest = digest.unwrap_or_else(|| {
-            let msg = "Missing digest in enum variant: e.g. Sha256(multihash::Sha2Digest<U32>)]";
+            let msg = "Missing digest atttibute: e.g. #[mh(digest = multihash::Sha2Digest<U32>)]";
             #[cfg(test)]
             panic!(msg);
             #[cfg(not(test))]
@@ -195,83 +173,81 @@ fn error_code_duplicates(hashes: &[Hash]) {
 
 pub fn multihash(s: Structure) -> TokenStream {
     let mh_crate = utils::use_crate("tiny-multihash");
-    let mh_enum = &s.ast().ident;
+    let code_enum = &s.ast().ident;
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
 
     error_code_duplicates(&hashes);
 
     let params = Params {
         mh_crate: mh_crate.clone(),
-        mh_enum: mh_enum.clone(),
+        code_enum: code_enum.clone(),
     };
 
-    let digest_code = hashes.iter().map(|h| h.digest_code(&params));
-    let digest_size = hashes.iter().map(|h| h.digest_size(&params));
-    let digest_digest = hashes.iter().map(|h| h.digest_digest(&params));
-    let digest_new = hashes.iter().map(|h| h.digest_new());
-    let digest_wrap = hashes.iter().map(|h| h.digest_wrap(&params));
-    #[cfg(feature = "std")]
-    let digest_read = hashes.iter().map(|h| h.digest_read(&params));
+    let code_into_u64 = hashes.iter().map(|h| h.code_into_u64(&params));
+    let code_from_u64 = hashes.iter().map(|h| h.code_from_u64());
+    let code_digest = hashes.iter().map(|h| h.code_digest(&params));
     let from_digest = hashes.iter().map(|h| h.from_digest(&params));
 
-    #[cfg(feature = "std")]
-    let std_read = quote! {
-            fn read<R: std::io::Read>(mut r: R) -> Result<Self, #mh_crate::Error>
-            where
-               Self: Sized
-            {
-               let code = unsigned_varint::io::read_u64(&mut r)?;
-               match code {
-                   #(#digest_read,)*
-                   _ => Err(#mh_crate::Error::UnsupportedCode(code)),
-               }
-            }
-    };
-    #[cfg(not(feature = "std"))]
-    let std_read = quote! {};
-
     quote! {
-        impl From<#mh_enum> for u64 {
-           fn from(mh: #mh_enum) -> Self {
-               mh.code()
-           }
+        impl #code_enum {
+            /// Calculate the hash of some input data.
+            ///
+            /// # Example
+            ///
+            /// ```
+            /// use tiny_multihash::Code;
+            ///
+            /// let hash = Code::Sha3_256.digest(b"Hello world!");
+            /// println!("{:02x?}", hash);
+            /// ```
+            // TODO vmx 2020-09-21: Don't hardcode the size here, define it in the code enum
+            pub fn digest(&self, input: &[u8]) -> Multihash<U64> {
+                match self {
+                    #(#code_digest,)*
+                }
+            }
+
+            /// Create a multihash from an existing [`Digest`].
+            ///
+            /// # Example
+            ///
+            /// ```
+            /// use tiny_multihash::{Code, Sha3_256, StatefulHasher};
+            ///
+            /// let mut hasher = Sha3_256::default();
+            /// hasher.update(b"Hello world!");
+            /// let hash = Code::multihash_from_digest(&hasher.finalize());
+            /// println!("{:02x?}", hash);
+            /// ```
+            pub fn multihash_from_digest<S, D>(digest: &D) -> Multihash<U64>
+            where
+                S: Size,
+                D: #mh_crate::Digest<S>,
+                Self: From<D>,
+            {
+                // TODO vmx 2020-09-22: Don't clone
+                let code = Self::from(digest.clone());
+                #mh_crate::Multihash::wrap(code.into(), &digest.as_ref()).unwrap()
+            }
         }
 
-        impl #mh_crate::MultihashDigest for #mh_enum {
-           fn new(code: u64, input: &[u8]) -> Result<Self, #mh_crate::Error> {
-              match code {
-                  #(#digest_new,)*
-                  _ => Err(#mh_crate::Error::UnsupportedCode(code)),
-              }
-           }
-
-           fn wrap(code: u64, digest: &[u8]) -> Result<Self, #mh_crate::Error> {
-               match code {
-                  #(#digest_wrap,)*
-                  _ => Err(#mh_crate::Error::UnsupportedCode(code)),
-              }
-           }
-
-           fn code(&self) -> u64 {
-               match self {
-                   #(#digest_code,)*
-               }
-            }
-
-            fn size(&self) -> u8 {
-                match self {
-                    #(#digest_size,)*
+        impl From<#code_enum> for u64 {
+            fn from(code: #code_enum) -> Self {
+                match code {
+                    #(#code_into_u64,)*
                 }
             }
+        }
 
-            fn digest(&self) -> &[u8] {
-                match self {
-                    #(#digest_digest,)*
+        impl core::convert::TryFrom<u64> for #code_enum {
+            type Error = #mh_crate::Error;
+
+            fn try_from(code: u64) -> Result<Self, Self::Error> {
+                match code {
+                    #(#code_from_u64,)*
+                    _ => Err(#mh_crate::Error::UnsupportedCode(code))
                 }
             }
-
-            #std_read
-
         }
 
         #(#from_digest)*
@@ -286,73 +262,92 @@ mod tests {
     fn test_multihash_derive() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           pub enum Multihash {
-               #[mh(code = tiny_multihash::IDENTITY, hasher = tiny_multihash::Identity256)]
-               Identity256(tiny_multihash::IdentityDigest<U32>),
+           pub enum Code {
+               #[mh(code = tiny_multihash::IDENTITY, hasher = tiny_multihash::Identity256, digest = tiny_multihash::IdentityDigest<U32>)]
+               Identity256,
                /// Multihash array for hash function.
-               #[mh(code = 0x38b64f, hasher = tiny_multihash::Strobe256)]
-               Strobe256(tiny_multihash::StrobeDigest<U32>),
+               #[mh(code = 0x38b64f, hasher = tiny_multihash::Strobe256, digest = tiny_multihash::StrobeDigest<U32>)]
+               Strobe256,
             }
         };
         let expected = quote! {
-            impl From<Multihash> for u64 {
-                fn from(mh: Multihash) -> Self {
-                    mh.code()
+            impl Code {
+               /// Calculate the hash of some input data.
+               ///
+               /// # Example
+               ///
+               /// ```
+               /// use tiny_multihash::Code;
+               ///
+               /// let hash = Code::Sha3_256.digest(b"Hello world!");
+               /// println!("{:02x?}", hash);
+               /// ```
+               pub fn digest(&self, input: &[u8]) -> Multihash<U64> {
+                   match self {
+                       Self::Identity256 => {
+                           let digest = tiny_multihash::Identity256::digest(input);
+                           tiny_multihash::Multihash::wrap(tiny_multihash::IDENTITY, &digest.as_ref()).unwrap()
+                       },
+                       Self::Strobe256 => {
+                           let digest = tiny_multihash::Strobe256::digest(input);
+                           tiny_multihash::Multihash::wrap(0x38b64f, &digest.as_ref()).unwrap()
+                       },
+                   }
+               }
+
+               /// Create a multihash from an existing [`Digest`].
+               ///
+               /// # Example
+               ///
+               /// ```
+               /// use tiny_multihash::{Code, Sha3_256, StatefulHasher};
+               ///
+               /// let mut hasher = Sha3_256::default();
+               /// hasher.update(b"Hello world!");
+               /// let hash = Code::multihash_from_digest(&hasher.finalize());
+               /// println!("{:02x?}", hash);
+               /// ```
+               pub fn multihash_from_digest<S, D>(digest: &D) -> Multihash<U64>
+               where
+                   S: Size,
+                   D: tiny_multihash::Digest<S>,
+                   Self: From<D>,
+               {
+                   let code = Self::from(digest.clone());
+                   tiny_multihash::Multihash::wrap(code.into(), &digest.as_ref()).unwrap()
+               }
+            }
+
+
+            impl From<Code> for u64 {
+                fn from(code: Code) -> Self {
+                    match code {
+                        Code::Identity256 => tiny_multihash::IDENTITY,
+                        Code::Strobe256 => 0x38b64f,
+                    }
                 }
             }
-            impl tiny_multihash::MultihashDigest for Multihash {
-                fn new(code: u64, input: &[u8]) -> Result<Self, tiny_multihash::Error> {
+
+            impl core::convert::TryFrom<u64> for Code {
+                type Error = tiny_multihash::Error;
+
+                fn try_from(code: u64) -> Result<Self, Self::Error> {
                     match code {
-                        tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Identity256::digest(input))),
-                        0x38b64f => Ok(Self::Strobe256(tiny_multihash::Strobe256::digest(input))),
-                        _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
-                    }
-                }
-                fn wrap(code: u64, digest: &[u8]) -> Result<Self, tiny_multihash::Error> {
-                    match code {
-                        tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Digest::wrap(digest)?)),
-                        0x38b64f => Ok(Self::Strobe256(tiny_multihash::Digest::wrap(digest)?)),
-                        _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
-                    }
-                }
-                fn code(&self) -> u64 {
-                    match self {
-                        Multihash::Identity256(_mh) => tiny_multihash::IDENTITY,
-                        Multihash::Strobe256(_mh) => 0x38b64f,
-                    }
-                }
-                fn size(&self) -> u8 {
-                    match self {
-                        Multihash::Identity256(mh) => tiny_multihash::Digest::size(mh),
-                        Multihash::Strobe256(mh) => tiny_multihash::Digest::size(mh),
-                    }
-                }
-                fn digest(&self) -> &[u8] {
-                    match self {
-                        Multihash::Identity256(mh) => mh.as_ref(),
-                        Multihash::Strobe256(mh) => mh.as_ref(),
-                    }
-                }
-                fn read<R: std::io::Read>(mut r: R) -> Result<Self, tiny_multihash::Error>
-                where
-                    Self: Sized
-                {
-                    let code = unsigned_varint::io::read_u64(&mut r)?;
-                    match code {
-                        tiny_multihash::IDENTITY => Ok(Self::Identity256(tiny_multihash::Digest::from_reader(r)?)),
-                        0x38b64f => Ok(Self::Strobe256(tiny_multihash::Digest::from_reader(r)?)),
-                        _ => Err(tiny_multihash::Error::UnsupportedCode(code)),
+                        tiny_multihash::IDENTITY => Ok(Self::Identity256),
+                        0x38b64f => Ok(Self::Strobe256),
+                        _ => Err(tiny_multihash::Error::UnsupportedCode(code))
                     }
                 }
             }
-            impl From<tiny_multihash::IdentityDigest<U32> > for Multihash {
+
+            impl From<tiny_multihash::IdentityDigest<U32> > for Code {
                 fn from(digest: tiny_multihash::IdentityDigest<U32>) -> Self {
-                    Self::Identity256(digest)
+                    Self::Identity256
                 }
             }
-            impl From<tiny_multihash::StrobeDigest<U32> > for Multihash {
+            impl From<tiny_multihash::StrobeDigest<U32> > for Code {
                 fn from(digest: tiny_multihash::StrobeDigest<U32>) -> Self {
-                    Self::Strobe256(digest)
+                    Self::Strobe256
                 }
             }
         };
@@ -370,10 +365,10 @@ mod tests {
         let input = quote! {
            #[derive(Clone, Multihash)]
            pub enum Multihash {
-               #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256)]
-               Identity256(tiny_multihash::Sha2Digest<U32>),
-               #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256)]
-               Identity256(tiny_multihash::Sha2Digest<U32>),
+               #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
+               Identity256,
+               #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
+               Identity256,
             }
         };
         let derive_input = syn::parse2(input).unwrap();
@@ -386,11 +381,11 @@ mod tests {
     fn test_multihash_error_code_duplicates_numbers() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           pub enum Multihash {
-               #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256)]
-               Identity256(tiny_multihash::Sha2Digest<U32>),
-               #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256)]
-               Identity256(tiny_multihash::Sha2Digest<U32>),
+           pub enum Code {
+               #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
+               Identity256,
+               #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
+               Identity256,
             }
         };
         let derive_input = syn::parse2(input).unwrap();
