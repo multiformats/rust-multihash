@@ -81,8 +81,8 @@ impl Hash {
         let code_enum = &params.code_enum;
         let ident = &self.ident;
         quote! {
-           impl From<#digest> for #code_enum {
-               fn from(digest: #digest) -> Self {
+           impl From<&#digest> for #code_enum {
+               fn from(digest: &#digest) -> Self {
                    Self::#ident
                }
            }
@@ -219,14 +219,13 @@ pub fn multihash(s: Structure) -> TokenStream {
             /// let hash = Code::multihash_from_digest(&hasher.finalize());
             /// println!("{:02x?}", hash);
             /// ```
-            pub fn multihash_from_digest<S, D>(digest: &D) -> Multihash<U64>
+            pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<U64>
             where
                 S: Size,
                 D: #mh_crate::Digest<S>,
-                Self: From<D>,
+                Self: From<&'a D>,
             {
-                // TODO vmx 2020-09-22: Don't clone
-                let code = Self::from(digest.clone());
+                let code = Self::from(&digest);
                 #mh_crate::Multihash::wrap(code.into(), &digest.as_ref()).unwrap()
             }
         }
@@ -307,13 +306,13 @@ mod tests {
                /// let hash = Code::multihash_from_digest(&hasher.finalize());
                /// println!("{:02x?}", hash);
                /// ```
-               pub fn multihash_from_digest<S, D>(digest: &D) -> Multihash<U64>
+               pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<U64>
                where
                    S: Size,
                    D: tiny_multihash::Digest<S>,
-                   Self: From<D>,
+                   Self: From<&'a D>,
                {
-                   let code = Self::from(digest.clone());
+                   let code = Self::from(&digest);
                    tiny_multihash::Multihash::wrap(code.into(), &digest.as_ref()).unwrap()
                }
             }
@@ -340,13 +339,13 @@ mod tests {
                 }
             }
 
-            impl From<tiny_multihash::IdentityDigest<U32> > for Code {
-                fn from(digest: tiny_multihash::IdentityDigest<U32>) -> Self {
+            impl From<&tiny_multihash::IdentityDigest<U32> > for Code {
+                fn from(digest: &tiny_multihash::IdentityDigest<U32>) -> Self {
                     Self::Identity256
                 }
             }
-            impl From<tiny_multihash::StrobeDigest<U32> > for Code {
-                fn from(digest: tiny_multihash::StrobeDigest<U32>) -> Self {
+            impl From<&tiny_multihash::StrobeDigest<U32> > for Code {
+                fn from(digest: &tiny_multihash::StrobeDigest<U32>) -> Self {
                     Self::Strobe256
                 }
             }

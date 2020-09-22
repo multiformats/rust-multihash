@@ -202,7 +202,7 @@ fn assert_roundtrip() {
 fn multihash_methods<H>(code: Code, prefix: &str, digest_str: &str)
 where
     H: StatefulHasher,
-    Code: From<H::Digest>,
+    Code: for<'a> From<&'a H::Digest>,
 {
     let digest = hex_to_bytes(digest_str);
     let expected_bytes = hex_to_bytes(&format!("{}{}", prefix, digest_str));
