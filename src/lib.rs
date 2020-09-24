@@ -32,9 +32,8 @@
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// TODO vmx 2020-09-22 Enable arb again
-//#[cfg(any(test, feature = "test"))]
-//mod arb;
+#[cfg(any(test, feature = "test"))]
+mod arb;
 mod error;
 mod hasher;
 mod hasher_impl;
