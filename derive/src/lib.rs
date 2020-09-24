@@ -13,7 +13,7 @@
 //!
 //! ```
 //! use tiny_multihash::derive::Multihash;
-//! use tiny_multihash::{Digest, Error, Hasher, Multihash, Size, U32, U64};
+//! use tiny_multihash::{U32, U64};
 //!
 //! #[derive(Clone, Debug, Eq, Multihash, PartialEq)]
 //! #[mh(max_size = U64)]

@@ -1,5 +1,3 @@
-use crate::hasher::{Hasher, Size};
-use crate::multihash::Multihash;
 use tiny_multihash_derive::Multihash;
 
 /// Default (cryptographically secure) Multihash implementation.

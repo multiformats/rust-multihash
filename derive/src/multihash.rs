@@ -239,7 +239,8 @@ pub fn multihash(s: Structure) -> TokenStream {
             /// println!("{:02x?}", hash);
             /// ```
             // TODO vmx 2020-09-21: Don't hardcode the size here, define it in the code enum
-            pub fn digest(&self, input: &[u8]) -> Multihash<#max_size> {
+            pub fn digest(&self, input: &[u8]) -> #mh_crate::Multihash<#max_size> {
+                use #mh_crate::Hasher;
                 match self {
                     #(#code_digest,)*
                 }
@@ -257,9 +258,9 @@ pub fn multihash(s: Structure) -> TokenStream {
             /// let hash = Code::multihash_from_digest(&hasher.finalize());
             /// println!("{:02x?}", hash);
             /// ```
-            pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<#max_size>
+            pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> #mh_crate::Multihash<#max_size>
             where
-                S: Size,
+                S: #mh_crate::Size,
                 D: #mh_crate::Digest<S>,
                 Self: From<&'a D>,
             {
@@ -320,7 +321,8 @@ mod tests {
                /// let hash = Code::Sha3_256.digest(b"Hello world!");
                /// println!("{:02x?}", hash);
                /// ```
-               pub fn digest(&self, input: &[u8]) -> Multihash<U32> {
+               pub fn digest(&self, input: &[u8]) -> tiny_multihash::Multihash<U32> {
+                   use tiny_multihash::Hasher;
                    match self {
                        Self::Identity256 => {
                            let digest = tiny_multihash::Identity256::digest(input);
@@ -345,9 +347,9 @@ mod tests {
                /// let hash = Code::multihash_from_digest(&hasher.finalize());
                /// println!("{:02x?}", hash);
                /// ```
-               pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<U32>
+               pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> tiny_multihash::Multihash<U32>
                where
-                   S: Size,
+                   S: tiny_multihash::Size,
                    D: tiny_multihash::Digest<S>,
                    Self: From<&'a D>,
                {
