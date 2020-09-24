@@ -46,48 +46,6 @@ macro_rules! derive_digest {
             }
         }
 
-        #[cfg(feature = "scale-codec")]
-        impl parity_scale_codec::Encode for $name<$crate::U32> {
-            fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
-                let mut digest = [0; 32];
-                digest.copy_from_slice(self.as_ref());
-                digest.using_encoded(f)
-            }
-        }
-
-        #[cfg(feature = "scale-codec")]
-        impl parity_scale_codec::Decode for $name<$crate::U32> {
-            fn decode<I: parity_scale_codec::Input>(
-                input: &mut I,
-            ) -> Result<Self, parity_scale_codec::Error> {
-                let digest = <[u8; 32]>::decode(input)?;
-                let mut array = GenericArray::default();
-                array.copy_from_slice(&digest[..]);
-                Ok(Self(array))
-            }
-        }
-
-        #[cfg(feature = "scale-codec")]
-        impl parity_scale_codec::Encode for $name<$crate::U64> {
-            fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
-                let mut digest = [0; 64];
-                digest.copy_from_slice(self.as_ref());
-                digest.using_encoded(f)
-            }
-        }
-
-        #[cfg(feature = "scale-codec")]
-        impl parity_scale_codec::Decode for $name<$crate::U64> {
-            fn decode<I: parity_scale_codec::Input>(
-                input: &mut I,
-            ) -> Result<Self, parity_scale_codec::Error> {
-                let digest = <[u8; 64]>::decode(input)?;
-                let mut array = GenericArray::default();
-                array.copy_from_slice(&digest[..]);
-                Ok(Self(array))
-            }
-        }
-
         impl<S: Size> Digest<S> for $name<S> {}
     };
 }

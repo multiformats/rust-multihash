@@ -26,9 +26,6 @@ use generic_array::GenericArray;
 /// assert_eq!(mh.size(), 32);
 /// assert_eq!(mh.digest(), &digest_bytes[2..]);
 /// ```
-// TODO vmx 2020-09-22: Make custom codec serialization possible again
-//#[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Decode))]
-//#[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Encode))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
 #[cfg_attr(feature = "serde-codec", serde(bound = "S: Size"))]
@@ -119,6 +116,66 @@ impl<S: Size> Multihash<S> {
     }
 }
 
+#[cfg(feature = "scale-codec")]
+impl parity_scale_codec::Encode for Multihash<crate::U32> {
+    fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
+        let mut digest = [0; 32];
+        digest.copy_from_slice(&self.digest);
+        dest.push(&self.code);
+        dest.push(&self.size);
+        dest.push(&digest);
+    }
+}
+
+#[cfg(feature = "scale-codec")]
+impl parity_scale_codec::EncodeLike for Multihash<crate::U32> {}
+
+#[cfg(feature = "scale-codec")]
+impl parity_scale_codec::Decode for Multihash<crate::U32> {
+    fn decode<DecIn: parity_scale_codec::Input>(
+        input: &mut DecIn,
+    ) -> Result<Self, parity_scale_codec::Error> {
+        Ok(Multihash {
+            code: parity_scale_codec::Decode::decode(input)?,
+            size: parity_scale_codec::Decode::decode(input)?,
+            digest: {
+                let digest = <[u8; 32]>::decode(input)?;
+                GenericArray::clone_from_slice(&digest)
+            },
+        })
+    }
+}
+
+#[cfg(feature = "scale-codec")]
+impl parity_scale_codec::Encode for Multihash<crate::U64> {
+    fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
+        let mut digest = [0; 64];
+        digest.copy_from_slice(&self.digest);
+        dest.push(&self.code);
+        dest.push(&self.size);
+        dest.push(&digest);
+    }
+}
+
+#[cfg(feature = "scale-codec")]
+impl parity_scale_codec::EncodeLike for Multihash<crate::U64> {}
+
+#[cfg(feature = "scale-codec")]
+impl parity_scale_codec::Decode for Multihash<crate::U64> {
+    fn decode<DecIn: parity_scale_codec::Input>(
+        input: &mut DecIn,
+    ) -> Result<Self, parity_scale_codec::Error> {
+        Ok(Multihash {
+            code: parity_scale_codec::Decode::decode(input)?,
+            size: parity_scale_codec::Decode::decode(input)?,
+            digest: {
+                let digest = <[u8; 64]>::decode(input)?;
+                GenericArray::clone_from_slice(&digest)
+            },
+        })
+    }
+}
+
 /// Writes the multihash to a byte stream.
 #[cfg(feature = "std")]
 pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<(), Error>
@@ -179,17 +236,17 @@ mod tests {
         assert_eq!(hash, hash2);
     }
 
-    //#[test]
-    //#[cfg(feature = "scale-codec")]
-    //fn test_scale() {
-    //    use parity_scale_codec::{Decode, Encode};
-    //
-    //    let mh = RawMultihash::default();
-    //    let bytes = mh.encode();
-    //    let mh2: RawMultihash = Decode::decode(&mut &bytes[..]).unwrap();
-    //    assert_eq!(mh, mh2);
-    //}
-    //
+    #[test]
+    #[cfg(feature = "scale-codec")]
+    fn test_scale() {
+        use parity_scale_codec::{Decode, Encode};
+
+        let mh = Multihash::<crate::U32>::default();
+        let bytes = mh.encode();
+        let mh2: Multihash<crate::U32> = Decode::decode(&mut &bytes[..]).unwrap();
+        assert_eq!(mh, mh2);
+    }
+
     #[test]
     #[cfg(feature = "serde-codec")]
     fn test_serde() {
