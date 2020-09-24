@@ -21,7 +21,7 @@ derive = ["tiny-multihash-derive"]
 test = ["multihash-impl", "quickcheck", "rand"]
 all = ["blake2b", "blake2s", "sha1", "sha2", "sha3", "strobe"]
 scale-codec = ["parity-scale-codec"]
-serde-codec = ["serde"]
+serde-codec = ["serde", "generic-array/serde"]
 
 blake2b = ["blake2b_simd"]
 blake2s = ["blake2s_simd"]

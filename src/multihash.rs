@@ -29,8 +29,9 @@ use generic_array::GenericArray;
 // TODO vmx 2020-09-22: Make custom codec serialization possible again
 //#[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Decode))]
 //#[cfg_attr(feature = "scale-codec", derive(parity_scale_codec::Encode))]
-//#[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
-//#[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
+#[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde-codec", serde(bound = "S: Size"))]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct Multihash<S: Size> {
     /// The code of the Multihash.
@@ -189,12 +190,12 @@ mod tests {
     //    assert_eq!(mh, mh2);
     //}
     //
-    //#[test]
-    //#[cfg(feature = "serde-codec")]
-    //fn test_serde() {
-    //    let mh = RawMultihash::default();
-    //    let bytes = serde_json::to_string(&mh).unwrap();
-    //    let mh2 = serde_json::from_str(&bytes).unwrap();
-    //    assert_eq!(mh, mh2);
-    //}
+    #[test]
+    #[cfg(feature = "serde-codec")]
+    fn test_serde() {
+        let mh = Multihash::<crate::U32>::default();
+        let bytes = serde_json::to_string(&mh).unwrap();
+        let mh2 = serde_json::from_str(&bytes).unwrap();
+        assert_eq!(mh, mh2);
+    }
 }
