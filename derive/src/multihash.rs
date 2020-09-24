@@ -17,8 +17,10 @@ mod kw {
     custom_keyword!(digest);
     custom_keyword!(hasher);
     custom_keyword!(mh);
+    custom_keyword!(max_size);
 }
 
+/// Attributes for the enum items.
 #[derive(Debug)]
 enum MhAttr {
     Code(utils::Attr<kw::code, syn::Expr>),
@@ -35,6 +37,18 @@ impl Parse for MhAttr {
         } else {
             Ok(MhAttr::Digest(input.parse()?))
         }
+    }
+}
+
+/// Attributes of the top-level derive.
+#[derive(Debug)]
+enum DeriveAttr {
+    MaxSize(utils::Attr<kw::max_size, syn::Type>),
+}
+
+impl Parse for DeriveAttr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        Ok(Self::MaxSize(input.parse()?))
     }
 }
 
@@ -139,6 +153,29 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
     }
 }
 
+/// Parse top-level enum [#mh()] attributes.
+fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> syn::Type {
+    let mut max_size = None;
+
+    for attr in &ast.attrs {
+        let derive_attrs: Result<utils::Attrs<DeriveAttr>, _> = syn::parse2(attr.tokens.clone());
+        if let Ok(derive_attrs) = derive_attrs {
+            for derive_attr in derive_attrs.attrs {
+                match derive_attr {
+                    DeriveAttr::MaxSize(max_size_attr) => max_size = Some(max_size_attr.value),
+                }
+            }
+        }
+    }
+    max_size.unwrap_or_else(|| {
+        let msg = "enum is missing `max_size` attribute: e.g. #[mh(max_size = U64)]";
+        #[cfg(test)]
+        panic!(msg);
+        #[cfg(not(test))]
+        proc_macro_error::abort!(&ast.ident, msg);
+    })
+}
+
 /// Return an error if the same code is used several times.
 ///
 /// This only checks for string equality, though this should still catch most errors caused by
@@ -174,6 +211,7 @@ fn error_code_duplicates(hashes: &[Hash]) {
 pub fn multihash(s: Structure) -> TokenStream {
     let mh_crate = utils::use_crate("tiny-multihash");
     let code_enum = &s.ast().ident;
+    let max_size = parse_code_enum_attrs(&s.ast());
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
 
     error_code_duplicates(&hashes);
@@ -201,7 +239,7 @@ pub fn multihash(s: Structure) -> TokenStream {
             /// println!("{:02x?}", hash);
             /// ```
             // TODO vmx 2020-09-21: Don't hardcode the size here, define it in the code enum
-            pub fn digest(&self, input: &[u8]) -> Multihash<U64> {
+            pub fn digest(&self, input: &[u8]) -> Multihash<#max_size> {
                 match self {
                     #(#code_digest,)*
                 }
@@ -219,7 +257,7 @@ pub fn multihash(s: Structure) -> TokenStream {
             /// let hash = Code::multihash_from_digest(&hasher.finalize());
             /// println!("{:02x?}", hash);
             /// ```
-            pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<U64>
+            pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<#max_size>
             where
                 S: Size,
                 D: #mh_crate::Digest<S>,
@@ -261,6 +299,7 @@ mod tests {
     fn test_multihash_derive() {
         let input = quote! {
            #[derive(Clone, Multihash)]
+           #[mh(max_size = U32)]
            pub enum Code {
                #[mh(code = tiny_multihash::IDENTITY, hasher = tiny_multihash::Identity256, digest = tiny_multihash::IdentityDigest<U32>)]
                Identity256,
@@ -281,7 +320,7 @@ mod tests {
                /// let hash = Code::Sha3_256.digest(b"Hello world!");
                /// println!("{:02x?}", hash);
                /// ```
-               pub fn digest(&self, input: &[u8]) -> Multihash<U64> {
+               pub fn digest(&self, input: &[u8]) -> Multihash<U32> {
                    match self {
                        Self::Identity256 => {
                            let digest = tiny_multihash::Identity256::digest(input);
@@ -306,7 +345,7 @@ mod tests {
                /// let hash = Code::multihash_from_digest(&hasher.finalize());
                /// println!("{:02x?}", hash);
                /// ```
-               pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<U64>
+               pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<U32>
                where
                    S: Size,
                    D: tiny_multihash::Digest<S>,
@@ -363,6 +402,7 @@ mod tests {
     fn test_multihash_error_code_duplicates() {
         let input = quote! {
            #[derive(Clone, Multihash)]
+           #[mh(max_size = U64)]
            pub enum Multihash {
                #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
                Identity256,
@@ -380,6 +420,7 @@ mod tests {
     fn test_multihash_error_code_duplicates_numbers() {
         let input = quote! {
            #[derive(Clone, Multihash)]
+           #[mh(max_size = U32)]
            pub enum Code {
                #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
                Identity256,

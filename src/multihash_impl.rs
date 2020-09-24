@@ -1,9 +1,6 @@
 use crate::hasher::{Hasher, Size};
 use crate::multihash::Multihash;
 use tiny_multihash_derive::Multihash;
-// TODO vmx 2020-09-20: make things work without this import (have it directly importet in the
-// derive)
-use crate::U64;
 
 /// Default (cryptographically secure) Multihash implementation.
 ///
@@ -12,6 +9,7 @@ use crate::U64;
 ///
 /// [`Multihash` derive]: crate::derive
 #[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
+#[mh(max_size = crate::U64)]
 pub enum Code {
     /// SHA-1 (20-byte hash size)
     #[cfg(feature = "sha1")]

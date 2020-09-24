@@ -9,6 +9,7 @@ use tiny_multihash::{
 };
 
 #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
+#[mh(max_size = U64)]
 pub enum Code {
     #[mh(code = 0x00, hasher = Identity256, digest = IdentityDigest<U32>)]
     Identity,
