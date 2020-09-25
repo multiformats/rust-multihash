@@ -15,7 +15,7 @@
 //! use tiny_multihash::derive::Multihash;
 //! use tiny_multihash::{U32, U64, MultihashCode};
 //!
-//! #[derive(Clone, Debug, Eq, Multihash, PartialEq)]
+//! #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
 //! #[mh(max_size = U64)]
 //! pub enum Code {
 //!     #[mh(code = 0x01, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]

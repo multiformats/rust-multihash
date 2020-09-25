@@ -11,7 +11,9 @@ use generic_array::GenericArray;
 /// It is usually implemented by a custom code table enum that derives the [`Multihash` derive].
 ///
 /// [`Multihash` derive]: crate::derive
-pub trait MultihashCode: TryFrom<u64> + Into<u64> + Send + Sync + 'static {
+pub trait MultihashCode:
+    TryFrom<u64> + Into<u64> + Send + Sync + Unpin + Copy + Eq + Debug + 'static
+{
     /// The maximum size a hash will allocate.
     type MaxSize: Size;
 
