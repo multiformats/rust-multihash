@@ -227,38 +227,17 @@ pub fn multihash(s: Structure) -> TokenStream {
     let from_digest = hashes.iter().map(|h| h.from_digest(&params));
 
     quote! {
-        impl #code_enum {
-            /// Calculate the hash of some input data.
-            ///
-            /// # Example
-            ///
-            /// ```
-            /// use tiny_multihash::Code;
-            ///
-            /// let hash = Code::Sha3_256.digest(b"Hello world!");
-            /// println!("{:02x?}", hash);
-            /// ```
-            // TODO vmx 2020-09-21: Don't hardcode the size here, define it in the code enum
-            pub fn digest(&self, input: &[u8]) -> #mh_crate::Multihash<#max_size> {
+        impl #mh_crate::MultihashCode for #code_enum {
+            type MaxSize = #max_size;
+
+            fn digest(&self, input: &[u8]) -> #mh_crate::Multihash<Self::MaxSize> {
                 use #mh_crate::Hasher;
                 match self {
                     #(#code_digest,)*
                 }
             }
 
-            /// Create a multihash from an existing [`Digest`].
-            ///
-            /// # Example
-            ///
-            /// ```
-            /// use tiny_multihash::{Code, Sha3_256, StatefulHasher};
-            ///
-            /// let mut hasher = Sha3_256::default();
-            /// hasher.update(b"Hello world!");
-            /// let hash = Code::multihash_from_digest(&hasher.finalize());
-            /// println!("{:02x?}", hash);
-            /// ```
-            pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> #mh_crate::Multihash<#max_size>
+            fn multihash_from_digest<'a, S, D>(digest: &'a D) -> #mh_crate::Multihash<Self::MaxSize>
             where
                 S: #mh_crate::Size,
                 D: #mh_crate::Digest<S>,
@@ -310,18 +289,10 @@ mod tests {
             }
         };
         let expected = quote! {
-            impl Code {
-               /// Calculate the hash of some input data.
-               ///
-               /// # Example
-               ///
-               /// ```
-               /// use tiny_multihash::Code;
-               ///
-               /// let hash = Code::Sha3_256.digest(b"Hello world!");
-               /// println!("{:02x?}", hash);
-               /// ```
-               pub fn digest(&self, input: &[u8]) -> tiny_multihash::Multihash<U32> {
+            impl tiny_multihash::MultihashCode for Code {
+               type MaxSize = U32;
+
+               fn digest(&self, input: &[u8]) -> tiny_multihash::Multihash<Self::MaxSize> {
                    use tiny_multihash::Hasher;
                    match self {
                        Self::Identity256 => {
@@ -335,19 +306,7 @@ mod tests {
                    }
                }
 
-               /// Create a multihash from an existing [`Digest`].
-               ///
-               /// # Example
-               ///
-               /// ```
-               /// use tiny_multihash::{Code, Sha3_256, StatefulHasher};
-               ///
-               /// let mut hasher = Sha3_256::default();
-               /// hasher.update(b"Hello world!");
-               /// let hash = Code::multihash_from_digest(&hasher.finalize());
-               /// println!("{:02x?}", hash);
-               /// ```
-               pub fn multihash_from_digest<'a, S, D>(digest: &'a D) -> tiny_multihash::Multihash<U32>
+               fn multihash_from_digest<'a, S, D>(digest: &'a D) -> tiny_multihash::Multihash<Self::MaxSize>
                where
                    S: tiny_multihash::Size,
                    D: tiny_multihash::Digest<S>,

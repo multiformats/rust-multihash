@@ -1,9 +1,51 @@
-use crate::hasher::Size;
+use crate::hasher::{Digest, Size};
 use crate::Error;
+use core::convert::TryFrom;
 #[cfg(feature = "std")]
 use core::convert::TryInto;
 use core::fmt::Debug;
 use generic_array::GenericArray;
+
+/// Trait that implements hashing.
+///
+/// It is usually implemented by a custom code table enum that derives the [`Multihash` derive].
+///
+/// [`Multihash` derive]: crate::derive
+pub trait MultihashCode: TryFrom<u64> + Into<u64> + Send + Sync + 'static {
+    /// The maximum size a hash will allocate.
+    type MaxSize: Size;
+
+    /// Calculate the hash of some input data.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// // `Code` implements `MultihashCode`
+    /// use tiny_multihash::{Code, MultihashCode};
+    ///
+    /// let hash = Code::Sha3_256.digest(b"Hello world!");
+    /// println!("{:02x?}", hash);
+    /// ```
+    fn digest(&self, input: &[u8]) -> Multihash<Self::MaxSize>;
+
+    /// Create a multihash from an existing [`Digest`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tiny_multihash::{Code, MultihashCode, Sha3_256, StatefulHasher};
+    ///
+    /// let mut hasher = Sha3_256::default();
+    /// hasher.update(b"Hello world!");
+    /// let hash = Code::multihash_from_digest(&hasher.finalize());
+    /// println!("{:02x?}", hash);
+    /// ```
+    fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<Self::MaxSize>
+    where
+        S: Size,
+        D: Digest<S>,
+        Self: From<&'a D>;
+}
 
 /// A Multihash instance that only supports the basic functionality and no hashing.
 ///

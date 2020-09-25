@@ -76,6 +76,7 @@ mod tests {
     use super::*;
     use crate::hasher::Hasher;
     use crate::hasher_impl::sha3::{Sha3_256, Sha3_512};
+    use crate::multihash::MultihashCode;
 
     #[test]
     fn test_hasher_256() {

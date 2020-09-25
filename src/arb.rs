@@ -1,7 +1,7 @@
 use quickcheck::{Arbitrary, Gen};
 use rand::seq::SliceRandom;
 
-use crate::{Code, Multihash, U64};
+use crate::{Code, Multihash, MultihashCode, U64};
 
 const HASHES: [Code; 15] = [
     Code::Sha1,
