@@ -39,31 +39,10 @@ pub trait Digest<S: Size>:
         if digest.len() != S::to_usize() {
             return Err(Error::InvalidSize(digest.len() as _));
         }
-        Ok(Self::fit(digest))
-    }
-
-    /// Extends the digest size to the required size.
-    fn extend(digest: &[u8]) -> Result<Self, Error> {
-        if digest.len() > S::to_usize() {
-            return Err(Error::InvalidSize(digest.len() as _));
-        }
-        Ok(Self::fit(digest))
-    }
-
-    /// Wraps and the digest bytes.
-    fn truncate(digest: &[u8]) -> Result<Self, Error> {
-        if digest.len() < S::to_usize() {
-            return Err(Error::InvalidSize(digest.len() as _));
-        }
-        Ok(Self::fit(digest))
-    }
-
-    /// Fit the digest bytes.
-    fn fit(digest: &[u8]) -> Self {
         let mut array = GenericArray::default();
         let len = digest.len().min(array.len());
         array[..len].copy_from_slice(&digest[..len]);
-        array.into()
+        Ok(array.into())
     }
 
     /// Reads a multihash digest from a byte stream that contains the digest prefixed with the size.

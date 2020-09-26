@@ -46,98 +46,6 @@ macro_rules! derive_digest {
             }
         }
 
-        #[cfg(feature = "scale-codec")]
-        impl parity_scale_codec::Encode for $name<$crate::U32> {
-            fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
-                let mut digest = [0; 32];
-                digest.copy_from_slice(self.as_ref());
-                digest.using_encoded(f)
-            }
-        }
-
-        #[cfg(feature = "scale-codec")]
-        impl parity_scale_codec::Decode for $name<$crate::U32> {
-            fn decode<I: parity_scale_codec::Input>(
-                input: &mut I,
-            ) -> Result<Self, parity_scale_codec::Error> {
-                let digest = <[u8; 32]>::decode(input)?;
-                let mut array = GenericArray::default();
-                array.copy_from_slice(&digest[..]);
-                Ok(Self(array))
-            }
-        }
-
-        #[cfg(feature = "scale-codec")]
-        impl parity_scale_codec::Encode for $name<$crate::U64> {
-            fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
-                let mut digest = [0; 64];
-                digest.copy_from_slice(self.as_ref());
-                digest.using_encoded(f)
-            }
-        }
-
-        #[cfg(feature = "scale-codec")]
-        impl parity_scale_codec::Decode for $name<$crate::U64> {
-            fn decode<I: parity_scale_codec::Input>(
-                input: &mut I,
-            ) -> Result<Self, parity_scale_codec::Error> {
-                let digest = <[u8; 64]>::decode(input)?;
-                let mut array = GenericArray::default();
-                array.copy_from_slice(&digest[..]);
-                Ok(Self(array))
-            }
-        }
-
-        #[cfg(feature = "serde-codec")]
-        impl<SZ: Size> serde::Serialize for $name<SZ> {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: serde::Serializer,
-            {
-                use serde::ser::SerializeTuple;
-
-                let mut seq = serializer.serialize_tuple(self.0.len())?;
-                for elem in &self.0[..] {
-                    seq.serialize_element(elem)?;
-                }
-                seq.end()
-            }
-        }
-
-        #[cfg(feature = "serde-codec")]
-        impl<'de, S: Size> serde::Deserialize<'de> for $name<S> {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                use core::marker::PhantomData;
-
-                pub struct DigestVisitor<S: Size>(PhantomData<S>);
-
-                impl<'de, S: Size> serde::de::Visitor<'de> for DigestVisitor<S> {
-                    type Value = $name<S>;
-
-                    fn expecting(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                        write!(f, "an array of length {}", S::to_u8())
-                    }
-
-                    fn visit_seq<A: serde::de::SeqAccess<'de>>(
-                        self,
-                        mut seq: A,
-                    ) -> Result<Self::Value, A::Error> {
-                        let mut arr = GenericArray::default();
-                        for (i, b) in arr.iter_mut().enumerate() {
-                            *b = seq
-                                .next_element()?
-                                .ok_or_else(|| serde::de::Error::invalid_length(i, &self))?;
-                        }
-                        Ok($name(arr))
-                    }
-                }
-                deserializer.deserialize_tuple(S::to_usize(), DigestVisitor(PhantomData))
-            }
-        }
-
         impl<S: Size> Digest<S> for $name<S> {}
     };
 }
@@ -175,7 +83,7 @@ macro_rules! derive_hasher_blake {
 
             fn finalize(&self) -> Self::Digest {
                 let digest = self.state.finalize();
-                Self::Digest::try_from(digest.as_bytes()).expect("digest sizes always match")
+                GenericArray::clone_from_slice(digest.as_bytes()).into()
             }
 
             fn reset(&mut self) {
@@ -325,16 +233,13 @@ pub mod identity {
         // A custom implementation is needed as an identity hash value might be shorter than the
         // allocated Digest.
         fn wrap(digest: &[u8]) -> Result<Self, Error> {
-            Self::extend(digest)
-        }
-
-        // a custom implementation is needed as an identity hash also stores the actual size of
-        // the given digest.
-        fn fit(digest: &[u8]) -> Self {
+            if digest.len() > S::to_usize() {
+                return Err(Error::InvalidSize(digest.len() as _));
+            }
             let mut array = GenericArray::default();
             let len = digest.len().min(array.len());
             array[..len].copy_from_slice(&digest[..len]);
-            Self(len as u8, array)
+            Ok(Self(len as u8, array))
         }
 
         // A custom implementation is needed as an identity hash also stores the actual size of
