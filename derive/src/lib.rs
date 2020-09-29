@@ -1,13 +1,18 @@
 //! This proc macro derives a custom Multihash code table from a list of hashers.
 //!
 //! The digests are stack allocated with a fixed size. That size needs to be big enough to hold any
-//! of the specified hash digests. This cannot be determined automatically on compile-time, hence
-//! it needs to set manually via the `max_size` attribute.
+//! of the specified hash digests. This cannot be determined reliably on compile-time, hence it
+//! needs to set manually via the `max_size` attribute. Also you might want to set it to bigger
+//! sizes then necessarily needed for backwards/forward compatibility.
 //!
-//! If you set `#mh(max_size = …)` to a too low value, e.g. to `U32` in the example below, your
-//! hasher will panic when it tried to generate the `Sha2_512` hash. If you set it to a value
-//! larger than strictly needed, e.g. to `U128` in the example blow, it will use more memory, but
-//! it won't have any consequences on the correctness.
+//! If you set `#mh(max_size = …)` to a too low value, you will get compiler errors. Please note
+//! the the sizes are checked only on a syntactic level and *not* on the type level. This means
+//! that digest need to have a size generic, which is a valid `typenum`, for example `U32` or
+//! `generic_array::typenum::U64`.
+//!
+//! You can disable those compiler errors with setting the `no_max_size_errors` attribute. This
+//! can be useful if you e.g. have specified type aliases for your hash digests and you are sure
+//! you use the correct value for `max_size`.
 //!
 //! # Example
 //!
