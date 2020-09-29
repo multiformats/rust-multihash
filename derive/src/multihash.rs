@@ -16,8 +16,8 @@ mod kw {
     custom_keyword!(digest);
     custom_keyword!(hasher);
     custom_keyword!(mh);
-    custom_keyword!(max_size);
-    custom_keyword!(no_max_size_errors);
+    custom_keyword!(alloc_size);
+    custom_keyword!(no_alloc_size_errors);
 }
 
 /// Attributes for the enum items.
@@ -43,16 +43,16 @@ impl Parse for MhAttr {
 /// Attributes of the top-level derive.
 #[derive(Debug)]
 enum DeriveAttr {
-    MaxSize(utils::Attr<kw::max_size, syn::Type>),
-    NoMaxSizeErrors(kw::no_max_size_errors),
+    AllocSize(utils::Attr<kw::alloc_size, syn::Type>),
+    NoAllocSizeErrors(kw::no_alloc_size_errors),
 }
 
 impl Parse for DeriveAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        if input.peek(kw::max_size) {
-            Ok(Self::MaxSize(input.parse()?))
-        } else if input.peek(kw::no_max_size_errors) {
-            Ok(Self::NoMaxSizeErrors(input.parse()?))
+        if input.peek(kw::alloc_size) {
+            Ok(Self::AllocSize(input.parse()?))
+        } else if input.peek(kw::no_alloc_size_errors) {
+            Ok(Self::NoAllocSizeErrors(input.parse()?))
         } else {
             Err(syn::Error::new(input.span(), "unknown attribute"))
         }
@@ -162,26 +162,28 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
 
 /// Parse top-level enum [#mh()] attributes.
 ///
-/// Returns the `max_size` and whether errors regarding to `max_size` should be reported or not.
+/// Returns the `alloc_size` and whether errors regarding to `alloc_size` should be reported or not.
 fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> (syn::Type, bool) {
-    let mut max_size = None;
-    let mut no_max_size_errors = false;
+    let mut alloc_size = None;
+    let mut no_alloc_size_errors = false;
 
     for attr in &ast.attrs {
         let derive_attrs: Result<utils::Attrs<DeriveAttr>, _> = syn::parse2(attr.tokens.clone());
         if let Ok(derive_attrs) = derive_attrs {
             for derive_attr in derive_attrs.attrs {
                 match derive_attr {
-                    DeriveAttr::MaxSize(max_size_attr) => max_size = Some(max_size_attr.value),
-                    DeriveAttr::NoMaxSizeErrors(_) => no_max_size_errors = true,
+                    DeriveAttr::AllocSize(alloc_size_attr) => {
+                        alloc_size = Some(alloc_size_attr.value)
+                    }
+                    DeriveAttr::NoAllocSizeErrors(_) => no_alloc_size_errors = true,
                 }
             }
         }
     }
-    match max_size {
-        Some(max_size) => (max_size, no_max_size_errors),
+    match alloc_size {
+        Some(alloc_size) => (alloc_size, no_alloc_size_errors),
         None => {
-            let msg = "enum is missing `max_size` attribute: e.g. #[mh(max_size = U64)]";
+            let msg = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = U64)]";
             #[cfg(test)]
             panic!(msg);
             #[cfg(not(test))]
@@ -248,21 +250,21 @@ fn parse_unsigned_typenum(typenum_path: &syn::Type) -> Result<u64, ParseError> {
 
 /// Returns the max size as u64.
 ///
-/// Emits an error if the `#mh(max_size)` attribute doesn't contain a valid unsigned integer
+/// Emits an error if the `#mh(alloc_size)` attribute doesn't contain a valid unsigned integer
 /// `typenum`.
-fn parse_max_size_attribute(max_size: &syn::Type) -> u64 {
-    parse_unsigned_typenum(&max_size).unwrap_or_else(|_| {
-        let msg = "`max_size` attribute must be a `typenum`, e.g. #[mh(max_size = U64)]";
+fn parse_alloc_size_attribute(alloc_size: &syn::Type) -> u64 {
+    parse_unsigned_typenum(&alloc_size).unwrap_or_else(|_| {
+        let msg = "`alloc_size` attribute must be a `typenum`, e.g. #[mh(alloc_size = U64)]";
         #[cfg(test)]
         panic!(msg);
         #[cfg(not(test))]
-        proc_macro_error::abort!(&max_size, msg);
+        proc_macro_error::abort!(&alloc_size, msg);
     })
 }
 
-/// Return a warning/error if the specified max_size is smaller than the biggest digest
-fn error_max_size(hashes: &[Hash], expected_max_size_type: &syn::Type) {
-    let expected_max_size = parse_max_size_attribute(expected_max_size_type);
+/// Return a warning/error if the specified alloc_size is smaller than the biggest digest
+fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::Type) {
+    let expected_alloc_size = parse_alloc_size_attribute(expected_alloc_size_type);
 
     let maybe_error: Result<(), ParseError> = hashes
         .iter()
@@ -274,8 +276,8 @@ fn error_max_size(hashes: &[Hash], expected_max_size_type: &syn::Type) {
                         Some(syn::GenericArgument::Type(path)) => {
                             match parse_unsigned_typenum(&path) {
                                 Ok(max_digest_size) => {
-                                    if max_digest_size > expected_max_size {
-                                        let msg = format!("The `#mh(max_size) attribute must be bigger than the maximum defined digest size (U{})",
+                                    if max_digest_size > expected_alloc_size {
+                                        let msg = format!("The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size (U{})",
                                         max_digest_size);
                                         #[cfg(test)]
                                         panic!(msg);
@@ -284,7 +286,7 @@ fn error_max_size(hashes: &[Hash], expected_max_size_type: &syn::Type) {
                                             let digest = &hash.digest.to_token_stream().to_string().replace(" ", "");
                                             let line = &hash.digest.span().start().line;
                                             proc_macro_error::emit_error!(
-                                                &expected_max_size_type, msg;
+                                                &expected_alloc_size_type, msg;
                                                 note = "the bigger digest is `{}` at line {}", digest, line;
                                             );
                                         }
@@ -316,13 +318,13 @@ fn error_max_size(hashes: &[Hash], expected_max_size_type: &syn::Type) {
 pub fn multihash(s: Structure) -> TokenStream {
     let mh_crate = utils::use_crate("tiny-multihash");
     let code_enum = &s.ast().ident;
-    let (max_size, no_max_size_errors) = parse_code_enum_attrs(&s.ast());
+    let (alloc_size, no_alloc_size_errors) = parse_code_enum_attrs(&s.ast());
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
 
     error_code_duplicates(&hashes);
 
-    if !no_max_size_errors {
-        error_max_size(&hashes, &max_size);
+    if !no_alloc_size_errors {
+        error_alloc_size(&hashes, &alloc_size);
     }
 
     let params = Params {
@@ -337,16 +339,16 @@ pub fn multihash(s: Structure) -> TokenStream {
 
     quote! {
         impl #mh_crate::MultihashCode for #code_enum {
-            type MaxSize = #max_size;
+            type AllocSize = #alloc_size;
 
-            fn digest(&self, input: &[u8]) -> #mh_crate::Multihash<Self::MaxSize> {
+            fn digest(&self, input: &[u8]) -> #mh_crate::Multihash<Self::AllocSize> {
                 use #mh_crate::Hasher;
                 match self {
                     #(#code_digest,)*
                 }
             }
 
-            fn multihash_from_digest<'a, S, D>(digest: &'a D) -> #mh_crate::Multihash<Self::MaxSize>
+            fn multihash_from_digest<'a, S, D>(digest: &'a D) -> #mh_crate::Multihash<Self::AllocSize>
             where
                 S: #mh_crate::Size,
                 D: #mh_crate::Digest<S>,
@@ -388,7 +390,7 @@ mod tests {
     fn test_multihash_derive() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(max_size = U32)]
+           #[mh(alloc_size = U32)]
            pub enum Code {
                #[mh(code = tiny_multihash::IDENTITY, hasher = tiny_multihash::Identity256, digest = tiny_multihash::IdentityDigest<U32>)]
                Identity256,
@@ -399,9 +401,9 @@ mod tests {
         };
         let expected = quote! {
             impl tiny_multihash::MultihashCode for Code {
-               type MaxSize = U32;
+               type AllocSize = U32;
 
-               fn digest(&self, input: &[u8]) -> tiny_multihash::Multihash<Self::MaxSize> {
+               fn digest(&self, input: &[u8]) -> tiny_multihash::Multihash<Self::AllocSize> {
                    use tiny_multihash::Hasher;
                    match self {
                        Self::Identity256 => {
@@ -415,7 +417,7 @@ mod tests {
                    }
                }
 
-               fn multihash_from_digest<'a, S, D>(digest: &'a D) -> tiny_multihash::Multihash<Self::MaxSize>
+               fn multihash_from_digest<'a, S, D>(digest: &'a D) -> tiny_multihash::Multihash<Self::AllocSize>
                where
                    S: tiny_multihash::Size,
                    D: tiny_multihash::Digest<S>,
@@ -472,7 +474,7 @@ mod tests {
     fn test_multihash_error_code_duplicates() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(max_size = U64)]
+           #[mh(alloc_size = U64)]
            pub enum Multihash {
                #[mh(code = tiny_multihash::SHA2_256, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
                Identity256,
@@ -490,7 +492,7 @@ mod tests {
     fn test_multihash_error_code_duplicates_numbers() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(max_size = U32)]
+           #[mh(alloc_size = U32)]
            pub enum Code {
                #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
                Identity256,
@@ -504,8 +506,10 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "enum is missing `max_size` attribute: e.g. #[mh(max_size = U64)]")]
-    fn test_multihash_error_no_max_size() {
+    #[should_panic(
+        expected = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = U64)]"
+    )]
+    fn test_multihash_error_no_alloc_size() {
         let input = quote! {
            #[derive(Clone, Multihash)]
            pub enum Code {
@@ -520,12 +524,12 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "The `#mh(max_size) attribute must be bigger than the maximum defined digest size (U32)"
+        expected = "The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size (U32)"
     )]
-    fn test_multihash_error_too_small_max_size() {
+    fn test_multihash_error_too_small_alloc_size() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(max_size = U16)]
+           #[mh(alloc_size = U16)]
            pub enum Code {
                #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<U32>)]
                Sha2_256,
@@ -543,7 +547,7 @@ mod tests {
     fn test_multihash_error_digest_invalid_size_type() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(max_size = U32)]
+           #[mh(alloc_size = U32)]
            pub enum Code {
                #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<foo>)]
                Sha2_256,
@@ -561,7 +565,7 @@ mod tests {
     fn test_multihash_error_digest_invalid_size_type2() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(max_size = U32)]
+           #[mh(alloc_size = U32)]
            pub enum Code {
                #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = tiny_multihash::Sha2Digest<_>)]
                Sha2_256,
@@ -579,7 +583,7 @@ mod tests {
     fn test_multihash_error_digest_without_typenum() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(max_size = U32)]
+           #[mh(alloc_size = U32)]
            pub enum Code {
                #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = Sha2_256Digest)]
                Sha2_256,
@@ -590,12 +594,12 @@ mod tests {
         multihash(s);
     }
 
-    // This one does not panic, die to `no_max_size_errors`
+    // This one does not panic, die to `no_alloc_size_errors`
     #[test]
-    fn test_multihash_error_digest_without_typenum_no_max_size_errors() {
+    fn test_multihash_error_digest_without_typenum_no_alloc_size_errors() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(max_size = U32, no_max_size_errors)]
+           #[mh(alloc_size = U32, no_alloc_size_errors)]
            pub enum Code {
                #[mh(code = 0x14, hasher = tiny_multihash::Sha2_256, digest = Sha2_256Digest)]
                Sha2_256,

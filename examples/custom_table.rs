@@ -27,7 +27,7 @@ impl StatefulHasher for Sha2_256Truncated20 {
 }
 
 #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
-#[mh(max_size = U64)]
+#[mh(alloc_size = U64)]
 pub enum Code {
     /// Example for using a custom hasher which returns truncated hashes
     #[mh(code = 0x12, hasher = Sha2_256Truncated20, digest = tiny_multihash::Sha2Digest<U20>)]

@@ -15,7 +15,7 @@ pub trait MultihashCode:
     TryFrom<u64> + Into<u64> + Send + Sync + Unpin + Copy + Eq + Debug + 'static
 {
     /// The maximum size a hash will allocate.
-    type MaxSize: Size;
+    type AllocSize: Size;
 
     /// Calculate the hash of some input data.
     ///
@@ -28,7 +28,7 @@ pub trait MultihashCode:
     /// let hash = Code::Sha3_256.digest(b"Hello world!");
     /// println!("{:02x?}", hash);
     /// ```
-    fn digest(&self, input: &[u8]) -> Multihash<Self::MaxSize>;
+    fn digest(&self, input: &[u8]) -> Multihash<Self::AllocSize>;
 
     /// Create a multihash from an existing [`Digest`].
     ///
@@ -42,7 +42,7 @@ pub trait MultihashCode:
     /// let hash = Code::multihash_from_digest(&hasher.finalize());
     /// println!("{:02x?}", hash);
     /// ```
-    fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<Self::MaxSize>
+    fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<Self::AllocSize>
     where
         S: Size,
         D: Digest<S>,

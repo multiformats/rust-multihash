@@ -7,7 +7,7 @@ use tiny_multihash_derive::Multihash;
 ///
 /// [`Multihash` derive]: crate::derive
 #[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
-#[mh(max_size = crate::U64)]
+#[mh(alloc_size = crate::U64)]
 pub enum Code {
     /// SHA-1 (20-byte hash size)
     #[cfg(feature = "sha1")]
