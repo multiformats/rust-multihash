@@ -4,7 +4,7 @@ use core::convert::TryFrom;
 #[cfg(feature = "std")]
 use core::convert::TryInto;
 use core::fmt::Debug;
-use generic_array::GenericArray;
+use generic_array::{ArrayLength, GenericArray};
 
 /// Trait that implements hashing.
 ///
@@ -82,6 +82,8 @@ pub struct Multihash<S: Size> {
     /// The digest.
     digest: GenericArray<u8, S>,
 }
+
+impl<S: Size> Copy for Multihash<S> where <S as ArrayLength<u8>>::ArrayType: Copy {}
 
 impl<S: Size> Multihash<S> {
     /// Wraps the digest in a multihash.
