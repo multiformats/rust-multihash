@@ -2,10 +2,10 @@ use std::io::Cursor;
 
 use tiny_multihash::{
     derive::Multihash, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128, Blake2s256,
-    Blake2sDigest, Digest, Error, Hasher, Identity256, IdentityDigest, Keccak224, Keccak256,
-    Keccak384, Keccak512, KeccakDigest, Multihash, MultihashCode, Sha1, Sha1Digest, Sha2Digest,
-    Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Size, StatefulHasher,
-    Strobe256, Strobe512, StrobeDigest, U16, U20, U28, U32, U48, U64,
+    Blake2sDigest, Blake3Digest, Blake3_256, Digest, Error, Hasher, Identity256, IdentityDigest,
+    Keccak224, Keccak256, Keccak384, Keccak512, KeccakDigest, Multihash, MultihashCode, Sha1,
+    Sha1Digest, Sha2Digest, Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
+    Size, StatefulHasher, Strobe256, Strobe512, StrobeDigest, U16, U20, U28, U32, U48, U64,
 };
 
 #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
@@ -43,6 +43,8 @@ pub enum Code {
     Blake2s128,
     #[mh(code = 0xb260, hasher = Blake2s256, digest = Blake2sDigest<U32>)]
     Blake2s256,
+    #[mh(code = 0x1e, hasher = Blake3_256, digest = Blake3Digest<U32>)]
+    Blake3_256,
     #[mh(code = 0x3312e7, hasher = Strobe256, digest = StrobeDigest<U16>)]
     Strobe256,
     #[mh(code = 0x3312e8, hasher = Strobe512, digest = StrobeDigest<U32>)]
@@ -113,6 +115,7 @@ fn multihash_encode() {
         Blake2s256, Code::Blake2s256, b"hello world", "e0e402209aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b";
         Blake2b256, Code::Blake2b256, b"hello world", "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
         Blake2s128, Code::Blake2s128, b"hello world", "d0e4021037deae0226c30da2ab424a7b8ee14e83";
+        Blake3_256, Code::Blake3_256, b"hello world", "1e20d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
     }
 }
 
@@ -150,6 +153,7 @@ fn assert_decode() {
         Code::Blake2s256, "e0e402209aec6806794561107e594b1f6a8a6b0c92a0cba9acf5e5e93cca06f781813b0b";
         Code::Blake2b256, "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
         Code::Blake2s128, "d0e4021037deae0226c30da2ab424a7b8ee14e83";
+        Code::Blake3_256, "1e20d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
     }
 }
 
@@ -196,6 +200,7 @@ fn assert_roundtrip() {
         Code::Keccak512, Keccak512;
         Code::Blake2b512, Blake2b512;
         Code::Blake2s256, Blake2s256;
+        Code::Blake3_256, Blake3_256;
     );
 }
 
@@ -301,6 +306,11 @@ fn test_multihash_methods() {
         Code::Blake2s128,
         "d0e40210",
         "37deae0226c30da2ab424a7b8ee14e83",
+    );
+    multihash_methods::<Blake3_256>(
+        Code::Blake3_256,
+        "1e20",
+        "d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24",
     );
 }
 

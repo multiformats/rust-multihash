@@ -2,9 +2,9 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::Rng;
 
 use tiny_multihash::{
-    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Hasher, Keccak224, Keccak256, Keccak384,
-    Keccak512, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512, StatefulHasher,
-    Strobe256, Strobe512,
+    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Hasher, Keccak224, Keccak256,
+    Keccak384, Keccak512, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
+    StatefulHasher, Strobe256, Strobe512,
 };
 
 macro_rules! group_digest {
@@ -62,6 +62,7 @@ fn bench_digest(c: &mut Criterion) {
         "blake2b_512" => Blake2b512, &data
         "blake2s_128" => Blake2s128, &data
         "blake2s_256" => Blake2s256, &data
+        "blake3_256" => Blake3_256, &data
         "strobe_256" => Strobe256, &data
         "strobe_512" => Strobe512, &data
     );
@@ -88,6 +89,7 @@ fn bench_stream(c: &mut Criterion) {
         "blake2b_512" => Blake2b512, &data
         "blake2s_128" => Blake2s128, &data
         "blake2s_256" => Blake2s256, &data
+        "blake3_256" => Blake3_256, &data
         "strobe_256" => Strobe256, &data
         "strobe_512" => Strobe512, &data
     );

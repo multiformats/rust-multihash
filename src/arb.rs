@@ -3,7 +3,7 @@ use rand::seq::SliceRandom;
 
 use crate::{Code, Multihash, MultihashCode, U64};
 
-const HASHES: [Code; 15] = [
+const HASHES: [Code; 16] = [
     Code::Sha1,
     Code::Sha2_256,
     Code::Sha2_512,
@@ -19,6 +19,7 @@ const HASHES: [Code; 15] = [
     Code::Blake2b512,
     Code::Blake2s128,
     Code::Blake2s256,
+    Code::Blake3_256,
 ];
 
 /// Generates a random valid multihash.

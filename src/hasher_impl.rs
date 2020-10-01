@@ -124,6 +124,55 @@ pub mod blake2s {
     pub type Blake2s256 = Blake2sHasher<U32>;
 }
 
+#[cfg(feature = "blake3")]
+pub mod blake3 {
+    use super::*;
+    use core::marker::PhantomData;
+    use generic_array::typenum::U32;
+
+    // derive_hasher_blake!(blake3, Blake3Hasher, Blake3Digest);
+    derive_digest!(Blake3Digest);
+
+    /// Multihash hasher.
+    #[derive(Debug)]
+    pub struct Blake3Hasher<S: Size> {
+        _marker: PhantomData<S>,
+        hasher: ::blake3::Hasher,
+    }
+
+    impl<S: Size> Default for Blake3Hasher<S> {
+        fn default() -> Self {
+            let hasher = ::blake3::Hasher::new();
+
+            Self {
+                _marker: PhantomData,
+                hasher,
+            }
+        }
+    }
+
+    impl<S: Size> StatefulHasher for Blake3Hasher<S> {
+        type Size = S;
+        type Digest = Blake3Digest<Self::Size>;
+
+        fn update(&mut self, input: &[u8]) {
+            self.hasher.update(input);
+        }
+
+        fn finalize(&self) -> Self::Digest {
+            let digest = self.hasher.finalize(); //default is 32 bytes anyway
+            GenericArray::clone_from_slice(digest.as_bytes()).into()
+        }
+
+        fn reset(&mut self) {
+            self.hasher.reset();
+        }
+    }
+
+    /// blake3-256 hasher.
+    pub type Blake3_256 = Blake3Hasher<U32>;
+}
+
 #[cfg(feature = "digest")]
 macro_rules! derive_hasher_sha {
     ($module:ty, $name:ident, $size:ty, $digest:ident) => {

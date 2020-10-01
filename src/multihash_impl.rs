@@ -69,6 +69,10 @@ pub enum Code {
     #[cfg(feature = "blake2s")]
     #[mh(code = 0xb260, hasher = crate::Blake2s256, digest = crate::Blake2sDigest<crate::U32>)]
     Blake2s256,
+    /// BLAKE3-256 (32-byte hash size)
+    #[cfg(feature = "blake3")]
+    #[mh(code = 0x1e, hasher = crate::Blake3_256, digest = crate::Blake3Digest<crate::U32>)]
+    Blake3_256,
 }
 
 #[cfg(test)]
