@@ -37,11 +37,34 @@ Then run `cargo build`.
 ## Usage
 
 ```rust
-use multihash::Sha2_256;
+use multihash::{Code, MultihashCode};
 
 fn main() {
-    let hash = Sha2_256::digest(b"my hash");
+    let hash = Code::Sha2_256.digest(b"my hash");
     println!("{:?}", hash);
+}
+```
+
+### Using a custom code table
+
+You can derive your own application specific code table:
+
+```rust
+use multihash::derive::Multihash;
+use multihash::{MultihashCode, U32, U64};
+
+#[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
+#[mh(alloc_size = U64)]
+pub enum Code {
+    #[mh(code = 0x01, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<U32>)]
+    Foo,
+    #[mh(code = 0x02, hasher = multihash::Sha2_512, digest = multihash::Sha2Digest<U64>)]
+    Bar,
+}
+
+fn main() {
+    let hash = Code::Foo.digest(b"my hash");
+    println!("{:02x?}", hash);
 }
 ```
 
@@ -52,6 +75,8 @@ fn main() {
 * `SHA2-512`
 * `SHA3`/`Keccak`
 * `Blake2b-256`/`Blake2b-512`/`Blake2s-128`/`Blake2s-256`
+* `Blake3`
+* `Strobe`
 
 ## Maintainers
 
@@ -68,4 +93,4 @@ Small note: If editing the README, please conform to the [standard-readme](https
 
 ## License
 
-[MIT](LICENSE) © 2015-2017 Friedel Ziegelmayer
+[MIT](LICENSE)
