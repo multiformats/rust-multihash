@@ -3,8 +3,7 @@ use rand::seq::SliceRandom;
 
 use crate::{Code, Multihash, MultihashCode, U64};
 
-const HASHES: [Code; 16] = [
-    Code::Sha1,
+const HASHES: [Code; 15] = [
     Code::Sha2_256,
     Code::Sha2_512,
     Code::Sha3_224,

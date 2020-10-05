@@ -9,10 +9,6 @@ use multihash_derive::Multihash;
 #[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
 #[mh(alloc_size = crate::U64)]
 pub enum Code {
-    /// SHA-1 (20-byte hash size)
-    #[cfg(feature = "sha1")]
-    #[mh(code = 0x11, hasher = crate::Sha1, digest = crate::Sha1Digest<crate::U20>)]
-    Sha1,
     /// SHA-256 (32-byte hash size)
     #[cfg(feature = "sha2")]
     #[mh(code = 0x12, hasher = crate::Sha2_256, digest = crate::Sha2Digest<crate::U32>)]
