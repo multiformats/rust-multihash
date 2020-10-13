@@ -3,10 +3,10 @@
 //! Feature Flags
 //! -------------
 //!
-//! Multihash has lots of [feature flags], by default, all features (except for `test`) are
-//! enabled.
+//! Multihash has lots of [feature flags], by default all features, except for `arb`, `scale-codec`
+//! and `serde-codec` are enabled.
 //!
-//! Some of them are about specific hash functions, these are:
+//! Some of the features are about specific hash functions, these are:
 //!
 //!  - `blake2b`: Enable Blake2b hashers
 //!  - `blake2s`: Enable Blake2s hashers
@@ -24,7 +24,8 @@
 //! specific subset of hash algorithms or add one which isn't supporte by default, you will likely
 //! disable that feature and enable `derive` in order to be able to use the [`Multihash` derive].
 //!
-//! The `test` feature flag enables property based testing features.
+//! The `arb` feature flag enables the quickcheck arbitrary implementation for property based
+//! testing.
 //!
 //! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
 //! [`Multihash` derive]: crate::derive
@@ -32,7 +33,7 @@
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(any(test, feature = "test"))]
+#[cfg(any(test, feature = "arb"))]
 mod arb;
 mod error;
 mod hasher;
