@@ -162,6 +162,13 @@ impl<S: Size> Multihash<S> {
     }
 }
 
+#[cfg(feature = "std")]
+impl<S: Size> From<Multihash<S>> for Vec<u8> {
+    fn from(multihash: Multihash<S>) -> Self {
+        multihash.to_bytes()
+    }
+}
+
 #[cfg(feature = "scale-codec")]
 impl parity_scale_codec::Encode for Multihash<crate::U32> {
     fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
