@@ -11,7 +11,7 @@ use generic_array::{ArrayLength, GenericArray};
 /// It is usually implemented by a custom code table enum that derives the [`Multihash` derive].
 ///
 /// [`Multihash` derive]: crate::derive
-pub trait MultihashCode:
+pub trait MultihashDigest:
     TryFrom<u64> + Into<u64> + Send + Sync + Unpin + Copy + Eq + Debug + 'static
 {
     /// The maximum size a hash will allocate.
@@ -22,8 +22,8 @@ pub trait MultihashCode:
     /// # Example
     ///
     /// ```
-    /// // `Code` implements `MultihashCode`
-    /// use multihash::{Code, MultihashCode};
+    /// // `Code` implements `MultihashDigest`
+    /// use multihash::{Code, MultihashDigest};
     ///
     /// let hash = Code::Sha3_256.digest(b"Hello world!");
     /// println!("{:02x?}", hash);
@@ -35,7 +35,7 @@ pub trait MultihashCode:
     /// # Example
     ///
     /// ```
-    /// use multihash::{Code, MultihashCode, Sha3_256, StatefulHasher};
+    /// use multihash::{Code, MultihashDigest, Sha3_256, StatefulHasher};
     ///
     /// let mut hasher = Sha3_256::default();
     /// hasher.update(b"Hello world!");

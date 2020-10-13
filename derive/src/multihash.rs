@@ -338,7 +338,7 @@ pub fn multihash(s: Structure) -> TokenStream {
     let from_digest = hashes.iter().map(|h| h.from_digest(&params));
 
     quote! {
-        impl #mh_crate::MultihashCode for #code_enum {
+        impl #mh_crate::MultihashDigest for #code_enum {
             type AllocSize = #alloc_size;
 
             fn digest(&self, input: &[u8]) -> #mh_crate::Multihash<Self::AllocSize> {
@@ -400,7 +400,7 @@ mod tests {
             }
         };
         let expected = quote! {
-            impl multihash::MultihashCode for Code {
+            impl multihash::MultihashDigest for Code {
                type AllocSize = U32;
 
                fn digest(&self, input: &[u8]) -> multihash::Multihash<Self::AllocSize> {

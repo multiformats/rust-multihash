@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use multihash::derive::Multihash;
 use multihash::typenum::{U20, U25, U64};
 use multihash::{
-    Digest, Error, Hasher, Multihash, MultihashCode, Sha2Digest, Sha2_256, Size, StatefulHasher,
+    Digest, Error, Hasher, Multihash, MultihashDigest, Sha2Digest, Sha2_256, Size, StatefulHasher,
 };
 
 // You can implement a custom hasher. This is a SHA2 256-bit hasher that returns a hash that is
