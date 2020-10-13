@@ -3,7 +3,7 @@ use std::io::Cursor;
 use multihash::{
     derive::Multihash, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128, Blake2s256,
     Blake2sDigest, Blake3Digest, Blake3_256, Digest, Error, Hasher, Identity256, IdentityDigest,
-    Keccak224, Keccak256, Keccak384, Keccak512, KeccakDigest, Multihash, MultihashCode, Sha1,
+    Keccak224, Keccak256, Keccak384, Keccak512, KeccakDigest, Multihash, MultihashDigest, Sha1,
     Sha1Digest, Sha2Digest, Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
     Size, StatefulHasher, Strobe256, Strobe512, StrobeDigest, U16, U20, U28, U32, U48, U64,
 };

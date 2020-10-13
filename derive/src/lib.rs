@@ -18,7 +18,7 @@
 //!
 //! ```
 //! use multihash::derive::Multihash;
-//! use multihash::{MultihashCode, U32, U64};
+//! use multihash::{MultihashDigest, U32, U64};
 //!
 //! #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
 //! #[mh(alloc_size = U64)]
