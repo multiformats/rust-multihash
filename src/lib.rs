@@ -32,7 +32,7 @@
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(any(test, feature = "test"))]
+#[cfg(any(test, feature = "arb"))]
 mod arb;
 mod error;
 mod hasher;
