@@ -19,10 +19,11 @@
 //!
 //! The library has support for `no_std`, if you disable the `std` feature flag.
 //!
-//! The `multihash-impl` feature flag enables a default Multihash implementation that contains all
-//! bundled hashers (which may be disabled via the feature flags mentioned above). If only want a
-//! specific subset of hash algorithms or add one which isn't supporte by default, you will likely
-//! disable that feature and enable `derive` in order to be able to use the [`Multihash` derive].
+//! The `multihash-impl` feature flag enables a default Multihash implementation that contains some
+//! of the bundled hashers. If you want a different set of hash algorithms or add one which isn't
+//! supported by default, you will disable that feature. Intead enable the `derive` feature in
+//! order to be able to use the [`Multihash` derive], together with the features for the hashers
+//! you need.
 //!
 //! The `arb` feature flag enables the quickcheck arbitrary implementation for property based
 //! testing.
