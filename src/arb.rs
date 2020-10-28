@@ -11,8 +11,8 @@ impl Arbitrary for Multihash<U64> {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         // In real world lower multihash codes are more likely to happen, hence distribute them
         // with bias towards smaller values.
-        let weights = vec![128, 64, 32, 16, 8, 4, 2, 1];
-        let dist = WeightedIndex::new(weights).unwrap();
+        let weights = [128, 64, 32, 16, 8, 4, 2, 1];
+        let dist = WeightedIndex::new(weights.iter()).unwrap();
         let code = match dist.sample(g) {
             0 => g.gen_range(0, u64::pow(2, 7)),
             1 => g.gen_range(u64::pow(2, 7), u64::pow(2, 14)),
