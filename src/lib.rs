@@ -3,33 +3,51 @@
 //! Feature Flags
 //! -------------
 //!
-//! Multihash has lots of [feature flags], by default all features, except for `arb`, `scale-codec`
-//! and `serde-codec` are enabled.
+//! Multihash has lots of [feature flags], by default a table with cryptographically secure hashers
+//! is created.
 //!
-//! Some of the features are about specific hash functions, these are:
+//! Some of the features are about specific hash functions, these are ("default" marks the hashers
+//! that are enabled by default):
 //!
-//!  - `blake2b`: Enable Blake2b hashers
-//!  - `blake2s`: Enable Blake2s hashers
-//!  - `sha1`: Enable SHA-1 hashers
-//!  - `sha2`: Enable SHA-2 hashers
-//!  - `sha3`: Enable SHA-3 hashers
+//!  - `blake2b`: (default) Enable Blake2b hashers
+//!  - `blake2s`: (default) Enable Blake2s hashers
+//!  - `identity`: Enable the Identity hashers (using it is discouraged as it's not a hash function
+//!     in the sense that it produces a fixed sized output independent of the input size)
+//!  - `sha1`: Enable SHA-1 hasher
+//!  - `sha2`: (default) Enable SHA-2 hashers
+//!  - `sha3`: (default) Enable SHA-3 hashers
 //!  - `strobe`: Enable Strobe hashers
 //!
-//! In order to enable all hashers, you can set the `all` feature flag.
+//! In order to enable all cryptographically secure hashers, you can set the `secure-hashes`
+//! feature flag (enabled by default).
 //!
 //! The library has support for `no_std`, if you disable the `std` feature flag.
 //!
-//! The `multihash-impl` feature flag enables a default Multihash implementation that contains some
-//! of the bundled hashers. If you want a different set of hash algorithms or add one which isn't
-//! supported by default, you will disable that feature. Intead enable the `derive` feature in
-//! order to be able to use the [`Multihash` derive], together with the features for the hashers
-//! you need.
+//! The `multihash-impl` feature flag (enabled by default) enables a default Multihash
+//! implementation that contains some of the bundled hashers. If you want a different set of hash
+//! algorithms you can change this with enabled the corresponding features.
+//!
+//! For example if you only need SHA2 hasher, you could set the features in the `multihash`
+//! dependency like this:
+//!
+//! ```toml
+//! multihash = { version = …, default-features = false, features = ["std", "multihash-impl", "sha2"] }
+//! ```
+//!
+//! If you want to customize your code table even more, for example you want only one specific hash
+//! digest size and not whole family, you would only enable the `derive` feature (enabled by
+//! default), which enables the [`Multihash` derive], together with the hashers you want.
 //!
 //! The `arb` feature flag enables the quickcheck arbitrary implementation for property based
 //! testing.
 //!
+//! For serializing the multihash there is support for [Serde] via the `serde-codec` feature and
+//! the [SCALE Codec] via the `scale-codec` feature.
+//!
 //! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
 //! [`Multihash` derive]: crate::derive
+//! [Serde]: https://serde.rs
+//! [SCALE Codec]: https://github.com/paritytech/parity-scale-codec
 
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
