@@ -14,17 +14,18 @@ documentation = "https://docs.rs/multihash/"
 edition = "2018"
 
 [features]
-default = ["std", "all", "derive", "multihash-impl"]
+default = ["std", "derive", "multihash-impl", "secure-hashes"]
 std = ["unsigned-varint/std", "multihash-derive/std"]
-multihash-impl = ["derive", "all"]
+multihash-impl = ["derive"]
 derive = ["multihash-derive"]
 arb = ["quickcheck", "rand"]
-all = ["blake2b", "blake2s", "blake3", "sha1", "sha2", "sha3", "strobe"]
+secure-hashes = ["blake2b", "blake2s", "blake3", "sha2", "sha3"]
 scale-codec = ["parity-scale-codec"]
 serde-codec = ["serde", "generic-array/serde"]
 
 blake2b = ["blake2b_simd"]
 blake2s = ["blake2s_simd"]
+identity = []
 sha1 = ["digest", "sha-1"]
 sha2 = ["digest", "sha-2"]
 sha3 = ["digest", "sha-3"]
