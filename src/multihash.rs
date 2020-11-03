@@ -42,6 +42,7 @@ pub trait MultihashDigest:
     /// let hash = Code::multihash_from_digest(&hasher.finalize());
     /// println!("{:02x?}", hash);
     /// ```
+    #[allow(clippy::needless_lifetimes)]
     fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash<Self::AllocSize>
     where
         S: Size,
@@ -57,7 +58,7 @@ pub trait MultihashDigest:
 /// # Example
 ///
 /// ```
-/// use multihash::{Multihash, U64};
+/// use multihash::Multihash;
 ///
 /// const Sha3_256: u64 = 0x16;
 /// let digest_bytes = [
@@ -65,7 +66,7 @@ pub trait MultihashDigest:
 ///     0x76, 0x22, 0xf3, 0xca, 0x71, 0xfb, 0xa1, 0xd9, 0x72, 0xfd, 0x94, 0xa3, 0x1c, 0x3b, 0xfb,
 ///     0xf2, 0x4e, 0x39, 0x38,
 /// ];
-/// let mh = Multihash::<U64>::from_bytes(&digest_bytes).unwrap();
+/// let mh = Multihash::from_bytes(&digest_bytes).unwrap();
 /// assert_eq!(mh.code(), Sha3_256);
 /// assert_eq!(mh.size(), 32);
 /// assert_eq!(mh.digest(), &digest_bytes[2..]);

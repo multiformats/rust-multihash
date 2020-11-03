@@ -1,4 +1,5 @@
-//! This proc macro derives a custom Multihash code table from a list of hashers.
+//! This proc macro derives a custom Multihash code table from a list of hashers. It also
+//! generates a public type called `Multihash` which corresponds to the specified `alloc_size`.
 //!
 //! The digests are stack allocated with a fixed size. That size needs to be big enough to hold any
 //! of the specified hash digests. This cannot be determined reliably on compile-time, hence it
