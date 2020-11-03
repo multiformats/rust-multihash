@@ -60,7 +60,6 @@ impl Parse for DeriveAttr {
 }
 
 struct Params {
-    mh_crate: syn::Ident,
     code_enum: syn::Ident,
 }
 
@@ -86,14 +85,13 @@ impl Hash {
         quote!(#code => Ok(Self::#ident))
     }
 
-    fn code_digest(&self, params: &Params) -> TokenStream {
+    fn code_digest(&self) -> TokenStream {
         let ident = &self.ident;
         let hasher = &self.hasher;
         let code = &self.code;
-        let mh_crate = &params.mh_crate;
         quote!(Self::#ident => {
            let digest = #hasher::digest(input);
-           #mh_crate::Multihash::wrap(#code, &digest.as_ref()).unwrap()
+           Multihash::wrap(#code, &digest.as_ref()).unwrap()
         })
     }
 
@@ -328,34 +326,36 @@ pub fn multihash(s: Structure) -> TokenStream {
     }
 
     let params = Params {
-        mh_crate: mh_crate.clone(),
         code_enum: code_enum.clone(),
     };
 
     let code_into_u64 = hashes.iter().map(|h| h.code_into_u64(&params));
     let code_from_u64 = hashes.iter().map(|h| h.code_from_u64());
-    let code_digest = hashes.iter().map(|h| h.code_digest(&params));
+    let code_digest = hashes.iter().map(|h| h.code_digest());
     let from_digest = hashes.iter().map(|h| h.from_digest(&params));
 
     quote! {
+        /// A Multihash with the same allocated size as the Multihashes produces by this derive.
+        pub type Multihash = #mh_crate::MultihashGeneric::<#alloc_size>;
+
         impl #mh_crate::MultihashDigest for #code_enum {
             type AllocSize = #alloc_size;
 
-            fn digest(&self, input: &[u8]) -> #mh_crate::Multihash<Self::AllocSize> {
+            fn digest(&self, input: &[u8]) -> Multihash {
                 use #mh_crate::Hasher;
                 match self {
                     #(#code_digest,)*
                 }
             }
 
-            fn multihash_from_digest<'a, S, D>(digest: &'a D) -> #mh_crate::Multihash<Self::AllocSize>
+            fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash
             where
                 S: #mh_crate::Size,
                 D: #mh_crate::Digest<S>,
                 Self: From<&'a D>,
             {
                 let code = Self::from(&digest);
-                #mh_crate::Multihash::wrap(code.into(), &digest.as_ref()).unwrap()
+                Multihash::wrap(code.into(), &digest.as_ref()).unwrap()
             }
         }
 
@@ -400,31 +400,34 @@ mod tests {
             }
         };
         let expected = quote! {
+            /// A Multihash with the same allocated size as the Multihashes produces by this derive.
+            pub type Multihash = multihash::MultihashGeneric::<U32>;
+
             impl multihash::MultihashDigest for Code {
                type AllocSize = U32;
 
-               fn digest(&self, input: &[u8]) -> multihash::Multihash<Self::AllocSize> {
+               fn digest(&self, input: &[u8]) -> Multihash {
                    use multihash::Hasher;
                    match self {
                        Self::Identity256 => {
                            let digest = multihash::Identity256::digest(input);
-                           multihash::Multihash::wrap(multihash::IDENTITY, &digest.as_ref()).unwrap()
+                           Multihash::wrap(multihash::IDENTITY, &digest.as_ref()).unwrap()
                        },
                        Self::Strobe256 => {
                            let digest = multihash::Strobe256::digest(input);
-                           multihash::Multihash::wrap(0x38b64f, &digest.as_ref()).unwrap()
+                           Multihash::wrap(0x38b64f, &digest.as_ref()).unwrap()
                        },
                    }
                }
 
-               fn multihash_from_digest<'a, S, D>(digest: &'a D) -> multihash::Multihash<Self::AllocSize>
+               fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash
                where
                    S: multihash::Size,
                    D: multihash::Digest<S>,
                    Self: From<&'a D>,
                {
                    let code = Self::from(&digest);
-                   multihash::Multihash::wrap(code.into(), &digest.as_ref()).unwrap()
+                   Multihash::wrap(code.into(), &digest.as_ref()).unwrap()
                }
             }
 

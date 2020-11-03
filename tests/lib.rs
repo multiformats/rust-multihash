@@ -3,9 +3,10 @@ use std::io::Cursor;
 use multihash::{
     derive::Multihash, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128, Blake2s256,
     Blake2sDigest, Blake3Digest, Blake3_256, Digest, Error, Hasher, Identity256, IdentityDigest,
-    Keccak224, Keccak256, Keccak384, Keccak512, KeccakDigest, Multihash, MultihashDigest, Sha1,
-    Sha1Digest, Sha2Digest, Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
-    Size, StatefulHasher, Strobe256, Strobe512, StrobeDigest, U16, U20, U28, U32, U48, U64,
+    Keccak224, Keccak256, Keccak384, Keccak512, KeccakDigest, MultihashDigest, MultihashGeneric,
+    Sha1, Sha1Digest, Sha2Digest, Sha2_256, Sha2_512, Sha3Digest, Sha3_224, Sha3_256, Sha3_384,
+    Sha3_512, Size, StatefulHasher, Strobe256, Strobe512, StrobeDigest, U16, U20, U28, U32, U48,
+    U64,
 };
 
 #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
@@ -113,7 +114,7 @@ macro_rules! assert_decode {
         $(
             let hash = hex::decode($hash).unwrap();
             assert_eq!(
-                Multihash::<U64>::from_bytes(&hash).unwrap().code(),
+                Multihash::from_bytes(&hash).unwrap().code(),
                 u64::from($code),
                 "{:?} decodes correctly", stringify!($code)
             );
@@ -152,7 +153,7 @@ macro_rules! assert_roundtrip {
             {
                 let hash = $code.digest(b"helloworld");
                 assert_eq!(
-                    Multihash::<U64>::from_bytes(&hash.to_bytes()).unwrap().code(),
+                    Multihash::from_bytes(&hash.to_bytes()).unwrap().code(),
                     hash.code()
                 );
             }
@@ -162,7 +163,7 @@ macro_rules! assert_roundtrip {
                 hasher.update(b"helloworld");
                 let hash = Code::multihash_from_digest(&hasher.finalize());
                 assert_eq!(
-                    Multihash::<U64>::from_bytes(&hash.to_bytes()).unwrap().code(),
+                    Multihash::from_bytes(&hash.to_bytes()).unwrap().code(),
                     hash.code()
                 );
             }
@@ -313,25 +314,25 @@ fn test_long_identity_hash() {
 #[test]
 fn multihash_errors() {
     assert!(
-        Multihash::<U64>::from_bytes(&[]).is_err(),
+        Multihash::from_bytes(&[]).is_err(),
         "Should error on empty data"
     );
     assert!(
-        Multihash::<U64>::from_bytes(&[1, 2, 3]).is_err(),
+        Multihash::from_bytes(&[1, 2, 3]).is_err(),
         "Should error on invalid multihash"
     );
     assert!(
-        Multihash::<U64>::from_bytes(&[1, 2, 3]).is_err(),
+        Multihash::from_bytes(&[1, 2, 3]).is_err(),
         "Should error on invalid prefix"
     );
     assert!(
-        Multihash::<U64>::from_bytes(&[0x12, 0x20, 0xff]).is_err(),
+        Multihash::from_bytes(&[0x12, 0x20, 0xff]).is_err(),
         "Should error on correct prefix with wrong digest"
     );
     let identity_code: u8 = 0x00;
     let identity_length = 3;
     assert!(
-        Multihash::<U64>::from_bytes(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
+        Multihash::from_bytes(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
     );
 }
