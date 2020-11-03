@@ -65,13 +65,13 @@ pub use crate::error::{Error, Result};
 #[cfg(feature = "std")]
 pub use crate::hasher::WriteHasher;
 pub use crate::hasher::{Digest, Hasher, Size, StatefulHasher};
-pub use crate::multihash::{Multihash, MultihashDigest};
+pub use crate::multihash::{Multihash as MultihashGeneric, MultihashDigest};
 pub use generic_array::typenum::{self, U128, U16, U20, U28, U32, U48, U64};
 #[cfg(feature = "derive")]
 pub use multihash_derive as derive;
 
 #[cfg(feature = "multihash-impl")]
-pub use crate::multihash_impl::Code;
+pub use crate::multihash_impl::{Code, Multihash};
 
 #[cfg(feature = "blake2b")]
 pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bDigest, Blake2bHasher};

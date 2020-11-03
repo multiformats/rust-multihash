@@ -3,7 +3,8 @@ use std::convert::TryFrom;
 use multihash::derive::Multihash;
 use multihash::typenum::{U20, U25, U64};
 use multihash::{
-    Digest, Error, Hasher, Multihash, MultihashDigest, Sha2Digest, Sha2_256, Size, StatefulHasher,
+    Digest, Error, Hasher, MultihashDigest, MultihashGeneric, Sha2Digest, Sha2_256, Size,
+    StatefulHasher,
 };
 
 // You can implement a custom hasher. This is a SHA2 256-bit hasher that returns a hash that is
@@ -48,7 +49,7 @@ fn main() {
     // Sometimes you might not need to hash new data, you just want to get the information about
     // a Multihash.
     let truncated_sha2_bytes = truncated_sha2_hash.to_bytes();
-    let unknown_hash = Multihash::<U64>::from_bytes(&truncated_sha2_bytes).unwrap();
+    let unknown_hash = Multihash::from_bytes(&truncated_sha2_bytes).unwrap();
     println!("SHA2 256-bit hash truncated to 160 bits:");
     println!("  code: {:x?}", unknown_hash.code());
     println!("  size: {}", unknown_hash.size());
