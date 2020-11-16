@@ -74,7 +74,7 @@ pub trait MultihashDigest:
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
 #[cfg_attr(feature = "serde-codec", serde(bound = "S: Size"))]
-#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Multihash<S: Size> {
     /// The code of the Multihash.
     code: u64,
