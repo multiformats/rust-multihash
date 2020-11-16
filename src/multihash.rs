@@ -163,6 +163,15 @@ impl<S: Size> Multihash<S> {
     }
 }
 
+// Don't hash the whole allocated space, but just the actual digest
+#[allow(clippy::derive_hash_xor_eq)]
+impl<S: Size> core::hash::Hash for Multihash<S> {
+    fn hash<T: core::hash::Hasher>(&self, state: &mut T) {
+        self.code.hash(state);
+        self.digest().hash(state);
+    }
+}
+
 #[cfg(feature = "std")]
 impl<S: Size> From<Multihash<S>> for Vec<u8> {
     fn from(multihash: Multihash<S>) -> Self {
