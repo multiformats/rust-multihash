@@ -74,7 +74,7 @@ pub trait MultihashDigest:
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
 #[cfg_attr(feature = "serde-codec", serde(bound = "S: Size"))]
-#[derive(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Multihash<S: Size> {
     /// The code of the Multihash.
     code: u64,
@@ -160,6 +160,15 @@ impl<S: Size> Multihash<S> {
         self.write(&mut bytes)
             .expect("writing to a vec should never fail");
         bytes
+    }
+}
+
+// Don't hash the whole allocated space, but just the actual digest
+#[allow(clippy::derive_hash_xor_eq)]
+impl<S: Size> core::hash::Hash for Multihash<S> {
+    fn hash<T: core::hash::Hasher>(&self, state: &mut T) {
+        self.code.hash(state);
+        self.digest().hash(state);
     }
 }
 
