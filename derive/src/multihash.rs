@@ -345,6 +345,7 @@ pub fn multihash(s: Structure) -> TokenStream {
                 use #mh_crate::Hasher;
                 match self {
                     #(#code_digest,)*
+                    _ => unreachable!(),
                 }
             }
 
@@ -363,6 +364,7 @@ pub fn multihash(s: Structure) -> TokenStream {
             fn from(code: #code_enum) -> Self {
                 match code {
                     #(#code_into_u64,)*
+                    _ => unreachable!(),
                 }
             }
         }
@@ -417,6 +419,7 @@ mod tests {
                            let digest = multihash::Strobe256::digest(input);
                            Multihash::wrap(0x38b64f, &digest.as_ref()).unwrap()
                        },
+                       _ => unreachable!(),
                    }
                }
 
@@ -437,6 +440,7 @@ mod tests {
                     match code {
                         Code::Identity256 => multihash::IDENTITY,
                         Code::Strobe256 => 0x38b64f,
+                       _ => unreachable!(),
                     }
                 }
             }
