@@ -50,6 +50,22 @@ macro_rules! derive_digest {
     };
 }
 
+macro_rules! derive_write {
+    ($name:ident) => {
+        #[cfg(feature = "std")]
+        impl<S: Size> std::io::Write for $name<S> {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                self.update(buf);
+                Ok(buf.len())
+            }
+
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+    };
+}
+
 #[cfg(any(feature = "blake2b", feature = "blake2s"))]
 macro_rules! derive_hasher_blake {
     ($module:ident, $name:ident, $digest:ident) => {
@@ -91,6 +107,8 @@ macro_rules! derive_hasher_blake {
                 self.state = state;
             }
         }
+
+        derive_write!($name);
     };
 }
 
@@ -169,6 +187,8 @@ pub mod blake3 {
         }
     }
 
+    derive_write!(Blake3Hasher);
+
     /// blake3-256 hasher.
     pub type Blake3_256 = Blake3Hasher<U32>;
 }
@@ -199,6 +219,18 @@ macro_rules! derive_hasher_sha {
             fn reset(&mut self) {
                 use digest::Digest;
                 self.state.reset();
+            }
+        }
+
+        #[cfg(feature = "std")]
+        impl std::io::Write for $name {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                self.update(buf);
+                Ok(buf.len())
+            }
+
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
             }
         }
     };
@@ -342,6 +374,8 @@ pub mod identity {
         }
     }
 
+    derive_write!(IdentityHasher);
+
     /// 32 byte Identity hasher (constrained to 32 bytes).
     ///
     /// # Panics
@@ -402,6 +436,8 @@ pub mod strobe {
             self.initialized = false;
         }
     }
+
+    derive_write!(StrobeHasher);
 
     /// 256 bit strobe hasher.
     pub type Strobe256 = StrobeHasher<U32>;
