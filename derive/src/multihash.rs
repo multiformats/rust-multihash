@@ -266,7 +266,7 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::Type) {
 
     let maybe_error: Result<(), ParseError> = hashes
         .iter()
-        .map(|hash| {
+        .try_for_each(|hash| {
             // The digest type must have a size parameter of the shape `U<number>`, else we error.
             match hash.digest.segments.last() {
                 Some(path_segment) => match &path_segment.arguments {
@@ -300,7 +300,7 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::Type) {
                 },
                 None => Err(ParseError(hash.digest.span())),
             }
-        }).collect();
+        });
 
     if let Err(_error) = maybe_error {
         let msg = "Invalid byte size. It must be a unsigned integer typenum, e.g. `U32`";
