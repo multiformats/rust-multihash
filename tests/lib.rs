@@ -1,4 +1,4 @@
-use std::io::Cursor;
+use std::io::{Cursor, Write};
 
 use multihash::{
     derive::Multihash, Blake2b256, Blake2b512, Blake2bDigest, Blake2s128, Blake2s256,
@@ -161,6 +161,16 @@ macro_rules! assert_roundtrip {
             {
                 let mut hasher = <$alg>::default();
                 hasher.update(b"helloworld");
+                let hash = Code::multihash_from_digest(&hasher.finalize());
+                assert_eq!(
+                    Multihash::from_bytes(&hash.to_bytes()).unwrap().code(),
+                    hash.code()
+                );
+            }
+            // Hashing as `Write` implementation
+            {
+                let mut hasher = <$alg>::default();
+                hasher.write_all(b"helloworld").unwrap();
                 let hash = Code::multihash_from_digest(&hasher.finalize());
                 assert_eq!(
                     Multihash::from_bytes(&hash.to_bytes()).unwrap().code(),
