@@ -62,8 +62,6 @@ mod multihash;
 mod multihash_impl;
 
 pub use crate::error::{Error, Result};
-#[cfg(feature = "std")]
-pub use crate::hasher::WriteHasher;
 pub use crate::hasher::{Digest, Hasher, Size, StatefulHasher};
 pub use crate::multihash::{Multihash as MultihashGeneric, MultihashDigest};
 pub use generic_array::typenum::{self, U128, U16, U20, U28, U32, U48, U64};

@@ -134,19 +134,3 @@ impl<T: StatefulHasher> Hasher for T {
         hasher.finalize()
     }
 }
-
-/// New type wrapper for a hasher that implements the `std::io::Write` trait.
-#[cfg(feature = "std")]
-pub struct WriteHasher<H: Hasher>(H);
-
-#[cfg(feature = "std")]
-impl<H: StatefulHasher> std::io::Write for WriteHasher<H> {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.0.update(buf);
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
-}
