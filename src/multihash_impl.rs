@@ -7,15 +7,15 @@ use multihash_derive::Multihash;
 ///
 /// [`Multihash` derive]: crate::derive
 #[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
-#[mh(alloc_size = crate::U64)]
+#[mh(alloc_size = U64)]
 pub enum Code {
     /// SHA-256 (32-byte hash size)
     #[cfg(feature = "sha2")]
-    #[mh(code = 0x12, hasher = crate::Sha2_256, digest = crate::Sha2Digest<crate::U32>)]
+    #[mh(code = 0x12, hasher = crate::Sha2_256, digest = crate::Sha2Digest<32>)]
     Sha2_256,
     /// SHA-512 (64-byte hash size)
     #[cfg(feature = "sha2")]
-    #[mh(code = 0x13, hasher = crate::Sha2_512, digest = crate::Sha2Digest<crate::U64>)]
+    #[mh(code = 0x13, hasher = crate::Sha2_512, digest = crate::Sha2Digest<64>)]
     Sha2_512,
     /// SHA3-224 (28-byte hash size)
     #[cfg(feature = "sha3")]
