@@ -1,6 +1,6 @@
 use crate::error::Error;
 use core::fmt::Debug;
-use std::usize;
+
 
 /// Stack allocated digest trait.
 pub trait Digest<const S: usize>:

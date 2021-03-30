@@ -4,7 +4,6 @@ use core::convert::TryFrom;
 #[cfg(feature = "std")]
 use core::convert::TryInto;
 use core::fmt::Debug;
-use std::usize;
 
 /// Trait that implements hashing.
 ///
