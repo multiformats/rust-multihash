@@ -275,7 +275,7 @@ pub mod identity {
 
     /// Multihash digest.
     #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-    pub struct IdentityDigest<const S: usize>(u8, [u8; S]);
+    pub struct IdentityDigest<const S: usize>(usize, [u8; S]);
 
     impl<const S: usize> Default for IdentityDigest<S> {
         fn default() -> Self {
@@ -297,7 +297,7 @@ pub mod identity {
 
     impl<const S: usize> From<[u8; S]> for IdentityDigest<S> {
         fn from(array: [u8; S]) -> Self {
-            Self(array.len() as u8, array)
+            Self(array.len(), array)
         }
     }
 
@@ -308,7 +308,7 @@ pub mod identity {
     }
 
     impl<const S: usize> Digest<S> for IdentityDigest<S> {
-        fn size(&self) -> u8 {
+        fn size(&self) -> usize {
             self.0
         }
 
@@ -321,7 +321,7 @@ pub mod identity {
             let mut array = [0; S];
             let len = digest.len().min(array.len());
             array[..len].copy_from_slice(&digest[..len]);
-            Ok(Self(len as u8, array))
+            Ok(Self(len, array))
         }
 
         // A custom implementation is needed as an identity hash also stores the actual size of
@@ -339,7 +339,7 @@ pub mod identity {
             }
             let mut digest = [0; S];
             r.read_exact(&mut digest[..size as usize])?;
-            Ok(Self(size as u8, digest))
+            Ok(Self(size as usize, digest))
         }
     }
 
@@ -372,7 +372,7 @@ pub mod identity {
         }
 
         fn finalize(&self) -> Self::Digest {
-            IdentityDigest(self.i as u8, self.bytes.clone())
+            IdentityDigest(self.i, self.bytes.clone())
         }
 
         fn reset(&mut self) {

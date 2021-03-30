@@ -17,9 +17,9 @@ pub trait Digest<const S: usize>:
     + Sync
     + 'static
 {
-    /// Size of the digest.
-    fn size(&self) -> u8 {
-        S as u8
+    /// Size of the digest. Maximum for Some of the Blake family is 2^64-1 bytes
+    fn size(&self) -> usize {
+        S
     }
 
     /// Wraps the digest bytes.
@@ -97,8 +97,8 @@ pub trait Hasher<const S: usize>: Default + Send + Sync {
     type Digest: Digest<S>;
 
     /// Returns the allocated size of the digest.
-    fn size() -> u8 {
-        S as u8
+    fn size() -> usize {
+        S
     }
 
     /// Hashes the given `input` data and returns its hash digest.
