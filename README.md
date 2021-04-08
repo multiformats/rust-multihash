@@ -15,8 +15,6 @@
 > [multihash](https://github.com/multiformats/multihash) implementation in Rust.
 
 ## Table of Contents
-
-  - [Table of Contents](#table-of-contents)
   - [Install](#install)
   - [Usage](#usage)
   - [Supported Hash Types](#supported-hash-types)
