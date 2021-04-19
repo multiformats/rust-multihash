@@ -91,7 +91,7 @@ mod tests {
         let hash2 = Code::Sha3_256.digest(b"hello world");
         assert_eq!(hash.code(), u64::from(Code::Sha3_256));
         assert_eq!(hash.size(), 32);
-        assert_eq!(hash.digest(), &digest.as_ref()[..]);
+        assert_eq!(hash.digest(), digest.as_ref());
         assert_eq!(hash, hash2);
     }
 
@@ -102,7 +102,7 @@ mod tests {
         let hash2 = Code::Sha3_512.digest(b"hello world");
         assert_eq!(hash.code(), u64::from(Code::Sha3_512));
         assert_eq!(hash.size(), 64);
-        assert_eq!(hash.digest(), &digest.as_ref()[..]);
+        assert_eq!(hash.digest(), digest.as_ref());
         assert_eq!(hash, hash2);
     }
 }
