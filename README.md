@@ -15,13 +15,12 @@
 > [multihash](https://github.com/multiformats/multihash) implementation in Rust.
 
 ## Table of Contents
-
-- [Install](#install)
-- [Usage](#usage)
-- [Supported Hash Types](#supported-hash-types)
-- [Maintainers](#maintainers)
-- [Contribute](#contribute)
-- [License](#license)
+  - [Install](#install)
+  - [Usage](#usage)
+  - [Supported Hash Types](#supported-hash-types)
+  - [Maintainers](#maintainers)
+  - [Contribute](#contribute)
+  - [License](#license)
 
 ## Install
 
@@ -37,7 +36,7 @@ Then run `cargo build`.
 ## Usage
 
 ```rust
-use multihash::{Code, MultihashCode};
+use multihash::{Code, MultihashDigest};
 
 fn main() {
     let hash = Code::Sha2_256.digest(b"my hash");
@@ -51,7 +50,7 @@ You can derive your own application specific code table:
 
 ```rust
 use multihash::derive::Multihash;
-use multihash::{MultihashCode, U32, U64};
+use multihash::{MultihashDigest, U32, U64};
 
 #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
 #[mh(alloc_size = U64)]
