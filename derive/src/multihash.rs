@@ -131,21 +131,21 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
         let code = code.unwrap_or_else(|| {
             let msg = "Missing code attribute: e.g. #[mh(code = multihash::SHA3_256)]";
             #[cfg(test)]
-            panic!(msg);
+            panic!("{}", msg);
             #[cfg(not(test))]
             proc_macro_error::abort!(ident, msg);
         });
         let hasher = hasher.unwrap_or_else(|| {
             let msg = "Missing hasher attribute: e.g. #[mh(hasher = multihash::Sha2_256)]";
             #[cfg(test)]
-            panic!(msg);
+            panic!("{}", msg);
             #[cfg(not(test))]
             proc_macro_error::abort!(ident, msg);
         });
         let digest = digest.unwrap_or_else(|| {
             let msg = "Missing digest atttibute: e.g. #[mh(digest = multihash::Sha2Digest<U32>)]";
             #[cfg(test)]
-            panic!(msg);
+            panic!("{}", msg);
             #[cfg(not(test))]
             proc_macro_error::abort!(ident, msg);
         });
@@ -183,7 +183,7 @@ fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> (syn::Type, bool) {
         None => {
             let msg = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = U64)]";
             #[cfg(test)]
-            panic!(msg);
+            panic!("{}", msg);
             #[cfg(not(test))]
             proc_macro_error::abort!(&ast.ident, msg);
         }
@@ -208,7 +208,7 @@ fn error_code_duplicates(hashes: &[Hash]) {
         // It's a duplicate
         if !uniq.insert(code) {
             #[cfg(test)]
-            panic!(msg);
+            panic!("{}", msg);
             #[cfg(not(test))]
             {
                 let already_defined = uniq.get(code).unwrap();
@@ -254,7 +254,7 @@ fn parse_alloc_size_attribute(alloc_size: &syn::Type) -> u64 {
     parse_unsigned_typenum(&alloc_size).unwrap_or_else(|_| {
         let msg = "`alloc_size` attribute must be a `typenum`, e.g. #[mh(alloc_size = U64)]";
         #[cfg(test)]
-        panic!(msg);
+        panic!("{}", msg);
         #[cfg(not(test))]
         proc_macro_error::abort!(&alloc_size, msg);
     })
@@ -278,7 +278,7 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::Type) {
                                         let msg = format!("The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size (U{})",
                                         max_digest_size);
                                         #[cfg(test)]
-                                        panic!(msg);
+                                        panic!("{}", msg);
                                         #[cfg(not(test))]
                                         {
                                             let digest = &hash.digest.to_token_stream().to_string().replace(" ", "");
@@ -305,7 +305,7 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::Type) {
     if let Err(_error) = maybe_error {
         let msg = "Invalid byte size. It must be a unsigned integer typenum, e.g. `U32`";
         #[cfg(test)]
-        panic!(msg);
+        panic!("{}", msg);
         #[cfg(not(test))]
         {
             proc_macro_error::emit_error!(&_error.0, msg);
