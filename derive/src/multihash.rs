@@ -43,7 +43,7 @@ impl Parse for MhAttr {
 /// Attributes of the top-level derive.
 #[derive(Debug)]
 enum DeriveAttr {
-    AllocSize(utils::Attr<kw::alloc_size, syn::Type>),
+    AllocSize(utils::Attr<kw::alloc_size, syn::LitInt>),
     NoAllocSizeErrors(kw::no_alloc_size_errors),
 }
 
@@ -161,7 +161,7 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
 /// Parse top-level enum [#mh()] attributes.
 ///
 /// Returns the `alloc_size` and whether errors regarding to `alloc_size` should be reported or not.
-fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> (syn::Type, bool) {
+fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> (syn::LitInt, bool) {
     let mut alloc_size = None;
     let mut no_alloc_size_errors = false;
 
@@ -226,33 +226,12 @@ fn error_code_duplicates(hashes: &[Hash]) {
 #[derive(Debug)]
 struct ParseError(proc_macro2::Span);
 
-/// Parse a path containing a `typenum` unsigned integer (e.g. `U64`) into a u64
-fn parse_unsigned_typenum(typenum_path: &syn::Type) -> Result<u64, ParseError> {
-    match typenum_path {
-        syn::Type::Path(type_path) => match type_path.path.segments.last() {
-            Some(path_segment) => {
-                let typenum_ident = &path_segment.ident;
-                let typenum = typenum_ident.to_string();
-                match typenum.as_str().split_at(1) {
-                    ("U", byte_size) => byte_size
-                        .parse::<u64>()
-                        .map_err(|_| ParseError(typenum_ident.span())),
-                    _ => Err(ParseError(typenum_ident.span())),
-                }
-            }
-            None => Err(ParseError(type_path.path.span())),
-        },
-        _ => Err(ParseError(typenum_path.span())),
-    }
-}
-
 /// Returns the max size as u64.
 ///
-/// Emits an error if the `#mh(alloc_size)` attribute doesn't contain a valid unsigned integer
-/// `typenum`.
-fn parse_alloc_size_attribute(alloc_size: &syn::Type) -> u64 {
-    parse_unsigned_typenum(&alloc_size).unwrap_or_else(|_| {
-        let msg = "`alloc_size` attribute must be a `typenum`, e.g. #[mh(alloc_size = U64)]";
+/// Emits an error if the `#mh(alloc_size)` attribute doesn't contain a valid unsigned integer.
+fn parse_alloc_size_attribute(alloc_size: &syn::LitInt) -> u64 {
+    alloc_size.base10_parse().unwrap_or_else(|_| {
+        let msg = "`alloc_size` attribute must be an integer, e.g. #[mh(alloc_size = 64)]";
         #[cfg(test)]
         panic!(msg);
         #[cfg(not(test))]
@@ -261,38 +240,39 @@ fn parse_alloc_size_attribute(alloc_size: &syn::Type) -> u64 {
 }
 
 /// Return a warning/error if the specified alloc_size is smaller than the biggest digest
-fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::Type) {
+fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::LitInt) {
     let expected_alloc_size = parse_alloc_size_attribute(expected_alloc_size_type);
 
     let maybe_error: Result<(), ParseError> = hashes
         .iter()
         .try_for_each(|hash| {
-            // The digest type must have a size parameter of the shape `U<number>`, else we error.
+            // The digest type must have an integer as size parameter, else we error.
             match hash.digest.segments.last() {
                 Some(path_segment) => match &path_segment.arguments {
                     syn::PathArguments::AngleBracketed(arguments) => match arguments.args.last() {
-                        Some(syn::GenericArgument::Type(path)) => {
-                            match parse_unsigned_typenum(&path) {
-                                Ok(max_digest_size) => {
-                                    if max_digest_size > expected_alloc_size {
-                                        let msg = format!("The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size (U{})",
-                                        max_digest_size);
-                                        #[cfg(test)]
-                                        panic!(msg);
-                                        #[cfg(not(test))]
-                                        {
-                                            let digest = &hash.digest.to_token_stream().to_string().replace(" ", "");
-                                            let line = &hash.digest.span().start().line;
-                                            proc_macro_error::emit_error!(
-                                                &expected_alloc_size_type, msg;
-                                                note = "the bigger digest is `{}` at line {}", digest, line;
-                                            );
-                                        }
-                                    }
-                                    Ok(())
-                                },
-                                Err(err) => Err(err),
-                            }
+                        Some(syn::GenericArgument::Const(syn::Expr::Lit(expr_lit))) => match &expr_lit.lit {
+                           syn::Lit::Int(lit_int) => match lit_int.base10_parse::<u64>() {
+                              Ok(max_digest_size) => {
+                                  if max_digest_size > expected_alloc_size {
+                                      let msg = format!("The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size ({})",
+                                      max_digest_size);
+                                      #[cfg(test)]
+                                      panic!(msg);
+                                      #[cfg(not(test))]
+                                      {
+                                          let digest = &hash.digest.to_token_stream().to_string().replace(" ", "");
+                                          let line = &hash.digest.span().start().line;
+                                          proc_macro_error::emit_error!(
+                                              &expected_alloc_size_type, msg;
+                                              note = "the bigger digest is `{}` at line {}", digest, line;
+                                          );
+                                      }
+                                  }
+                                  Ok(())
+                              },
+                              _ => Err(ParseError(lit_int.span())),
+                           },
+                           _ => Err(ParseError(expr_lit.span())),
                         },
                         _ => Err(ParseError(arguments.args.span())),
                     },
@@ -338,9 +318,7 @@ pub fn multihash(s: Structure) -> TokenStream {
         /// A Multihash with the same allocated size as the Multihashes produces by this derive.
         pub type Multihash = #mh_crate::MultihashGeneric::<#alloc_size>;
 
-        impl #mh_crate::MultihashDigest for #code_enum {
-            type AllocSize = #alloc_size;
-
+        impl #mh_crate::MultihashDigest<#alloc_size> for #code_enum {
             fn digest(&self, input: &[u8]) -> Multihash {
                 use #mh_crate::Hasher;
                 match self {
@@ -349,10 +327,9 @@ pub fn multihash(s: Structure) -> TokenStream {
                 }
             }
 
-            fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash
+            fn multihash_from_digest<'a, D>(digest: &'a D) -> Multihash
             where
-                S: #mh_crate::Size,
-                D: #mh_crate::Digest<S>,
+                D: #mh_crate::Digest<#alloc_size>,
                 Self: From<&'a D>,
             {
                 let code = Self::from(&digest);
