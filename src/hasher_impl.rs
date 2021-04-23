@@ -197,8 +197,8 @@ macro_rules! derive_hasher_sha {
             state: $module,
         }
 
-        impl<const S: usize> $crate::hasher::StatefulHasher<S> for $name {
-            type Digest = $digest<S>;
+        impl $crate::hasher::StatefulHasher<$size> for $name {
+            type Digest = $digest<$size>;
 
             fn update(&mut self, input: &[u8]) {
                 use digest::Digest;
@@ -208,9 +208,10 @@ macro_rules! derive_hasher_sha {
             fn finalize(&self) -> Self::Digest {
                 use digest::Digest;
                 // TODO: this extra array seems excessive to convert from a generic array
-                let a = self.state.clone().finalize().as_slice();
-                let array = [0; S];
-                array.copy_from_slice(a);
+                let a = self.state.clone().finalize();
+                let b = a.as_slice();
+                let mut array = [0; $size];
+                array.copy_from_slice(b);
                 Self::Digest::from(array)
             }
 
