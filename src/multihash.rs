@@ -1,9 +1,11 @@
-use crate::hasher::{Digest};
+use crate::hasher::Digest;
 use crate::Error;
 use core::convert::TryFrom;
 #[cfg(feature = "std")]
 use core::convert::TryInto;
 use core::fmt::Debug;
+#[cfg(feature = "serde-codec")]
+use serde_big_array::BigArray;
 
 /// Trait that implements hashing.
 ///
@@ -39,9 +41,9 @@ pub trait MultihashDigest<const SIZE: usize>:
     /// println!("{:02x?}", hash);
     /// ```
     #[allow(clippy::needless_lifetimes)]
-    fn multihash_from_digest<'a, D>(digest: &'a D) -> Multihash<SIZE>
+    fn multihash_from_digest<'a, D, const DIGEST_SIZE: usize>(digest: &'a D) -> Multihash<SIZE>
     where
-        D: Digest<SIZE>,
+        D: Digest<DIGEST_SIZE>,
         Self: From<&'a D>;
 }
 
@@ -68,7 +70,6 @@ pub trait MultihashDigest<const SIZE: usize>:
 /// ```
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
-#[cfg_attr(feature = "serde-codec", serde(bound = "S: Size"))]
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Multihash<const S: usize> {
     /// The code of the Multihash.
@@ -76,10 +77,21 @@ pub struct Multihash<const S: usize> {
     /// The actual size of the digest in bytes (not the allocated size).
     size: u8,
     /// The digest.
+    #[cfg_attr(feature = "serde-codec", serde(with = "BigArray"))]
     digest: [u8; S],
 }
 
 impl<const S: usize> Copy for Multihash<S> {}
+
+impl<const SIZE: usize> Default for Multihash<SIZE> {
+    fn default() -> Self {
+        Self {
+            code: 0,
+            size: 0,
+            digest: [0; SIZE],
+        }
+    }
+}
 
 impl<const S: usize> Multihash<S> {
     /// Wraps the digest in a multihash.
@@ -175,7 +187,7 @@ impl<const S: usize> From<Multihash<S>> for Vec<u8> {
 }
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::Encode for Multihash<crate::U32> {
+impl parity_scale_codec::Encode for Multihash<32> {
     fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
         let mut digest = [0; 32];
         digest.copy_from_slice(&self.digest);
@@ -186,26 +198,23 @@ impl parity_scale_codec::Encode for Multihash<crate::U32> {
 }
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::EncodeLike for Multihash<crate::U32> {}
+impl parity_scale_codec::EncodeLike for Multihash<32> {}
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::Decode for Multihash<crate::U32> {
+impl parity_scale_codec::Decode for Multihash<32> {
     fn decode<DecIn: parity_scale_codec::Input>(
         input: &mut DecIn,
     ) -> Result<Self, parity_scale_codec::Error> {
         Ok(Multihash {
             code: parity_scale_codec::Decode::decode(input)?,
             size: parity_scale_codec::Decode::decode(input)?,
-            digest: {
-                let digest = <[u8; 32]>::decode(input)?;
-                GenericArray::clone_from_slice(&digest)
-            },
+            digest: <[u8; 32]>::decode(input)?,
         })
     }
 }
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::Encode for Multihash<crate::U64> {
+impl parity_scale_codec::Encode for Multihash<64> {
     fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
         let mut digest = [0; 64];
         digest.copy_from_slice(&self.digest);
@@ -216,20 +225,17 @@ impl parity_scale_codec::Encode for Multihash<crate::U64> {
 }
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::EncodeLike for Multihash<crate::U64> {}
+impl parity_scale_codec::EncodeLike for Multihash<64> {}
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::Decode for Multihash<crate::U64> {
+impl parity_scale_codec::Decode for Multihash<64> {
     fn decode<DecIn: parity_scale_codec::Input>(
         input: &mut DecIn,
     ) -> Result<Self, parity_scale_codec::Error> {
         Ok(Multihash {
             code: parity_scale_codec::Decode::decode(input)?,
             size: parity_scale_codec::Decode::decode(input)?,
-            digest: {
-                let digest = <[u8; 64]>::decode(input)?;
-                GenericArray::clone_from_slice(&digest)
-            },
+            digest: <[u8; 64]>::decode(input)?,
         })
     }
 }
@@ -298,16 +304,16 @@ mod tests {
     fn test_scale() {
         use parity_scale_codec::{Decode, Encode};
 
-        let mh = Multihash::<crate::U32>::default();
+        let mh = Multihash::<32>::default();
         let bytes = mh.encode();
-        let mh2: Multihash<crate::U32> = Decode::decode(&mut &bytes[..]).unwrap();
+        let mh2: Multihash<32> = Decode::decode(&mut &bytes[..]).unwrap();
         assert_eq!(mh, mh2);
     }
 
     #[test]
     #[cfg(feature = "serde-codec")]
     fn test_serde() {
-        let mh = Multihash::<crate::U32>::default();
+        let mh = Multihash::<32>::default();
         let bytes = serde_json::to_string(&mh).unwrap();
         let mh2 = serde_json::from_str(&bytes).unwrap();
         assert_eq!(mh, mh2);

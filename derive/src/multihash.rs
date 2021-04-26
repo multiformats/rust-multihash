@@ -327,9 +327,9 @@ pub fn multihash(s: Structure) -> TokenStream {
                 }
             }
 
-            fn multihash_from_digest<'a, D>(digest: &'a D) -> Multihash
+            fn multihash_from_digest<'a, D, const S: usize>(digest: &'a D) -> Multihash
             where
-                D: #mh_crate::Digest<#alloc_size>,
+                D: #mh_crate::Digest<S>,
                 Self: From<&'a D>,
             {
                 let code = Self::from(&digest);
@@ -400,9 +400,8 @@ mod tests {
                    }
                }
 
-               fn multihash_from_digest<'a, S, D>(digest: &'a D) -> Multihash
+               fn multihash_from_digest<'a, D, const S: usize>(digest: &'a D) -> Multihash
                where
-                   S: multihash::Size,
                    D: multihash::Digest<S>,
                    Self: From<&'a D>,
                {

@@ -73,7 +73,7 @@ pub enum Code {
     // The following hashes are not cryptographically secure hashes and are not enabled by default
     /// Identity hash (max. 64 bytes)
     #[cfg(feature = "identity")]
-    #[mh(code = 0x00, hasher = crate::IdentityHasher::<crate::U64>, digest = crate::IdentityDigest<64>)]
+    #[mh(code = 0x00, hasher = crate::IdentityHasher::<64>, digest = crate::IdentityDigest<64>)]
     Identity,
 }
 

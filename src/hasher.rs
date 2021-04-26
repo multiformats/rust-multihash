@@ -1,7 +1,6 @@
 use crate::error::Error;
 use core::fmt::Debug;
 
-
 /// Stack allocated digest trait.
 pub trait Digest<const S: usize>:
     AsRef<[u8]>
@@ -18,9 +17,7 @@ pub trait Digest<const S: usize>:
     + 'static
 {
     /// Size of the digest. Maximum for Some of the Blake family is 2^64-1 bytes
-    fn size(&self) -> usize {
-        S
-    }
+    const SIZE: usize = S;
 
     /// Wraps the digest bytes.
     fn wrap(digest: &[u8]) -> Result<Self, Error> {
@@ -55,7 +52,6 @@ pub trait Digest<const S: usize>:
 
 /// Trait implemented by a hash function implementation.
 pub trait StatefulHasher<const SIZE: usize>: Default + Send + Sync {
-
     /// The Digest type to distinguish the output of different `Hasher` implementations.
     type Digest: Digest<SIZE>;
 
@@ -92,14 +88,12 @@ pub trait StatefulHasher<const SIZE: usize>: Default + Send + Sync {
 /// [Multihashes]: https://github.com/multiformats/multihash
 /// [associated type]: https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#specifying-placeholder-types-in-trait-definitions-with-associated-types
 /// [`MultihashDigest`]: crate::MultihashDigest
-pub trait Hasher<const S: usize>: Default + Send + Sync {
+pub trait Hasher<const SIZE: usize>: Default + Send + Sync {
     /// The Digest type to distinguish the output of different `Hasher` implementations.
-    type Digest: Digest<S>;
+    type Digest: Digest<SIZE>;
 
-    /// Returns the allocated size of the digest.
-    fn size() -> usize {
-        S
-    }
+    ///the allocated size of the digest.
+    const SIZE: usize = SIZE;
 
     /// Hashes the given `input` data and returns its hash digest.
     fn digest(input: &[u8]) -> Self::Digest
@@ -107,7 +101,7 @@ pub trait Hasher<const S: usize>: Default + Send + Sync {
         Self: Sized;
 }
 
-impl<T: StatefulHasher<S>, const S: usize> Hasher<S> for T{
+impl<T: StatefulHasher<SIZE>, const SIZE: usize> Hasher<SIZE> for T {
     type Digest = T::Digest;
 
     fn digest(input: &[u8]) -> Self::Digest {

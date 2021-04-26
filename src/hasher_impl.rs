@@ -157,9 +157,7 @@ pub mod blake3 {
         fn default() -> Self {
             let hasher = ::blake3::Hasher::new();
 
-            Self {
-                hasher,
-            }
+            Self { hasher }
         }
     }
 
@@ -238,10 +236,9 @@ macro_rules! derive_hasher_sha {
 #[cfg(feature = "sha1")]
 pub mod sha1 {
     use super::*;
-    use generic_array::typenum::U20;
 
     derive_digest!(Sha1Digest);
-    derive_hasher_sha!(::sha1::Sha1, Sha1, U20, Sha1Digest);
+    derive_hasher_sha!(::sha1::Sha1, Sha1, 20, Sha1Digest);
 }
 
 #[cfg(feature = "sha2")]
@@ -280,7 +277,7 @@ pub mod identity {
 
     impl<const S: usize> Default for IdentityDigest<S> {
         fn default() -> Self {
-            Self {0: 0, 1: [0u8; S]}
+            Self { 0: 0, 1: [0u8; S] }
         }
     }
 
@@ -308,18 +305,16 @@ pub mod identity {
         }
     }
 
-    impl<const S: usize> Digest<S> for IdentityDigest<S> {
-        fn size(&self) -> usize {
-            self.0
-        }
+    impl<const SIZE: usize> Digest<SIZE> for IdentityDigest<SIZE> {
+        const SIZE: usize = SIZE;
 
         // A custom implementation is needed as an identity hash value might be shorter than the
         // allocated Digest.
         fn wrap(digest: &[u8]) -> Result<Self, Error> {
-            if digest.len() > S {
+            if digest.len() > SIZE {
                 return Err(Error::InvalidSize(digest.len() as _));
             }
-            let mut array = [0; S];
+            let mut array = [0; SIZE];
             let len = digest.len().min(array.len());
             array[..len].copy_from_slice(&digest[..len]);
             Ok(Self(len, array))
@@ -335,10 +330,10 @@ pub mod identity {
             use unsigned_varint::io::read_u64;
 
             let size = read_u64(&mut r)?;
-            if size > S as u64|| size > u8::max_value() as u64 {
+            if size > SIZE as u64 || size > u8::max_value() as u64 {
                 return Err(Error::InvalidSize(size));
             }
-            let mut digest = [0; S];
+            let mut digest = [0; SIZE];
             r.read_exact(&mut digest[..size as usize])?;
             Ok(Self(size as usize, digest))
         }
@@ -357,10 +352,12 @@ pub mod identity {
 
     impl<const S: usize> Default for IdentityHasher<S> {
         fn default() -> Self {
-            Self {i: 0, bytes: [0u8; S]}
+            Self {
+                i: 0,
+                bytes: [0u8; S],
+            }
         }
     }
-
 
     impl<const S: usize> StatefulHasher<S> for IdentityHasher<S> {
         type Digest = IdentityDigest<S>;
@@ -373,7 +370,7 @@ pub mod identity {
         }
 
         fn finalize(&self) -> Self::Digest {
-            IdentityDigest(self.i, self.bytes.clone())
+            IdentityDigest(self.i, self.bytes)
         }
 
         fn reset(&mut self) {
@@ -400,15 +397,12 @@ pub mod unknown {
 #[cfg(feature = "strobe")]
 pub mod strobe {
     use super::*;
-    use core::marker::PhantomData;
-    use generic_array::typenum::{U32, U64};
     use strobe_rs::{SecParam, Strobe};
 
     derive_digest!(StrobeDigest);
 
     /// Strobe hasher.
     pub struct StrobeHasher<const S: usize> {
-        _marker: PhantomData<S>,
         strobe: Strobe,
         initialized: bool,
     }
@@ -416,16 +410,14 @@ pub mod strobe {
     impl<const S: usize> Default for StrobeHasher<S> {
         fn default() -> Self {
             Self {
-                _marker: PhantomData,
                 strobe: Strobe::new(b"StrobeHash", SecParam::B128),
                 initialized: false,
             }
         }
     }
 
-    impl<const S: usize> StatefulHasher for StrobeHasher<S> {
-        type Size = S;
-        type Digest = StrobeDigest<Self::Size>;
+    impl<const S: usize> StatefulHasher<S> for StrobeHasher<S> {
+        type Digest = StrobeDigest<S>;
 
         fn update(&mut self, input: &[u8]) {
             self.strobe.ad(input, self.initialized);
@@ -433,7 +425,7 @@ pub mod strobe {
         }
 
         fn finalize(&self) -> Self::Digest {
-            let mut hash = GenericArray::default();
+            let mut hash = [0; S];
             self.strobe.clone().prf(&mut hash, false);
             Self::Digest::from(hash)
         }
@@ -448,8 +440,8 @@ pub mod strobe {
     derive_write!(StrobeHasher);
 
     /// 256 bit strobe hasher.
-    pub type Strobe256 = StrobeHasher<U32>;
+    pub type Strobe256 = StrobeHasher<32>;
 
     /// 512 bit strobe hasher.
-    pub type Strobe512 = StrobeHasher<U64>;
+    pub type Strobe512 = StrobeHasher<64>;
 }

@@ -4,7 +4,7 @@ use rand::{
     Rng,
 };
 
-use crate::{MultihashGeneric};
+use crate::MultihashGeneric;
 
 /// Generates a random valid multihash.
 impl Arbitrary for MultihashGeneric<64> {
