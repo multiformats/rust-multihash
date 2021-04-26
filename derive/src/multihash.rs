@@ -143,7 +143,7 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
             proc_macro_error::abort!(ident, msg);
         });
         let digest = digest.unwrap_or_else(|| {
-            let msg = "Missing digest atttibute: e.g. #[mh(digest = multihash::Sha2Digest<U32>)]";
+            let msg = "Missing digest atttibute: e.g. #[mh(digest = multihash::Sha2Digest<32>)]";
             #[cfg(test)]
             panic!(msg);
             #[cfg(not(test))]
@@ -181,7 +181,7 @@ fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> (syn::LitInt, bool) {
     match alloc_size {
         Some(alloc_size) => (alloc_size, no_alloc_size_errors),
         None => {
-            let msg = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = U64)]";
+            let msg = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = 64)]";
             #[cfg(test)]
             panic!(msg);
             #[cfg(not(test))]
@@ -283,7 +283,7 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::LitInt) {
         });
 
     if let Err(_error) = maybe_error {
-        let msg = "Invalid byte size. It must be a unsigned integer typenum, e.g. `U32`";
+        let msg = "Invalid byte size. It must be a unsigned integer typenum, e.g. `32`";
         #[cfg(test)]
         panic!(msg);
         #[cfg(not(test))]
@@ -369,21 +369,20 @@ mod tests {
     fn test_multihash_derive() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(alloc_size = U32)]
+           #[mh(alloc_size = 32)]
            pub enum Code {
-               #[mh(code = multihash::IDENTITY, hasher = multihash::Identity256, digest = multihash::IdentityDigest<U32>)]
+               #[mh(code = multihash::IDENTITY, hasher = multihash::Identity256, digest = multihash::IdentityDigest<32>)]
                Identity256,
                /// Multihash array for hash function.
-               #[mh(code = 0x38b64f, hasher = multihash::Strobe256, digest = multihash::StrobeDigest<U32>)]
+               #[mh(code = 0x38b64f, hasher = multihash::Strobe256, digest = multihash::StrobeDigest<32>)]
                Strobe256,
             }
         };
         let expected = quote! {
             /// A Multihash with the same allocated size as the Multihashes produces by this derive.
-            pub type Multihash = multihash::MultihashGeneric::<U32>;
+            pub type Multihash = multihash::MultihashGeneric::<32>;
 
-            impl multihash::MultihashDigest for Code {
-               type AllocSize = U32;
+            impl multihash::MultihashDigest<32> for Code {
 
                fn digest(&self, input: &[u8]) -> Multihash {
                    use multihash::Hasher;
@@ -433,13 +432,13 @@ mod tests {
                 }
             }
 
-            impl From<&multihash::IdentityDigest<U32> > for Code {
-                fn from(digest: &multihash::IdentityDigest<U32>) -> Self {
+            impl From<&multihash::IdentityDigest<32> > for Code {
+                fn from(digest: &multihash::IdentityDigest<32>) -> Self {
                     Self::Identity256
                 }
             }
-            impl From<&multihash::StrobeDigest<U32> > for Code {
-                fn from(digest: &multihash::StrobeDigest<U32>) -> Self {
+            impl From<&multihash::StrobeDigest<32> > for Code {
+                fn from(digest: &multihash::StrobeDigest<32>) -> Self {
                     Self::Strobe256
                 }
             }
@@ -457,11 +456,11 @@ mod tests {
     fn test_multihash_error_code_duplicates() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(alloc_size = U64)]
+           #[mh(alloc_size = 64)]
            pub enum Multihash {
-               #[mh(code = multihash::SHA2_256, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<U32>)]
+               #[mh(code = multihash::SHA2_256, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<32>)]
                Identity256,
-               #[mh(code = multihash::SHA2_256, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<U32>)]
+               #[mh(code = multihash::SHA2_256, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<32>)]
                Identity256,
             }
         };
@@ -475,11 +474,11 @@ mod tests {
     fn test_multihash_error_code_duplicates_numbers() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(alloc_size = U32)]
+           #[mh(alloc_size = 32)]
            pub enum Code {
-               #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<U32>)]
+               #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<32>)]
                Identity256,
-               #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<U32>)]
+               #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<32>)]
                Identity256,
             }
         };
@@ -490,13 +489,13 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = U64)]"
+        expected = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = 64)]"
     )]
     fn test_multihash_error_no_alloc_size() {
         let input = quote! {
            #[derive(Clone, Multihash)]
            pub enum Code {
-               #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<U32>)]
+               #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<32>)]
                Sha2_256,
             }
         };
@@ -507,14 +506,14 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size (U32)"
+        expected = "The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size (32)"
     )]
     fn test_multihash_error_too_small_alloc_size() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(alloc_size = U16)]
+           #[mh(alloc_size = 16)]
            pub enum Code {
-               #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<U32>)]
+               #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<32>)]
                Sha2_256,
             }
         };
@@ -525,12 +524,12 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `U32`"
+        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `32`"
     )]
     fn test_multihash_error_digest_invalid_size_type() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(alloc_size = U32)]
+           #[mh(alloc_size = 32)]
            pub enum Code {
                #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<foo>)]
                Sha2_256,
@@ -543,12 +542,12 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `U32`"
+        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `32`"
     )]
     fn test_multihash_error_digest_invalid_size_type2() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(alloc_size = U32)]
+           #[mh(alloc_size = 32)]
            pub enum Code {
                #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<_>)]
                Sha2_256,
@@ -561,12 +560,12 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `U32`"
+        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `32`"
     )]
     fn test_multihash_error_digest_without_typenum() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(alloc_size = U32)]
+           #[mh(alloc_size = 32)]
            pub enum Code {
                #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = Sha2_256Digest)]
                Sha2_256,
@@ -582,7 +581,7 @@ mod tests {
     fn test_multihash_error_digest_without_typenum_no_alloc_size_errors() {
         let input = quote! {
            #[derive(Clone, Multihash)]
-           #[mh(alloc_size = U32, no_alloc_size_errors)]
+           #[mh(alloc_size = 32, no_alloc_size_errors)]
            pub enum Code {
                #[mh(code = 0x14, hasher = multihash::Sha2_256, digest = Sha2_256Digest)]
                Sha2_256,
