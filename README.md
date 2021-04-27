@@ -15,13 +15,12 @@
 > [multihash](https://github.com/multiformats/multihash) implementation in Rust.
 
 ## Table of Contents
-
-- [Install](#install)
-- [Usage](#usage)
-- [Supported Hash Types](#supported-hash-types)
-- [Maintainers](#maintainers)
-- [Contribute](#contribute)
-- [License](#license)
+  - [Install](#install)
+  - [Usage](#usage)
+  - [Supported Hash Types](#supported-hash-types)
+  - [Maintainers](#maintainers)
+  - [Contribute](#contribute)
+  - [License](#license)
 
 ## Install
 
@@ -39,7 +38,7 @@ MSRV 1.51.0 due to use of const generics
 ## Usage
 
 ```rust
-use multihash::{Code, MultihashCode};
+use multihash::{Code, MultihashDigest};
 
 fn main() {
     let hash = Code::Sha2_256.digest(b"my hash");
