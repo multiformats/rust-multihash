@@ -283,7 +283,7 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::LitInt) {
         });
 
     if let Err(_error) = maybe_error {
-        let msg = "Invalid byte size. It must be a unsigned integer typenum, e.g. `32`";
+        let msg = "Invalid byte size. It must be a unsigned integer, e.g. `32`";
         #[cfg(test)]
         panic!(msg);
         #[cfg(not(test))]
@@ -524,7 +524,7 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `32`"
+        expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`"
     )]
     fn test_multihash_error_digest_invalid_size_type() {
         let input = quote! {
@@ -542,7 +542,7 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `32`"
+        expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`"
     )]
     fn test_multihash_error_digest_invalid_size_type2() {
         let input = quote! {
@@ -560,9 +560,9 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer typenum, e.g. `32`"
+        expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`"
     )]
-    fn test_multihash_error_digest_without_typenum() {
+    fn test_multihash_error_digest_without_size() {
         let input = quote! {
            #[derive(Clone, Multihash)]
            #[mh(alloc_size = 32)]
@@ -578,7 +578,7 @@ mod tests {
 
     // This one does not panic, die to `no_alloc_size_errors`
     #[test]
-    fn test_multihash_error_digest_without_typenum_no_alloc_size_errors() {
+    fn test_multihash_error_digest_without_size_no_alloc_size_errors() {
         let input = quote! {
            #[derive(Clone, Multihash)]
            #[mh(alloc_size = 32, no_alloc_size_errors)]

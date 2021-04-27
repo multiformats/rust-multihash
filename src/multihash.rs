@@ -71,24 +71,24 @@ pub trait MultihashDigest<const SIZE: usize>:
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Multihash<const S: usize> {
+pub struct Multihash<const SIZE: usize> {
     /// The code of the Multihash.
     code: u64,
     /// The actual size of the digest in bytes (not the allocated size).
     size: u8,
     /// The digest.
     #[cfg_attr(feature = "serde-codec", serde(with = "BigArray"))]
-    digest: [u8; S],
+    digest: [u8; SIZE],
 }
 
 impl<const S: usize> Copy for Multihash<S> {}
 
-impl<const SIZE: usize> Default for Multihash<SIZE> {
+impl<const S: usize> Default for Multihash<S> {
     fn default() -> Self {
         Self {
             code: 0,
             size: 0,
-            digest: [0; SIZE],
+            digest: [0; S],
         }
     }
 }

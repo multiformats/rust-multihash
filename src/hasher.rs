@@ -51,9 +51,9 @@ pub trait Digest<const S: usize>:
 }
 
 /// Trait implemented by a hash function implementation.
-pub trait StatefulHasher<const SIZE: usize>: Default + Send + Sync {
+pub trait StatefulHasher<const S: usize>: Default + Send + Sync {
     /// The Digest type to distinguish the output of different `Hasher` implementations.
-    type Digest: Digest<SIZE>;
+    type Digest: Digest<S>;
 
     /// Consume input and update internal state.
     fn update(&mut self, input: &[u8]);
@@ -88,12 +88,12 @@ pub trait StatefulHasher<const SIZE: usize>: Default + Send + Sync {
 /// [Multihashes]: https://github.com/multiformats/multihash
 /// [associated type]: https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#specifying-placeholder-types-in-trait-definitions-with-associated-types
 /// [`MultihashDigest`]: crate::MultihashDigest
-pub trait Hasher<const SIZE: usize>: Default + Send + Sync {
+pub trait Hasher<const S: usize>: Default + Send + Sync {
     /// The Digest type to distinguish the output of different `Hasher` implementations.
-    type Digest: Digest<SIZE>;
+    type Digest: Digest<S>;
 
     ///the allocated size of the digest.
-    const SIZE: usize = SIZE;
+    const SIZE: usize = S;
 
     /// Hashes the given `input` data and returns its hash digest.
     fn digest(input: &[u8]) -> Self::Digest

@@ -305,16 +305,16 @@ pub mod identity {
         }
     }
 
-    impl<const SIZE: usize> Digest<SIZE> for IdentityDigest<SIZE> {
-        const SIZE: usize = SIZE;
+    impl<const S: usize> Digest<S> for IdentityDigest<S> {
+        const SIZE: usize = S;
 
         // A custom implementation is needed as an identity hash value might be shorter than the
         // allocated Digest.
         fn wrap(digest: &[u8]) -> Result<Self, Error> {
-            if digest.len() > SIZE {
+            if digest.len() > S {
                 return Err(Error::InvalidSize(digest.len() as _));
             }
-            let mut array = [0; SIZE];
+            let mut array = [0; S];
             let len = digest.len().min(array.len());
             array[..len].copy_from_slice(&digest[..len]);
             Ok(Self(len, array))
@@ -330,10 +330,10 @@ pub mod identity {
             use unsigned_varint::io::read_u64;
 
             let size = read_u64(&mut r)?;
-            if size > SIZE as u64 || size > u8::max_value() as u64 {
+            if size > S as u64 || size > u8::max_value() as u64 {
                 return Err(Error::InvalidSize(size));
             }
-            let mut digest = [0; SIZE];
+            let mut digest = [0; S];
             r.read_exact(&mut digest[..size as usize])?;
             Ok(Self(size as usize, digest))
         }

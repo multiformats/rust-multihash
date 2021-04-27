@@ -34,6 +34,8 @@ multihash = "*"
 
 Then run `cargo build`.
 
+MSRV 1.51.0 due to use of const generics
+
 ## Usage
 
 ```rust
@@ -51,14 +53,14 @@ You can derive your own application specific code table:
 
 ```rust
 use multihash::derive::Multihash;
-use multihash::{MultihashCode, U32, U64};
+use multihash::MultihashCode;
 
 #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
-#[mh(alloc_size = U64)]
+#[mh(alloc_size = 64)]
 pub enum Code {
-    #[mh(code = 0x01, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<U32>)]
+    #[mh(code = 0x01, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<32>)]
     Foo,
-    #[mh(code = 0x02, hasher = multihash::Sha2_512, digest = multihash::Sha2Digest<U64>)]
+    #[mh(code = 0x02, hasher = multihash::Sha2_512, digest = multihash::Sha2Digest<64>)]
     Bar,
 }
 
@@ -75,7 +77,7 @@ fn main() {
 * `SHA2-512`
 * `SHA3`/`Keccak`
 * `Blake2b-256`/`Blake2b-512`/`Blake2s-128`/`Blake2s-256`
-* `Blake3`
+* `Blake3`(256 only)
 * `Strobe`
 
 ## Maintainers
