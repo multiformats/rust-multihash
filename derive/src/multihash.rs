@@ -523,9 +523,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`"
-    )]
+    #[should_panic(expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`")]
     fn test_multihash_error_digest_invalid_size_type() {
         let input = quote! {
            #[derive(Clone, Multihash)]
@@ -541,9 +539,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`"
-    )]
+    #[should_panic(expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`")]
     fn test_multihash_error_digest_invalid_size_type2() {
         let input = quote! {
            #[derive(Clone, Multihash)]
@@ -559,9 +555,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(
-        expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`"
-    )]
+    #[should_panic(expected = "Invalid byte size. It must be a unsigned integer, e.g. `32`")]
     fn test_multihash_error_digest_without_size() {
         let input = quote! {
            #[derive(Clone, Multihash)]

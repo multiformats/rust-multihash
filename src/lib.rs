@@ -49,7 +49,7 @@
 //! [Serde]: https://serde.rs
 //! [SCALE Codec]: https://github.com/paritytech/parity-scale-codec
 
-#![deny(missing_docs)]
+#![deny(missing_docs, warnings, unsafe_code)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(any(test, feature = "arb"))]
