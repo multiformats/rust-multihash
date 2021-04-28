@@ -162,7 +162,7 @@ impl<const S: usize> Multihash<S> {
 
     /// Returns the bytes of a multihash.
     #[cfg(feature = "std")]
-    pub fn to_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(self.size().into());
         self.write(&mut bytes)
             .expect("writing to a vec should never fail");

@@ -152,8 +152,8 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
         Self {
             ident,
             code,
-            digest,
             hasher,
+            digest,
         }
     }
 }
@@ -257,7 +257,7 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::LitInt) {
                                       let msg = format!("The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size ({})",
                                       max_digest_size);
                                       #[cfg(test)]
-                                      panic!(msg);
+                                      panic!("{}", msg);
                                       #[cfg(not(test))]
                                       {
                                           let digest = &hash.digest.to_token_stream().to_string().replace(" ", "");
