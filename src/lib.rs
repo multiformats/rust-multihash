@@ -41,13 +41,11 @@
 //! The `arb` feature flag enables the quickcheck arbitrary implementation for property based
 //! testing.
 //!
-//! For serializing the multihash there is support for [Serde] via the `serde-codec` feature and
-//! the [SCALE Codec] via the `scale-codec` feature.
+//! For serializing the multihash there is support for [Serde] via the `serde-codec` feature.
 //!
 //! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
 //! [`Multihash` derive]: crate::derive
 //! [Serde]: https://serde.rs
-//! [SCALE Codec]: https://github.com/paritytech/parity-scale-codec
 
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
