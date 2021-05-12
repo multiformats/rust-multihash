@@ -31,25 +31,25 @@ jobs:
           components: rustfmt, clippy
 
       - name: Check Code Format
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@v1.0.3
         with:
           command: fmt
           args: --all -- --check
 
       - name: Code Lint
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@v1.0.3
         with:
           command: clippy
           args: --all-targets --all-features --workspace -- -D warnings
 
       - name: Code Lint Without Default Features
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@v1.0.3
         with:
           command: clippy
           args: --no-default-features --workspace -- -D warnings
 
       - name: Test
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@v1.0.3
         with:
           command: test
           args: --all-features --workspace
@@ -70,7 +70,7 @@ jobs:
           target: thumbv6m-none-eabi
 
       - name: Build
-        uses: actions-rs/cargo@v1
+        uses: actions-rs/cargo@v1.0.3
         with:
           command: build
           args: --no-default-features --workspace --target thumbv6m-none-eabi
