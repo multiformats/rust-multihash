@@ -90,7 +90,7 @@ jobs:
           override: true
 
       - name: Generate Code Coverage
-        uses: actions-rs/tarpaulin@v0.1
+        uses: actions-rs/tarpaulin@v0.1.3
         with:
           args: --all-features
 
