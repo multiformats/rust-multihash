@@ -1,12 +1,13 @@
 use std::collections::HashSet;
 
 use crate::utils;
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 #[cfg(not(test))]
 use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
+use syn::Error;
 use synstructure::{Structure, VariantInfo};
 
 mod kw {
@@ -152,8 +153,8 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
         Self {
             ident,
             code,
-            digest,
             hasher,
+            digest,
         }
     }
 }
@@ -314,7 +315,13 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::Type) {
 }
 
 pub fn multihash(s: Structure) -> TokenStream {
-    let mh_crate = utils::use_crate("multihash");
+    let mh_crate = match utils::use_crate("multihash") {
+        Ok(ident) => ident,
+        Err(e) => {
+            let err = Error::new(Span::call_site(), e).to_compile_error();
+            return quote!(#err);
+        }
+    };
     let code_enum = &s.ast().ident;
     let (alloc_size, no_alloc_size_errors) = parse_code_enum_attrs(&s.ast());
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
