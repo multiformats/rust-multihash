@@ -37,7 +37,7 @@ parity-scale-codec = { version = "2.1.1", default-features = false, features = [
 quickcheck = { version = "0.9.2", optional = true }
 rand = { version = "0.7.3", optional = true }
 serde = { version = "1.0.116", default-features = false, features = ["derive"], optional = true }
-multihash-derive = { version = "0.7.1", path = "derive", default-features = false, optional = true }
+multihash-derive = { version = "0.7.2", path = "derive", default-features = false, optional = true }
 unsigned-varint = { version = "0.7.0", default-features = false }
 
 blake2b_simd = { version = "0.5.10", default-features = false, optional = true }
