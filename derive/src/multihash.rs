@@ -7,7 +7,6 @@ use quote::quote;
 use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
-use syn::Error;
 use synstructure::{Structure, VariantInfo};
 
 mod kw {
@@ -225,7 +224,7 @@ fn error_code_duplicates(hashes: &[Hash]) {
 
 /// An error that contains a span in order to produce nice error messages.
 #[derive(Debug)]
-struct ParseError(proc_macro2::Span);
+struct ParseError(Span);
 
 /// Parse a path containing a `typenum` unsigned integer (e.g. `U64`) into a u64
 fn parse_unsigned_typenum(typenum_path: &syn::Type) -> Result<u64, ParseError> {
@@ -318,7 +317,7 @@ pub fn multihash(s: Structure) -> TokenStream {
     let mh_crate = match utils::use_crate("multihash") {
         Ok(ident) => ident,
         Err(e) => {
-            let err = Error::new(Span::call_site(), e).to_compile_error();
+            let err = syn::Error::new(Span::call_site(), e).to_compile_error();
             return quote!(#err);
         }
     };
