@@ -181,12 +181,12 @@ impl<S: Size> From<Multihash<S>> for Vec<u8> {
 
 #[cfg(feature = "scale-codec")]
 impl parity_scale_codec::Encode for Multihash<crate::U32> {
-    fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
+    fn encode_to<EncOut: parity_scale_codec::Output + ?Sized>(&self, dest: &mut EncOut) {
         let mut digest = [0; 32];
         digest.copy_from_slice(&self.digest);
-        dest.push(&self.code);
-        dest.push(&self.size);
-        dest.push(&digest);
+        self.code.encode_to(dest);
+        self.size.encode_to(dest);
+        digest.encode_to(dest);
     }
 }
 
@@ -211,12 +211,12 @@ impl parity_scale_codec::Decode for Multihash<crate::U32> {
 
 #[cfg(feature = "scale-codec")]
 impl parity_scale_codec::Encode for Multihash<crate::U64> {
-    fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
+    fn encode_to<EncOut: parity_scale_codec::Output + ?Sized>(&self, dest: &mut EncOut) {
         let mut digest = [0; 64];
         digest.copy_from_slice(&self.digest);
-        dest.push(&self.code);
-        dest.push(&self.size);
-        dest.push(&digest);
+        self.code.encode_to(dest);
+        self.size.encode_to(dest);
+        digest.encode_to(dest);
     }
 }
 
