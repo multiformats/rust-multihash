@@ -203,9 +203,9 @@ fn assert_roundtrip() {
 }
 
 /// Testing the public interface of `Multihash` and coversions to it
-fn multihash_methods<H, const SIZE: usize>(code: Code, prefix: &str, digest_str: &str)
+fn multihash_methods<H, const S: usize>(code: Code, prefix: &str, digest_str: &str)
 where
-    H: StatefulHasher<SIZE>,
+    H: StatefulHasher<S>,
     Code: for<'a> From<&'a H::Digest>,
 {
     let digest = hex::decode(digest_str).unwrap();

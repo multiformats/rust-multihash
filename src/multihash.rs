@@ -12,7 +12,7 @@ use serde_big_array::BigArray;
 /// It is usually implemented by a custom code table enum that derives the [`Multihash` derive].
 ///
 /// [`Multihash` derive]: crate::derive
-pub trait MultihashDigest<const SIZE: usize>:
+pub trait MultihashDigest<const S: usize>:
     TryFrom<u64> + Into<u64> + Send + Sync + Unpin + Copy + Eq + Debug + 'static
 {
     /// Calculate the hash of some input data.
@@ -26,7 +26,7 @@ pub trait MultihashDigest<const SIZE: usize>:
     /// let hash = Code::Sha3_256.digest(b"Hello world!");
     /// println!("{:02x?}", hash);
     /// ```
-    fn digest(&self, input: &[u8]) -> Multihash<SIZE>;
+    fn digest(&self, input: &[u8]) -> Multihash<S>;
 
     /// Create a multihash from an existing [`Digest`].
     ///
@@ -41,7 +41,7 @@ pub trait MultihashDigest<const SIZE: usize>:
     /// println!("{:02x?}", hash);
     /// ```
     #[allow(clippy::needless_lifetimes)]
-    fn multihash_from_digest<'a, D, const DIGEST_SIZE: usize>(digest: &'a D) -> Multihash<SIZE>
+    fn multihash_from_digest<'a, D, const DIGEST_SIZE: usize>(digest: &'a D) -> Multihash<S>
     where
         D: Digest<DIGEST_SIZE>,
         Self: From<&'a D>;
@@ -71,14 +71,14 @@ pub trait MultihashDigest<const SIZE: usize>:
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Multihash<const SIZE: usize> {
+pub struct Multihash<const S: usize> {
     /// The code of the Multihash.
     code: u64,
     /// The actual size of the digest in bytes (not the allocated size).
     size: u8,
     /// The digest.
     #[cfg_attr(feature = "serde-codec", serde(with = "BigArray"))]
-    digest: [u8; SIZE],
+    digest: [u8; S],
 }
 
 impl<const S: usize> Copy for Multihash<S> {}

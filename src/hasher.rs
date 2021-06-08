@@ -101,7 +101,7 @@ pub trait Hasher<const S: usize>: Default + Send + Sync {
         Self: Sized;
 }
 
-impl<T: StatefulHasher<SIZE>, const SIZE: usize> Hasher<SIZE> for T {
+impl<T: StatefulHasher<S>, const S: usize> Hasher<S> for T {
     type Digest = T::Digest;
 
     fn digest(input: &[u8]) -> Self::Digest {
