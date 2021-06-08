@@ -187,58 +187,32 @@ impl<const S: usize> From<Multihash<S>> for Vec<u8> {
 }
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::Encode for Multihash<32> {
-    fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
-        let mut digest = [0; 32];
+impl<const S: usize> parity_scale_codec::Encode for Multihash<S> {
+    fn encode_to<EncOut: parity_scale_codec::Output + ?Sized>(&self, dest: &mut EncOut) {
+        let mut digest = [0; S];
         digest.copy_from_slice(&self.digest);
-        dest.push(&self.code);
-        dest.push(&self.size);
-        dest.push(&digest);
+        self.code.encode_to(dest);
+        self.size.encode_to(dest);
+        digest.encode_to(dest);
     }
 }
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::EncodeLike for Multihash<32> {}
+impl<const S: usize> parity_scale_codec::EncodeLike for Multihash<S> {}
 
 #[cfg(feature = "scale-codec")]
-impl parity_scale_codec::Decode for Multihash<32> {
+impl<const S: usize> parity_scale_codec::Decode for Multihash<S> {
     fn decode<DecIn: parity_scale_codec::Input>(
         input: &mut DecIn,
     ) -> Result<Self, parity_scale_codec::Error> {
         Ok(Multihash {
             code: parity_scale_codec::Decode::decode(input)?,
             size: parity_scale_codec::Decode::decode(input)?,
-            digest: <[u8; 32]>::decode(input)?,
+            digest: <[u8; S]>::decode(input)?,
         })
     }
 }
 
-#[cfg(feature = "scale-codec")]
-impl parity_scale_codec::Encode for Multihash<64> {
-    fn encode_to<EncOut: parity_scale_codec::Output>(&self, dest: &mut EncOut) {
-        let mut digest = [0; 64];
-        digest.copy_from_slice(&self.digest);
-        dest.push(&self.code);
-        dest.push(&self.size);
-        dest.push(&digest);
-    }
-}
-
-#[cfg(feature = "scale-codec")]
-impl parity_scale_codec::EncodeLike for Multihash<64> {}
-
-#[cfg(feature = "scale-codec")]
-impl parity_scale_codec::Decode for Multihash<64> {
-    fn decode<DecIn: parity_scale_codec::Input>(
-        input: &mut DecIn,
-    ) -> Result<Self, parity_scale_codec::Error> {
-        Ok(Multihash {
-            code: parity_scale_codec::Decode::decode(input)?,
-            size: parity_scale_codec::Decode::decode(input)?,
-            digest: <[u8; 64]>::decode(input)?,
-        })
-    }
-}
 
 /// Writes the multihash to a byte stream.
 #[cfg(feature = "std")]
