@@ -1,6 +1,6 @@
 [package]
 name = "multihash-derive"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Proc macro for deriving custom multihash tables."
@@ -12,7 +12,7 @@ proc-macro = true
 
 [dependencies]
 proc-macro2 = { version = "1.0.24", features = ["span-locations"] }
-proc-macro-crate = "0.1.5"
+proc-macro-crate = "1.0.0"
 proc-macro-error = "1.0.4"
 quote = "1.0.7"
 syn = "1.0.42"

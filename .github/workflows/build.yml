@@ -54,8 +54,8 @@ jobs:
           command: test
           args: --all-features --workspace
 
-  ensure_no_std:
-    name: Ensure no_std
+  build-no-std:
+    name: Build no_std
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Sources

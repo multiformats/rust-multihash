@@ -1,10 +1,15 @@
 use proc_macro2::Span;
+use proc_macro_crate::{crate_name, FoundCrate};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
+use syn::Error;
 
-pub fn use_crate(name: &str) -> syn::Ident {
-    let krate = proc_macro_crate::crate_name(name).unwrap_or_else(|_| "crate".into());
-    syn::Ident::new(&krate, Span::call_site())
+pub fn use_crate(name: &str) -> Result<syn::Ident, Error> {
+    match crate_name(name) {
+        Ok(FoundCrate::Name(krate)) => Ok(syn::Ident::new(&krate, Span::call_site())),
+        Ok(FoundCrate::Itself) => Ok(syn::Ident::new("crate", Span::call_site())),
+        Err(err) => Err(Error::new(Span::call_site(), err)),
+    }
 }
 
 #[derive(Debug)]

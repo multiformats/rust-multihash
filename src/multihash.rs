@@ -213,7 +213,6 @@ impl<const S: usize> parity_scale_codec::Decode for Multihash<S> {
     }
 }
 
-
 /// Writes the multihash to a byte stream.
 #[cfg(feature = "std")]
 pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<(), Error>

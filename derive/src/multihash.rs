@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use crate::utils;
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 #[cfg(not(test))]
 use quote::ToTokens;
@@ -224,7 +224,7 @@ fn error_code_duplicates(hashes: &[Hash]) {
 
 /// An error that contains a span in order to produce nice error messages.
 #[derive(Debug)]
-struct ParseError(proc_macro2::Span);
+struct ParseError(Span);
 
 /// Returns the max size as u64.
 ///
@@ -294,7 +294,13 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::LitInt) {
 }
 
 pub fn multihash(s: Structure) -> TokenStream {
-    let mh_crate = utils::use_crate("multihash");
+    let mh_crate = match utils::use_crate("multihash") {
+        Ok(ident) => ident,
+        Err(e) => {
+            let err = syn::Error::new(Span::call_site(), e).to_compile_error();
+            return quote!(#err);
+        }
+    };
     let code_enum = &s.ast().ident;
     let (alloc_size, no_alloc_size_errors) = parse_code_enum_attrs(&s.ast());
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
