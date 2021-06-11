@@ -5,7 +5,7 @@ use core::convert::TryFrom;
 macro_rules! derive_digest {
     ($name:ident) => {
         /// Multihash digest.
-        #[derive(Clone, Debug, Eq, Hash, PartialEq)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
         pub struct $name<const S: usize>([u8; S]);
 
         impl<const S: usize> Default for $name<S> {
