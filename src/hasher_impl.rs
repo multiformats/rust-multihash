@@ -205,12 +205,10 @@ macro_rules! derive_hasher_sha {
 
             fn finalize(&self) -> Self::Digest {
                 use digest::Digest;
-                // TODO: this extra array seems excessive to convert from a generic array
-                let a = self.state.clone().finalize();
-                let b = a.as_slice();
+                let digest = self.state.clone().finalize();
                 let mut array = [0; $size];
-                array.copy_from_slice(b);
-                Self::Digest::from(array)
+                array.copy_from_slice(digest.as_slice());
+                array.into()
             }
 
             fn reset(&mut self) {
