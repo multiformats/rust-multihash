@@ -41,7 +41,7 @@ pub trait Digest<const S: usize>:
         use unsigned_varint::io::read_u64;
 
         let size = read_u64(&mut r)?;
-        if size > S as u64 || size > u8::max_value() as u64 {
+        if size > S as u64 || size > u16::MAX as u64 {
             return Err(Error::InvalidSize(size));
         }
         let mut digest = [0; S];
