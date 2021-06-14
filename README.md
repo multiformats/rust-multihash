@@ -76,7 +76,7 @@ fn main() {
 * `SHA2-512`
 * `SHA3`/`Keccak`
 * `Blake2b-256`/`Blake2b-512`/`Blake2s-128`/`Blake2s-256`
-* `Blake3`(256 only)
+* `Blake3`
 * `Strobe`
 
 ## Maintainers
