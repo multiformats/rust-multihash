@@ -51,5 +51,11 @@ impl From<ReadError> for Error {
     }
 }
 
+impl From<DecodeError> for Error {
+    fn from(err: DecodeError) -> Self {
+        Self::Varint(err)
+    }
+}
+
 /// Multihash result.
 pub type Result<T> = core::result::Result<T, Error>;

@@ -127,6 +127,16 @@ impl<S: Size> Multihash<S> {
         Ok(Self { code, size, digest })
     }
 
+    /// Reads a multihash from a slice of bytes.
+    #[cfg(not(feature = "std"))]
+    pub fn read(r: &mut &[u8]) -> Result<Self, Error>
+    where
+        Self: Sized,
+    {
+        let (code, size, digest) = read_multihash(r)?;
+        Ok(Self { code, size, digest })
+    }
+
     /// Parses a multihash from a bytes.
     ///
     /// You need to make sure the passed in bytes have the correct length. The digest length
@@ -150,6 +160,12 @@ impl<S: Size> Multihash<S> {
     /// Writes a multihash to a byte stream.
     #[cfg(feature = "std")]
     pub fn write<W: std::io::Write>(&self, w: W) -> Result<(), Error> {
+        write_multihash(w, self.code(), self.size(), self.digest())
+    }
+
+    /// Writes a multihash to a byte slice, updating the byte slice.
+    #[cfg(not(feature = "std"))]
+    pub fn write<'a>(&self, w: &'a mut &'a mut [u8]) -> Result<(), Error> {
         write_multihash(w, self.code(), self.size(), self.digest())
     }
 
@@ -259,6 +275,37 @@ where
     Ok(())
 }
 
+/// Writes the multihash to a byte slice.
+#[cfg(not(feature = "std"))]
+pub fn write_multihash<'a>(
+    w: &'a mut &'a mut [u8],
+    code: u64,
+    size: u8,
+    digest: &[u8],
+) -> Result<(), Error> {
+    use unsigned_varint::encode as varint_encode;
+
+    let mut code_buf = varint_encode::u64_buffer();
+    let code = varint_encode::u64(code, &mut code_buf);
+
+    let mut size_buf = varint_encode::u8_buffer();
+    let size = varint_encode::u8(size, &mut size_buf);
+
+    let result_size = size.len() + code.len() + digest.len();
+    if result_size > w.len() {
+        return Err(Error::InvalidSize(result_size as u64)); // not the right error.
+    }
+
+    w.copy_from_slice(code);
+    *w = &mut w[code.len()..];
+    w.copy_from_slice(size);
+    *w = &mut w[size.len()..];
+    w.copy_from_slice(digest);
+    *w = &mut w[digest.len()..];
+
+    Ok(())
+}
+
 /// Reads a multihash from a byte stream that contains a full multihash (code, size and the digest)
 ///
 /// Returns the code, size and the digest. The size is the actual size and not the
@@ -283,6 +330,37 @@ where
     let mut digest = GenericArray::default();
     r.read_exact(&mut digest[..size as usize])?;
     Ok((code, size as u8, digest))
+}
+
+/// Reads a multihash from a byte slice that contains a full multihash (code, size and the digest)
+///
+/// Returns the code, size and the digest. The size is the actual size and not the
+/// maximum/allocated size of the digest.
+///
+/// Currently the maximum size for a digest is 255 bytes.
+#[cfg(not(feature = "std"))]
+pub fn read_multihash<S>(r: &mut &[u8]) -> Result<(u64, u8, GenericArray<u8, S>), Error>
+where
+    S: Size,
+{
+    use unsigned_varint::decode;
+
+    let buf = *r;
+
+    let (code, buf) = decode::u64(buf)?;
+    let (size, buf) = decode::u64(buf)?;
+
+    if size > S::to_u64() || size > u8::MAX as u64 || size > buf.len() as u64 {
+        return Err(Error::InvalidSize(size));
+    }
+
+    *r = buf;
+
+    Ok((
+        code,
+        size as u8,
+        GenericArray::clone_from_slice(&buf[..size as usize]),
+    ))
 }
 
 #[cfg(test)]
