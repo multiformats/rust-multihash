@@ -1,5 +1,7 @@
 use crate::hasher::{Digest, Size};
 use crate::Error;
+#[cfg(all(not(feature = "std"), feature = "scale-codec"))]
+use alloc::vec;
 use core::convert::TryFrom;
 #[cfg(feature = "std")]
 use core::convert::TryInto;
@@ -186,7 +188,12 @@ impl parity_scale_codec::Encode for Multihash<crate::U32> {
         digest.copy_from_slice(&self.digest);
         self.code.encode_to(dest);
         self.size.encode_to(dest);
-        digest.encode_to(dest);
+        // **NOTE** We write the digest directly to dest, since we have known the size of digest.
+        //
+        // We do not choose to encode &[u8] directly, because it will add extra bytes (the compact length of digest).
+        // For a valid multihash, the length of digest must equal to `size`.
+        // Therefore, we can only read raw bytes whose length is equal to `size` when decoding.
+        dest.write(&digest[..self.size as usize]);
     }
 }
 
@@ -198,11 +205,17 @@ impl parity_scale_codec::Decode for Multihash<crate::U32> {
     fn decode<DecIn: parity_scale_codec::Input>(
         input: &mut DecIn,
     ) -> Result<Self, parity_scale_codec::Error> {
+        let code = parity_scale_codec::Decode::decode(input)?;
+        let size = parity_scale_codec::Decode::decode(input)?;
+        // For a valid multihash, the length of digest must equal to the size.
+        let mut buf = vec![0u8; size as usize];
+        input.read(&mut buf)?;
         Ok(Multihash {
-            code: parity_scale_codec::Decode::decode(input)?,
-            size: parity_scale_codec::Decode::decode(input)?,
+            code,
+            size,
             digest: {
-                let digest = <[u8; 32]>::decode(input)?;
+                let mut digest = [0u8; 32];
+                digest[..size as usize].copy_from_slice(&buf);
                 GenericArray::clone_from_slice(&digest)
             },
         })
@@ -216,7 +229,12 @@ impl parity_scale_codec::Encode for Multihash<crate::U64> {
         digest.copy_from_slice(&self.digest);
         self.code.encode_to(dest);
         self.size.encode_to(dest);
-        digest.encode_to(dest);
+        // **NOTE** We write the digest directly to dest, since we have known the size of digest.
+        //
+        // We do not choose to encode &[u8] directly, because it will add extra bytes (the compact length of digest).
+        // For a valid multihash, the length of digest must equal to `size`.
+        // Therefore, we can only read raw bytes whose length is equal to `size` when decoding.
+        dest.write(&digest[..self.size as usize]);
     }
 }
 
@@ -228,11 +246,17 @@ impl parity_scale_codec::Decode for Multihash<crate::U64> {
     fn decode<DecIn: parity_scale_codec::Input>(
         input: &mut DecIn,
     ) -> Result<Self, parity_scale_codec::Error> {
+        let code = parity_scale_codec::Decode::decode(input)?;
+        let size = parity_scale_codec::Decode::decode(input)?;
+        // For a valid multihash, the length of digest must equal to the size.
+        let mut buf = vec![0u8; size as usize];
+        input.read(&mut buf)?;
         Ok(Multihash {
-            code: parity_scale_codec::Decode::decode(input)?,
-            size: parity_scale_codec::Decode::decode(input)?,
+            code,
+            size,
             digest: {
-                let digest = <[u8; 64]>::decode(input)?;
+                let mut digest = [0u8; 64];
+                digest[..size as usize].copy_from_slice(&buf);
                 GenericArray::clone_from_slice(&digest)
             },
         })
@@ -302,12 +326,28 @@ mod tests {
     #[test]
     #[cfg(feature = "scale-codec")]
     fn test_scale() {
+        use crate::{Hasher, Sha2_256};
         use parity_scale_codec::{Decode, Encode};
 
-        let mh = Multihash::<crate::U32>::default();
-        let bytes = mh.encode();
-        let mh2: Multihash<crate::U32> = Decode::decode(&mut &bytes[..]).unwrap();
-        assert_eq!(mh, mh2);
+        let mh1 = Multihash::<crate::U32>::wrap(
+            Code::Sha2_256.into(),
+            Sha2_256::digest(b"hello world").as_ref(),
+        )
+        .unwrap();
+        // println!("mh1: code = {}, size = {}, digest = {:?}", mh1.code(), mh1.size(), mh1.digest());
+        let mh1_bytes = mh1.encode();
+        // println!("Multihash<32>: {}", hex::encode(&mh1_bytes));
+        let mh2: Multihash<crate::U32> = Decode::decode(&mut &mh1_bytes[..]).unwrap();
+        assert_eq!(mh1, mh2);
+
+        let mh3: Multihash<crate::U64> = Code::Sha2_256.digest(b"hello world");
+        // println!("mh3: code = {}, size = {}, digest = {:?}", mh3.code(), mh3.size(), mh3.digest());
+        let mh3_bytes = mh3.encode();
+        // println!("Multihash<64>: {}", hex::encode(&mh3_bytes));
+        let mh4: Multihash<crate::U64> = Decode::decode(&mut &mh3_bytes[..]).unwrap();
+        assert_eq!(mh3, mh4);
+
+        assert_eq!(mh1_bytes, mh3_bytes);
     }
 
     #[test]
