@@ -360,7 +360,7 @@ pub mod identity {
         fn update(&mut self, input: &[u8]) {
             let start = self.i.min(self.bytes.len());
             let end = (self.i + input.len()).min(self.bytes.len());
-            self.bytes[start..end].copy_from_slice(&input);
+            self.bytes[start..end].copy_from_slice(input);
             self.i = end;
         }
 
