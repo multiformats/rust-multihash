@@ -251,7 +251,7 @@ fn parse_unsigned_typenum(typenum_path: &syn::Type) -> Result<u64, ParseError> {
 /// Emits an error if the `#mh(alloc_size)` attribute doesn't contain a valid unsigned integer
 /// `typenum`.
 fn parse_alloc_size_attribute(alloc_size: &syn::Type) -> u64 {
-    parse_unsigned_typenum(&alloc_size).unwrap_or_else(|_| {
+    parse_unsigned_typenum(alloc_size).unwrap_or_else(|_| {
         let msg = "`alloc_size` attribute must be a `typenum`, e.g. #[mh(alloc_size = U64)]";
         #[cfg(test)]
         panic!("{}", msg);
@@ -272,7 +272,7 @@ fn error_alloc_size(hashes: &[Hash], expected_alloc_size_type: &syn::Type) {
                 Some(path_segment) => match &path_segment.arguments {
                     syn::PathArguments::AngleBracketed(arguments) => match arguments.args.last() {
                         Some(syn::GenericArgument::Type(path)) => {
-                            match parse_unsigned_typenum(&path) {
+                            match parse_unsigned_typenum(path) {
                                 Ok(max_digest_size) => {
                                     if max_digest_size > expected_alloc_size {
                                         let msg = format!("The `#mh(alloc_size) attribute must be bigger than the maximum defined digest size (U{})",
@@ -322,7 +322,7 @@ pub fn multihash(s: Structure) -> TokenStream {
         }
     };
     let code_enum = &s.ast().ident;
-    let (alloc_size, no_alloc_size_errors) = parse_code_enum_attrs(&s.ast());
+    let (alloc_size, no_alloc_size_errors) = parse_code_enum_attrs(s.ast());
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
 
     error_code_duplicates(&hashes);
