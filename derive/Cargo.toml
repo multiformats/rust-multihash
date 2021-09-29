@@ -23,5 +23,5 @@ default = ["std"]
 std = []
 
 [dev-dependencies]
-pretty_assertions = "0.7.1"
+pretty_assertions = "1.0.0"
 multihash = { path = "..", default-features = false }
