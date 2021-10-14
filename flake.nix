@@ -6,9 +6,14 @@
       url = github:numtide/flake-utils;
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    naersk = {
+      url = github:yatima-inc/naersk;
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     utils = {
       url = github:yatima-inc/nix-utils;
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.naersk.follows = "naersk";
     };
   };
 
@@ -17,20 +22,33 @@
     , nixpkgs
     , flake-utils
     , utils
+    , naersk
     }:
-    flake-utils.lib.eachDefaultSystem (system:
+    let 
+      # Only use the supported systems
+      supportedSystems = builtins.attrNames naersk.lib;
+    in
+    flake-utils.lib.eachSystem supportedSystems (system:
     let
       lib = utils.lib.${system};
       pkgs = import nixpkgs { inherit system; };
-      inherit (lib) buildRustProject testRustProject rustDefault filterRustProject;
-      rust = rustDefault;
+      inherit (lib) buildRustProject testRustProject getRust;
+      rustNightly = getRust { date = "2021-10-13"; sha256 = "2hYUzd1vkONFeibPF2ZVOWR5LhKGecA0+Dq4/fTyNMg="; };
       crateName = "rust-multihash";
       root = ./.;
-      project = buildRustProject { inherit root; };
+      project = buildRustProject { inherit root; rust = rustNightly; };
     in
     {
       packages.${crateName} = project;
-      checks.${crateName} = testRustProject { doCheck = true; inherit root; };
+      checks.${crateName} = testRustProject { 
+        inherit root;
+        rust = rustNightly;
+        # Avoid unstable_options in test
+        cargoOptions = opt: [];
+        cargoBuildOptions = opt: [ "-Z unstable-options" ] ++ opt;
+        cargoTestOptions = opt: [ "--all-features" ] ++ opt;
+
+      };
 
       defaultPackage = self.packages.${system}.${crateName};
 
@@ -42,7 +60,7 @@
       # `nix develop`
       devShell = pkgs.mkShell {
         inputsFrom = builtins.attrValues self.packages.${system};
-        nativeBuildInputs = [ rust ];
+        nativeBuildInputs = [ rustNightly ];
         buildInputs = with pkgs; [
           rust-analyzer
           clippy
