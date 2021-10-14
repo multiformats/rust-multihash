@@ -1,5 +1,5 @@
 {
-  description = "TODO Description";
+  description = "Rust multihash implementation";
   inputs = {
     nixpkgs.url = github:nixos/nixpkgs;
     flake-utils = {
