@@ -1,7 +1,5 @@
 use crate::hasher::{Digest, Size};
 use crate::Error;
-#[cfg(all(not(feature = "std"), feature = "scale-codec"))]
-use alloc::vec;
 use core::convert::TryFrom;
 #[cfg(feature = "std")]
 use core::convert::TryInto;
@@ -207,18 +205,13 @@ impl parity_scale_codec::Decode for Multihash<crate::U32> {
     ) -> Result<Self, parity_scale_codec::Error> {
         let code = parity_scale_codec::Decode::decode(input)?;
         let size = parity_scale_codec::Decode::decode(input)?;
+        if size > 32 {
+            return Err(parity_scale_codec::Error::from("invalid size"));
+        }
         // For a valid multihash, the length of digest must equal to the size.
-        let mut buf = vec![0u8; size as usize];
-        input.read(&mut buf)?;
-        Ok(Multihash {
-            code,
-            size,
-            digest: {
-                let mut digest = [0u8; 32];
-                digest[..size as usize].copy_from_slice(&buf);
-                GenericArray::clone_from_slice(&digest)
-            },
-        })
+        let mut digest = GenericArray::default();
+        input.read(&mut digest[..size as usize])?;
+        Ok(Multihash { code, size, digest })
     }
 }
 
@@ -248,18 +241,13 @@ impl parity_scale_codec::Decode for Multihash<crate::U64> {
     ) -> Result<Self, parity_scale_codec::Error> {
         let code = parity_scale_codec::Decode::decode(input)?;
         let size = parity_scale_codec::Decode::decode(input)?;
+        if size > 64 {
+            return Err(parity_scale_codec::Error::from("invalid size"));
+        }
         // For a valid multihash, the length of digest must equal to the size.
-        let mut buf = vec![0u8; size as usize];
-        input.read(&mut buf)?;
-        Ok(Multihash {
-            code,
-            size,
-            digest: {
-                let mut digest = [0u8; 64];
-                digest[..size as usize].copy_from_slice(&buf);
-                GenericArray::clone_from_slice(&digest)
-            },
-        })
+        let mut digest = GenericArray::default();
+        input.read(&mut digest[..size as usize])?;
+        Ok(Multihash { code, size, digest })
     }
 }
 
