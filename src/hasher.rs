@@ -58,11 +58,11 @@ pub trait Digest<S: Size>:
     where
         R: io::Read,
     {
-      #[cfg(not(feature = "std"))]
-      use crate::varint_read_u64 as read_u64;
-      
-      #[cfg(feature = "std")]
-      use unsigned_varint::io::read_u64;
+        #[cfg(not(feature = "std"))]
+        use crate::varint_read_u64 as read_u64;
+
+        #[cfg(feature = "std")]
+        use unsigned_varint::io::read_u64;
 
         let size = read_u64(&mut r)?;
         if size > S::to_u64() || size > u8::max_value() as u64 {
