@@ -330,7 +330,7 @@ pub mod identity {
         where
             R: std::io::Read,
         {
-            use unsigned_varint::io::read_u64;
+            use crate::multihash::read_u64;
 
             let size = read_u64(&mut r)?;
             if size > S::to_u64() || size > u8::max_value() as u64 {
