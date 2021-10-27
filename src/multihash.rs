@@ -1,10 +1,18 @@
 use crate::hasher::{Digest, Size};
 use crate::Error;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 use core::convert::TryFrom;
-#[cfg(feature = "std")]
+
 use core::convert::TryInto;
 use core::fmt::Debug;
 use generic_array::{ArrayLength, GenericArray};
+
+#[cfg(feature = "std")]
+use std::io;
+
+#[cfg(not(feature = "std"))]
+use core2::io;
 
 /// Trait that implements hashing.
 ///
@@ -118,8 +126,7 @@ impl<S: Size> Multihash<S> {
     }
 
     /// Reads a multihash from a byte stream.
-    #[cfg(feature = "std")]
-    pub fn read<R: std::io::Read>(r: R) -> Result<Self, Error>
+    pub fn read<R: io::Read>(r: R) -> Result<Self, Error>
     where
         Self: Sized,
     {
@@ -131,7 +138,6 @@ impl<S: Size> Multihash<S> {
     ///
     /// You need to make sure the passed in bytes have the correct length. The digest length
     /// needs to match the `size` value of the multihash.
-    #[cfg(feature = "std")]
     pub fn from_bytes(mut bytes: &[u8]) -> Result<Self, Error>
     where
         Self: Sized,
@@ -148,15 +154,13 @@ impl<S: Size> Multihash<S> {
     }
 
     /// Writes a multihash to a byte stream.
-    #[cfg(feature = "std")]
-    pub fn write<W: std::io::Write>(&self, w: W) -> Result<(), Error> {
+    pub fn write<W: io::Write>(&self, w: W) -> Result<(), Error> {
         write_multihash(w, self.code(), self.size(), self.digest())
     }
 
     /// Returns the bytes of a multihash.
-    #[cfg(feature = "std")]
     pub fn to_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(self.size().into());
+        let mut bytes: Vec<u8> = Vec::with_capacity(self.size().into());
         self.write(&mut bytes)
             .expect("writing to a vec should never fail");
         bytes
@@ -172,7 +176,6 @@ impl<S: Size> core::hash::Hash for Multihash<S> {
     }
 }
 
-#[cfg(feature = "std")]
 impl<S: Size> From<Multihash<S>> for Vec<u8> {
     fn from(multihash: Multihash<S>) -> Self {
         multihash.to_bytes()
@@ -252,10 +255,9 @@ impl parity_scale_codec::Decode for Multihash<crate::U64> {
 }
 
 /// Writes the multihash to a byte stream.
-#[cfg(feature = "std")]
 pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<(), Error>
 where
-    W: std::io::Write,
+    W: io::Write,
 {
     use unsigned_varint::encode as varint_encode;
 
@@ -277,16 +279,25 @@ where
 /// maximum/allocated size of the digest.
 ///
 /// Currently the maximum size for a digest is 255 bytes.
-#[cfg(feature = "std")]
 pub fn read_multihash<R, S>(mut r: R) -> Result<(u64, u8, GenericArray<u8, S>), Error>
 where
-    R: std::io::Read,
+    R: io::Read,
     S: Size,
 {
-    use unsigned_varint::io::read_u64;
+  #[cfg(not(feature = "std"))]
+  use crate::varint_read_u64 as read_u64;
+  
+  #[cfg(feature = "std")]
+  use unsigned_varint::io::read_u64;
 
-    let code = read_u64(&mut r)?;
-    let size = read_u64(&mut r)?;
+  let code = match read_u64(&mut r) {
+    Ok(c) => c,
+    Err(e) => return Err(e.into()),
+  };
+  let size = match read_u64(&mut r) {
+    Ok(s) => s,
+    Err(e) => return Err(e.into()),
+  };
 
     if size > S::to_u64() || size > u8::MAX as u64 {
         return Err(Error::InvalidSize(size));
