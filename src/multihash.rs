@@ -8,7 +8,7 @@ use core::convert::TryInto;
 use core::fmt::Debug;
 use generic_array::{ArrayLength, GenericArray};
 
-use unsigned_varint::{decode, encode as varint_encode};
+use unsigned_varint::encode as varint_encode;
 
 #[cfg(feature = "std")]
 use std::io;
@@ -284,12 +284,6 @@ where
     R: io::Read,
     S: Size,
 {
-    #[cfg(not(feature = "std"))]
-    use crate::read_u64;
-
-    #[cfg(feature = "std")]
-    use unsigned_varint::io::read_u64;
-
     let code = match read_u64(&mut r) {
         Ok(c) => c,
         Err(e) => return Err(e.into()),
@@ -308,10 +302,15 @@ where
     Ok((code, size as u8, digest))
 }
 
+#[cfg(feature = "std")]
+pub(crate) use unsigned_varint::io::read_u64;
+
 /// Reads 64 bits from a byte array into a u64
 /// Adapted from unsigned-varint's generated read_u64 function at
 /// https://github.com/paritytech/unsigned-varint/blob/master/src/io.rs
-pub fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
+#[cfg(not(feature = "std"))]
+pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
+    use unsigned_varint::decode;
     let mut b = varint_encode::u64_buffer();
     for i in 0..b.len() {
         let n = r.read(&mut (b[i..i + 1]))?;
