@@ -8,7 +8,7 @@ use core::convert::TryInto;
 use core::fmt::Debug;
 use generic_array::{ArrayLength, GenericArray};
 
-use unsigned_varint::{encode as varint_encode, decode};
+use unsigned_varint::{decode, encode as varint_encode};
 
 #[cfg(feature = "std")]
 use std::io;
@@ -271,7 +271,6 @@ pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Resul
 where
     W: io::Write,
 {
-
     let mut code_buf = varint_encode::u64_buffer();
     let code = varint_encode::u64(code, &mut code_buf);
 
@@ -295,20 +294,20 @@ where
     R: io::Read,
     S: Size,
 {
-  #[cfg(not(feature = "std"))]
-  use crate::read_u64 as read_u64;
-  
-  #[cfg(feature = "std")]
-  use unsigned_varint::io::read_u64;
+    #[cfg(not(feature = "std"))]
+    use crate::read_u64;
 
-  let code = match read_u64(&mut r) {
-    Ok(c) => c,
-    Err(e) => return Err(e.into()),
-  };
-  let size = match read_u64(&mut r) {
-    Ok(s) => s,
-    Err(e) => return Err(e.into()),
-  };
+    #[cfg(feature = "std")]
+    use unsigned_varint::io::read_u64;
+
+    let code = match read_u64(&mut r) {
+        Ok(c) => c,
+        Err(e) => return Err(e.into()),
+    };
+    let size = match read_u64(&mut r) {
+        Ok(s) => s,
+        Err(e) => return Err(e.into()),
+    };
 
     if size > S::to_u64() || size > u8::MAX as u64 {
         return Err(Error::InvalidSize(size));
@@ -323,19 +322,17 @@ where
 /// Adapted from unsigned-varint's generated read_u64 function at
 /// https://github.com/paritytech/unsigned-varint/blob/master/src/io.rs
 pub fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
-  let mut b = varint_encode::u64_buffer();
-  for i in 0..b.len() {
-    let n = r.read(&mut (b[i..i + 1]))?;
-    if n == 0 {
-      return Err(Error::Varint(decode::Error::Insufficient));
+    let mut b = varint_encode::u64_buffer();
+    for i in 0..b.len() {
+        let n = r.read(&mut (b[i..i + 1]))?;
+        if n == 0 {
+            return Err(Error::Varint(decode::Error::Insufficient));
+        } else if decode::is_last(b[i]) {
+            return Ok(decode::u64(&b[..=i]).unwrap().0);
+        }
     }
-    else if decode::is_last(b[i]) {
-      return Ok(decode::u64(&b[..=i]).unwrap().0);
-    }
-  }
-  Err(Error::Varint(decode::Error::Overflow))
+    Err(Error::Varint(decode::Error::Overflow))
 }
-
 
 #[cfg(test)]
 mod tests {
