@@ -94,25 +94,3 @@ pub use crate::hasher_impl::sha3::{Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha
 pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeDigest, StrobeHasher};
 pub use crate::hasher_impl::unknown::UnknownDigest;
 
-#[cfg(feature = "std")]
-use std::io;
-#[cfg(not(feature = "std"))]
-use core2::io;
-
-use unsigned_varint::{encode, decode};
-  
-/// Reader function from unsigned_varint
-pub fn varint_read_u64<R: io::Read>(mut r: R) -> Result<u64> {
-  let mut b = encode::u64_buffer();
-  for i in 0..b.len() {
-    let n = r.read(&mut (b[i..i + 1]))?;
-    if n == 0 {
-      return Err(error::Error::Varint(decode::Error::Insufficient));
-    }
-    else if decode::is_last(b[i]) {
-      return Ok(decode::u64(&b[..=i]).unwrap().0);
-    }
-  }
-  Err(error::Error::Varint(decode::Error::Overflow))
-}
-

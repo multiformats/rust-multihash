@@ -8,6 +8,8 @@ use core::convert::TryInto;
 use core::fmt::Debug;
 use generic_array::{ArrayLength, GenericArray};
 
+use unsigned_varint::{encode as varint_encode, decode};
+
 #[cfg(feature = "std")]
 use std::io;
 
@@ -259,7 +261,6 @@ pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Resul
 where
     W: io::Write,
 {
-    use unsigned_varint::encode as varint_encode;
 
     let mut code_buf = varint_encode::u64_buffer();
     let code = varint_encode::u64(code, &mut code_buf);
@@ -285,7 +286,7 @@ where
     S: Size,
 {
   #[cfg(not(feature = "std"))]
-  use crate::varint_read_u64 as read_u64;
+  use crate::read_u64 as read_u64;
   
   #[cfg(feature = "std")]
   use unsigned_varint::io::read_u64;
@@ -307,6 +308,24 @@ where
     r.read_exact(&mut digest[..size as usize])?;
     Ok((code, size as u8, digest))
 }
+
+/// Reads 64 bits from a byte array into a u64
+/// Adapted from unsigned-varint's generated read_u64 function at
+/// https://github.com/paritytech/unsigned-varint/blob/master/src/io.rs
+pub fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
+  let mut b = varint_encode::u64_buffer();
+  for i in 0..b.len() {
+    let n = r.read(&mut (b[i..i + 1]))?;
+    if n == 0 {
+      return Err(Error::Varint(decode::Error::Insufficient));
+    }
+    else if decode::is_last(b[i]) {
+      return Ok(decode::u64(&b[..=i]).unwrap().0);
+    }
+  }
+  Err(Error::Varint(decode::Error::Overflow))
+}
+
 
 #[cfg(test)]
 mod tests {
