@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
-use core2::io::Error as IoError;
+use core2::{error::Error as StdError, io::Error as IoError};
 #[cfg(feature = "std")]
-use std::io::Error as IoError;
+use std::{error::Error as StdError, io::Error as IoError};
 
 use unsigned_varint::decode::Error as DecodeError;
 #[cfg(feature = "std")]
@@ -32,20 +32,8 @@ impl core::fmt::Display for Error {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
+impl StdError for Error {}
 
-#[cfg(not(feature = "std"))]
-impl core2::error::Error for Error {}
-
-#[cfg(not(feature = "std"))]
-impl From<core2::io::Error> for Error {
-    fn from(err: core2::io::Error) -> Self {
-        Self::Io(err)
-    }
-}
-
-#[cfg(feature = "std")]
 impl From<IoError> for Error {
     fn from(err: IoError) -> Self {
         Self::Io(err)
