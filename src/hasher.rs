@@ -3,6 +3,12 @@ use core::fmt::Debug;
 use generic_array::typenum::marker_traits::Unsigned;
 use generic_array::{ArrayLength, GenericArray};
 
+#[cfg(feature = "std")]
+use std::io;
+
+#[cfg(not(feature = "std"))]
+use core2::io;
+
 /// Size marker trait.
 pub trait Size:
     ArrayLength<u8> + Debug + Default + Eq + core::hash::Hash + Send + Sync + 'static
@@ -48,12 +54,15 @@ pub trait Digest<S: Size>:
     /// Reads a multihash digest from a byte stream that contains the digest prefixed with the size.
     ///
     /// The byte stream must not contain the code as prefix.
-    #[cfg(feature = "std")]
     fn from_reader<R>(mut r: R) -> Result<Self, Error>
     where
-        R: std::io::Read,
+        R: io::Read,
     {
-        use unsigned_varint::io::read_u64;
+      #[cfg(not(feature = "std"))]
+      use crate::varint_read_u64 as read_u64;
+      
+      #[cfg(feature = "std")]
+      use unsigned_varint::io::read_u64;
 
         let size = read_u64(&mut r)?;
         if size > S::to_u64() || size > u8::max_value() as u64 {
