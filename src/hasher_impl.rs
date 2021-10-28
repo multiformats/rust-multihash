@@ -3,6 +3,12 @@ use crate::hasher::{Digest, Size, StatefulHasher};
 use core::convert::TryFrom;
 use generic_array::GenericArray;
 
+#[cfg(feature = "std")]
+use std::io;
+
+#[cfg(not(feature = "std"))]
+use core2::io;
+
 macro_rules! derive_digest {
     ($name:ident) => {
         /// Multihash digest.
@@ -52,14 +58,13 @@ macro_rules! derive_digest {
 
 macro_rules! derive_write {
     ($name:ident) => {
-        #[cfg(feature = "std")]
-        impl<S: Size> std::io::Write for $name<S> {
-            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        impl<S: Size> io::Write for $name<S> {
+            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
                 self.update(buf);
                 Ok(buf.len())
             }
 
-            fn flush(&mut self) -> std::io::Result<()> {
+            fn flush(&mut self) -> io::Result<()> {
                 Ok(())
             }
         }
@@ -222,14 +227,13 @@ macro_rules! derive_hasher_sha {
             }
         }
 
-        #[cfg(feature = "std")]
-        impl std::io::Write for $name {
-            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        impl io::Write for $name {
+            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
                 self.update(buf);
                 Ok(buf.len())
             }
 
-            fn flush(&mut self) -> std::io::Result<()> {
+            fn flush(&mut self) -> io::Result<()> {
                 Ok(())
             }
         }
@@ -325,12 +329,11 @@ pub mod identity {
 
         // A custom implementation is needed as an identity hash also stores the actual size of
         // the given digest.
-        #[cfg(feature = "std")]
         fn from_reader<R>(mut r: R) -> Result<Self, Error>
         where
-            R: std::io::Read,
+            R: io::Read,
         {
-            use unsigned_varint::io::read_u64;
+            use crate::multihash::read_u64;
 
             let size = read_u64(&mut r)?;
             if size > S::to_u64() || size > u8::max_value() as u64 {
