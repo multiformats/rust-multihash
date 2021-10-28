@@ -6,6 +6,7 @@ edition = "2018"
 description = "Proc macro for deriving custom multihash tables."
 license = "MIT"
 repository = "https://github.com/multiformats/multihash"
+resolver = "2"
 
 [lib]
 proc-macro = true
@@ -24,4 +25,4 @@ std = []
 
 [dev-dependencies]
 pretty_assertions = "1.0.0"
-multihash = { path = "..", default-features = false }
+multihash = { path = "..", default-features = false, features = ["derive", "sha2"] }
