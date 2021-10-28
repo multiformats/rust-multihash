@@ -1,6 +1,6 @@
 use crate::hasher::{Digest, Size};
 use crate::Error;
-#[cfg(feature = "alloc")]
+#[cfg(all(not(feature = "std"), feature = "alloc"))]
 use alloc::vec::Vec;
 use core::convert::TryFrom;
 
@@ -160,7 +160,6 @@ impl<S: Size> Multihash<S> {
         write_multihash(w, self.code(), self.size(), self.digest())
     }
 
-  
   #[cfg(any(feature = "std", feature = "alloc"))]
     /// Returns the bytes of a multihash.
     pub fn to_bytes(&self) -> Vec<u8> {
