@@ -1,6 +1,6 @@
 use crate::hasher::{Digest, Size};
 use crate::Error;
-#[cfg(not(feature = "std"))]
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 use core::convert::TryFrom;
 
@@ -160,9 +160,11 @@ impl<S: Size> Multihash<S> {
         write_multihash(w, self.code(), self.size(), self.digest())
     }
 
+  
+  #[cfg(any(feature = "std", feature = "alloc"))]
     /// Returns the bytes of a multihash.
     pub fn to_bytes(&self) -> Vec<u8> {
-        let mut bytes: Vec<u8> = Vec::with_capacity(self.size().into());
+        let mut bytes = Vec::with_capacity(self.size().into());
         self.write(&mut bytes)
             .expect("writing to a vec should never fail");
         bytes
@@ -178,6 +180,7 @@ impl<S: Size> core::hash::Hash for Multihash<S> {
     }
 }
 
+#[cfg(any(feature = "std", feature = "alloc"))]
 impl<S: Size> From<Multihash<S>> for Vec<u8> {
     fn from(multihash: Multihash<S>) -> Self {
         multihash.to_bytes()
@@ -284,14 +287,8 @@ where
     R: io::Read,
     S: Size,
 {
-    let code = match read_u64(&mut r) {
-        Ok(c) => c,
-        Err(e) => return Err(e.into()),
-    };
-    let size = match read_u64(&mut r) {
-        Ok(s) => s,
-        Err(e) => return Err(e.into()),
-    };
+  let code = read_u64(&mut r)?;
+  let size = read_u64(&mut r)?;
 
     if size > S::to_u64() || size > u8::MAX as u64 {
         return Err(Error::InvalidSize(size));
