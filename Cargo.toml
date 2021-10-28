@@ -16,7 +16,7 @@ resolver = "2"
 
 [features]
 default = ["std", "derive", "multihash-impl", "secure-hashes"]
-std = ["unsigned-varint/std", "multihash-derive/std"]
+std = ["unsigned-varint/std", "multihash-derive/std", "alloc"]
 alloc = []
 multihash-impl = ["derive"]
 derive = ["multihash-derive"]
