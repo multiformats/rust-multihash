@@ -44,7 +44,7 @@ unsigned-varint = { version = "0.7.0", default-features = false }
 
 blake2b_simd = { version = "0.5.10", default-features = false, optional = true }
 blake2s_simd = { version = "0.5.10", default-features = false, optional = true }
-blake3 = { version = "1.0.0", default-features = false, optional = true }
+blake3 = { version = "1.1.0", default-features = false, optional = true }
 digest = { version = "0.9.0", default-features = false, optional = true }
 sha-1 = { version = "0.9.1", default-features = false, optional = true }
 sha-2 = { version = "0.9.0", default-features = false, optional = true, package = "sha2" }
