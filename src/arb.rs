@@ -7,7 +7,7 @@ use rand::{
 use crate::MultihashGeneric;
 
 /// Generates a random valid multihash.
-impl Arbitrary for MultihashGeneric<64> {
+impl<const S: usize> Arbitrary for MultihashGeneric<S> {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         // In real world lower multihash codes are more likely to happen, hence distribute them
         // with bias towards smaller values.
@@ -25,9 +25,9 @@ impl Arbitrary for MultihashGeneric<64> {
             _ => unreachable!(),
         };
 
-        // Maximum size is 64 byte due to the `U64` generic
-        let size = g.gen_range(0, 64);
-        let mut data = [0; 64];
+        // Maximum size is S byte due to the generic.
+        let size = g.gen_range(0, S);
+        let mut data = [0; S];
         g.fill_bytes(&mut data);
         MultihashGeneric::wrap(code, &data[..size]).unwrap()
     }
