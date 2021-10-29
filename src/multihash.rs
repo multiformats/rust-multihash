@@ -194,8 +194,6 @@ impl<const S: usize> From<Multihash<S>> for Vec<u8> {
 #[cfg(feature = "scale-codec")]
 impl<const S: usize> parity_scale_codec::Encode for Multihash<S> {
     fn encode_to<EncOut: parity_scale_codec::Output + ?Sized>(&self, dest: &mut EncOut) {
-        let mut digest = [0; S];
-        digest.copy_from_slice(&self.digest);
         self.code.encode_to(dest);
         self.size.encode_to(dest);
         // **NOTE** We write the digest directly to dest, since we have known the size of digest.
@@ -203,7 +201,7 @@ impl<const S: usize> parity_scale_codec::Encode for Multihash<S> {
         // We do not choose to encode &[u8] directly, because it will add extra bytes (the compact length of digest).
         // For a valid multihash, the length of digest must equal to `size`.
         // Therefore, we can only read raw bytes whose length is equal to `size` when decoding.
-        dest.write(&digest[..self.size as usize]);
+        dest.write(self.digest());
     }
 }
 
@@ -215,15 +213,17 @@ impl<const S: usize> parity_scale_codec::Decode for Multihash<S> {
     fn decode<DecIn: parity_scale_codec::Input>(
         input: &mut DecIn,
     ) -> Result<Self, parity_scale_codec::Error> {
-        let code = parity_scale_codec::Decode::decode(input)?;
-        let size = parity_scale_codec::Decode::decode(input)?;
-        if size as usize > S {
+        let mut mh = Multihash {
+            code: parity_scale_codec::Decode::decode(input)?,
+            size: parity_scale_codec::Decode::decode(input)?,
+            digest: [0; S],
+        };
+        if mh.size as usize > S {
             return Err(parity_scale_codec::Error::from("invalid size"));
         }
         // For a valid multihash, the length of digest must equal to the size.
-        let mut digest = [0; S];
-        input.read(&mut digest[..size as usize])?;
-        Ok(Multihash { code, size, digest })
+        input.read(&mut mh.digest[..mh.size as usize])?;
+        Ok(mh)
     }
 }
 
