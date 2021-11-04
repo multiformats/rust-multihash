@@ -1,4 +1,3 @@
-use crate::hasher::Digest;
 use crate::Error;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
@@ -38,23 +37,19 @@ pub trait MultihashDigest<const S: usize>:
     /// ```
     fn digest(&self, input: &[u8]) -> Multihash<S>;
 
-    /// Create a multihash from an existing [`Digest`].
+    /// Create a multihash from an existing multihash digest.
     ///
     /// # Example
     ///
     /// ```
-    /// use multihash::{Code, MultihashDigest, Sha3_256, StatefulHasher};
+    /// use multihash::{Code, Hasher, MultihashDigest, Sha3_256};
     ///
     /// let mut hasher = Sha3_256::default();
     /// hasher.update(b"Hello world!");
-    /// let hash = Code::multihash_from_digest(&hasher.finalize());
+    /// let hash = Code::Sha3_256.wrap(&hasher.finalize()).unwrap();
     /// println!("{:02x?}", hash);
     /// ```
-    #[allow(clippy::needless_lifetimes)]
-    fn multihash_from_digest<'a, D, const DIGEST_SIZE: usize>(digest: &'a D) -> Multihash<S>
-    where
-        D: Digest<DIGEST_SIZE>,
-        Self: From<&'a D>;
+    fn wrap(&self, digest: &[u8]) -> Result<Multihash<S>, Error>;
 }
 
 /// A Multihash instance that only supports the basic functionality and no hashing.
@@ -386,14 +381,9 @@ mod tests {
     #[test]
     #[cfg(feature = "scale-codec")]
     fn test_scale() {
-        use crate::{Hasher, Sha2_256};
         use parity_scale_codec::{Decode, Encode};
 
-        let mh1 = Multihash::<32>::wrap(
-            Code::Sha2_256.into(),
-            Sha2_256::digest(b"hello world").as_ref(),
-        )
-        .unwrap();
+        let mh1 = Code::Sha2_256.digest(b"hello world");
         // println!("mh1: code = {}, size = {}, digest = {:?}", mh1.code(), mh1.size(), mh1.digest());
         let mh1_bytes = mh1.encode();
         // println!("Multihash<32>: {}", hex::encode(&mh1_bytes));
