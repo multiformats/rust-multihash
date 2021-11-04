@@ -4,7 +4,7 @@ use rand::Rng;
 use multihash::{
     Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Hasher, Keccak224, Keccak256,
     Keccak384, Keccak512, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
-    StatefulHasher, Strobe256, Strobe512,
+    Strobe256, Strobe512,
 };
 
 macro_rules! group_digest {
@@ -13,7 +13,9 @@ macro_rules! group_digest {
         $(
             group.bench_function($id, |b| {
                 b.iter(|| {
-                    let _ = black_box($hash::digest($input));
+                    let mut hasher = $hash::default();
+                    hasher.update(black_box($input));
+                    let _ = black_box(hasher.finalize());
                 })
             });
         )*
@@ -27,14 +29,13 @@ macro_rules! group_stream {
         $(
             group.bench_function($id, |b| {
                 b.iter(|| {
-                    let _ = black_box({
-                        let mut hasher = <$hash>::default();
-                        for i in 0..3 {
-                            let start = i * 256;
-                            hasher.update(&$input[start..(start + 256)]);
-                        }
-                        hasher.finalize()
-                    });
+                    let input = black_box($input);
+                    let mut hasher = <$hash>::default();
+                    for i in 0..3 {
+                        let start = i * 256;
+                        hasher.update(&input[start..(start + 256)]);
+                    }
+                    let _ = black_box(hasher.finalize());
                 })
             });
         )*

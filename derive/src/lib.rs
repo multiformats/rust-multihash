@@ -24,9 +24,9 @@
 //! #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
 //! #[mh(alloc_size = 64)]
 //! pub enum Code {
-//!     #[mh(code = 0x01, hasher = multihash::Sha2_256, digest = multihash::Sha2Digest<32>)]
+//!     #[mh(code = 0x01, hasher = multihash::Sha2_256)]
 //!     Foo,
-//!     #[mh(code = 0x02, hasher = multihash::Sha2_512, digest = multihash::Sha2Digest<64>)]
+//!     #[mh(code = 0x02, hasher = multihash::Sha2_512)]
 //!     Bar,
 //! }
 //!

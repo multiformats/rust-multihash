@@ -65,7 +65,7 @@ mod multihash;
 mod multihash_impl;
 
 pub use crate::error::{Error, Result};
-pub use crate::hasher::{Digest, Hasher, StatefulHasher};
+pub use crate::hasher::Hasher;
 pub use crate::multihash::{Multihash as MultihashGeneric, MultihashDigest};
 #[cfg(feature = "derive")]
 pub use multihash_derive as derive;
@@ -74,20 +74,19 @@ pub use multihash_derive as derive;
 pub use crate::multihash_impl::{Code, Multihash};
 
 #[cfg(feature = "blake2b")]
-pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bDigest, Blake2bHasher};
+pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bHasher};
 #[cfg(feature = "blake2s")]
-pub use crate::hasher_impl::blake2s::{Blake2s128, Blake2s256, Blake2sDigest, Blake2sHasher};
+pub use crate::hasher_impl::blake2s::{Blake2s128, Blake2s256, Blake2sHasher};
 #[cfg(feature = "blake3")]
-pub use crate::hasher_impl::blake3::{Blake3Digest, Blake3Hasher, Blake3_256};
-pub use crate::hasher_impl::identity::{Identity256, IdentityDigest, IdentityHasher};
+pub use crate::hasher_impl::blake3::{Blake3Hasher, Blake3_256};
+pub use crate::hasher_impl::identity::{Identity256, IdentityHasher};
 #[cfg(feature = "sha1")]
-pub use crate::hasher_impl::sha1::{Sha1, Sha1Digest};
+pub use crate::hasher_impl::sha1::Sha1;
 #[cfg(feature = "sha2")]
-pub use crate::hasher_impl::sha2::{Sha2Digest, Sha2_256, Sha2_512};
+pub use crate::hasher_impl::sha2::{Sha2_256, Sha2_512};
 #[cfg(feature = "sha3")]
-pub use crate::hasher_impl::sha3::{Keccak224, Keccak256, Keccak384, Keccak512, KeccakDigest};
+pub use crate::hasher_impl::sha3::{Keccak224, Keccak256, Keccak384, Keccak512};
 #[cfg(feature = "sha3")]
-pub use crate::hasher_impl::sha3::{Sha3Digest, Sha3_224, Sha3_256, Sha3_384, Sha3_512};
+pub use crate::hasher_impl::sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 #[cfg(feature = "strobe")]
-pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeDigest, StrobeHasher};
-pub use crate::hasher_impl::unknown::UnknownDigest;
+pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};
