@@ -80,7 +80,7 @@ pub trait MultihashDigest<const S: usize>:
 /// ```
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialOrd)]
 pub struct Multihash<const S: usize> {
     /// The code of the Multihash.
     code: u64,
@@ -191,6 +191,13 @@ impl<const S: usize> From<Multihash<S>> for Vec<u8> {
     }
 }
 
+impl<const A: usize, const B: usize> PartialEq<Multihash<B>> for Multihash<A> {
+    fn eq(&self, other: &Multihash<B>) -> bool {
+        // NOTE: there's no need to explicitly check the sizes, that's implicit in the digest.
+        self.code == other.code && self.digest() == other.digest()
+    }
+}
+
 #[cfg(feature = "scale-codec")]
 impl<const S: usize> parity_scale_codec::Encode for Multihash<S> {
     fn encode_to<EncOut: parity_scale_codec::Output + ?Sized>(&self, dest: &mut EncOut) {
@@ -297,7 +304,7 @@ mod tests {
         let hash = Code::Sha2_256.digest(b"hello world");
         let mut buf = [0u8; 35];
         hash.write(&mut buf[..]).unwrap();
-        let hash2 = Multihash::read(&buf[..]).unwrap();
+        let hash2 = Multihash::<32>::read(&buf[..]).unwrap();
         assert_eq!(hash, hash2);
     }
 
@@ -333,7 +340,14 @@ mod tests {
     fn test_serde() {
         let mh = Multihash::<32>::default();
         let bytes = serde_json::to_string(&mh).unwrap();
-        let mh2 = serde_json::from_str(&bytes).unwrap();
+        let mh2: Multihash<32> = serde_json::from_str(&bytes).unwrap();
         assert_eq!(mh, mh2);
+    }
+
+    #[test]
+    fn test_eq_sizes() {
+        let mh1 = Multihash::<32>::default();
+        let mh2 = Multihash::<64>::default();
+        assert_eq!(mh1, mh2);
     }
 }
