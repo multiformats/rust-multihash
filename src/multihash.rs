@@ -190,8 +190,8 @@ impl<const S: usize> Multihash<S> {
         mh
     }
 
-    /// Resizes the backing multihash buffer. If the multihash doesn't fit, this function fails and
-    /// does not truncate. If you need to truncate, call that first.
+    /// Resizes the backing multihash buffer. This function fails if the hash digest is larger than
+    /// the target size.
     ///
     /// ```
     /// use multihash::{Code, MultihashDigest, MultihashGeneric};
