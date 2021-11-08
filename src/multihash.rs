@@ -173,6 +173,45 @@ impl<const S: usize> Multihash<S> {
             .expect("writing to a vec should never fail");
         bytes
     }
+
+    /// Truncates the multihash to the given size. It's up to the caller to ensure that the new size
+    /// is secure (cryptographically) to use.
+    ///
+    /// If the new size is larger than the current size, this method does nothing.
+    ///
+    /// ```
+    /// use multihash::{Code, MultihashDigest};
+    ///
+    /// let hash = Code::Sha3_256.digest(b"Hello world!").truncate(20);
+    /// ```
+    pub fn truncate(&self, size: u8) -> Self {
+        let mut mh = *self;
+        mh.size = mh.size.min(size);
+        mh
+    }
+
+    /// Resizes the backing multihash buffer. This function fails if the hash digest is larger than
+    /// the target size.
+    ///
+    /// ```
+    /// use multihash::{Code, MultihashDigest, MultihashGeneric};
+    ///
+    /// let hash = Code::Sha3_256.digest(b"Hello world!");
+    /// let large_hash: MultihashGeneric<32> = hash.resize().unwrap();
+    /// ```
+    pub fn resize<const R: usize>(&self) -> Result<Multihash<R>, Error> {
+        let size = self.size as usize;
+        if size > R {
+            return Err(Error::InvalidSize(self.size as u64));
+        }
+        let mut mh = Multihash {
+            code: self.code,
+            size: self.size,
+            digest: [0; R],
+        };
+        mh.digest[..size].copy_from_slice(&self.digest[..size]);
+        Ok(mh)
+    }
 }
 
 // Don't hash the whole allocated space, but just the actual digest
@@ -306,6 +345,38 @@ mod tests {
         hash.write(&mut buf[..]).unwrap();
         let hash2 = Multihash::<32>::read(&buf[..]).unwrap();
         assert_eq!(hash, hash2);
+    }
+
+    #[test]
+    fn test_truncate_down() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let small = hash.truncate(20);
+        assert_eq!(small.size(), 20);
+    }
+
+    #[test]
+    fn test_truncate_up() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let small = hash.truncate(100);
+        assert_eq!(small.size(), 32);
+    }
+
+    #[test]
+    fn test_resize_fits() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let _: Multihash<32> = hash.resize().unwrap();
+    }
+
+    #[test]
+    fn test_resize_up() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let _: Multihash<100> = hash.resize().unwrap();
+    }
+
+    #[test]
+    fn test_resize_truncate() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        hash.resize::<20>().unwrap_err();
     }
 
     #[test]
