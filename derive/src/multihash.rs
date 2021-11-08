@@ -17,11 +17,11 @@ mod kw {
     custom_keyword!(hasher);
     custom_keyword!(mh);
     custom_keyword!(alloc_size);
+    custom_keyword!(io_path);
 }
 
 /// Attributes for the enum items.
 #[derive(Debug)]
-#[allow(clippy::large_enum_variant)]
 enum MhAttr {
     Code(utils::Attr<kw::code, syn::Expr>),
     Hasher(utils::Attr<kw::hasher, Box<syn::Type>>),
@@ -43,12 +43,15 @@ impl Parse for MhAttr {
 #[derive(Debug)]
 enum DeriveAttr {
     AllocSize(utils::Attr<kw::alloc_size, syn::LitInt>),
+    IoPath(utils::Attr<kw::io_path, syn::Path>),
 }
 
 impl Parse for DeriveAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         if input.peek(kw::alloc_size) {
             Ok(Self::AllocSize(input.parse()?))
+        } else if input.peek(kw::io_path) {
+            Ok(Self::IoPath(input.parse()?))
         } else {
             Err(syn::Error::new(input.span(), "unknown attribute"))
         }
@@ -88,6 +91,17 @@ impl Hash {
             let mut hasher = #hasher::default();
             hasher.update(input);
             Multihash::wrap(#code, hasher.finalize()).unwrap()
+        })
+    }
+
+    fn code_reader(&self) -> TokenStream {
+        let ident = &self.ident;
+        let hasher = &self.hasher;
+        let code = &self.code;
+        quote!(Self::#ident => {
+            let mut hasher = #hasher::default();
+            io::copy(reader, &mut hasher)?;
+            Ok(Multihash::wrap(#code, hasher.finalize()).unwrap())
         })
     }
 }
@@ -134,8 +148,10 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
 /// Parse top-level enum [#mh()] attributes.
 ///
 /// Returns the `alloc_size` and whether errors regarding to `alloc_size` should be reported or not.
-fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> syn::LitInt {
+fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> (syn::LitInt, syn::Path) {
     let mut alloc_size = None;
+
+    let mut io_path = syn::parse_quote!(::std::io);
 
     for attr in &ast.attrs {
         let derive_attrs: Result<utils::Attrs<DeriveAttr>, _> = syn::parse2(attr.tokens.clone());
@@ -145,12 +161,15 @@ fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> syn::LitInt {
                     DeriveAttr::AllocSize(alloc_size_attr) => {
                         alloc_size = Some(alloc_size_attr.value)
                     }
+                    DeriveAttr::IoPath(io_path_attr) => {
+                        io_path = io_path_attr.value;
+                    }
                 }
             }
         }
     }
     match alloc_size {
-        Some(alloc_size) => alloc_size,
+        Some(alloc_size) => (alloc_size, io_path),
         None => {
             let msg = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = 64)]";
             #[cfg(test)]
@@ -206,7 +225,7 @@ pub fn multihash(s: Structure) -> TokenStream {
         }
     };
     let code_enum = &s.ast().ident;
-    let alloc_size = parse_code_enum_attrs(s.ast());
+    let (alloc_size, io_path) = parse_code_enum_attrs(s.ast());
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
 
     error_code_duplicates(&hashes);
@@ -218,6 +237,7 @@ pub fn multihash(s: Structure) -> TokenStream {
     let code_into_u64 = hashes.iter().map(|h| h.code_into_u64(&params));
     let code_from_u64 = hashes.iter().map(|h| h.code_from_u64());
     let code_digest = hashes.iter().map(|h| h.code_digest());
+    let code_reader = hashes.iter().map(|h| h.code_reader());
 
     quote! {
         /// A Multihash with the same allocated size as the Multihashes produces by this derive.
@@ -228,6 +248,15 @@ pub fn multihash(s: Structure) -> TokenStream {
                 use #mh_crate::Hasher;
                 match self {
                     #(#code_digest,)*
+                    _ => unreachable!(),
+                }
+            }
+
+            fn digest_reader<R: #io_path::Read>(&self, reader: &mut R) -> #io_path::Result<Multihash> {
+                use #io_path;
+                use #mh_crate::Hasher;
+                match self {
+                    #(#code_reader,)*
                     _ => unreachable!(),
                 }
             }
@@ -298,9 +327,27 @@ mod tests {
                    }
                }
 
-               fn wrap(&self, digest: &[u8]) -> Result<Multihash, multihash::Error> {
-                   Multihash::wrap((*self).into(), digest)
+               fn digest_reader<R: ::std::io::Read>(&self, reader: &mut R) -> ::std::io::Result<Multihash> {
+                   use ::std::io;
+                   use multihash::Hasher;
+                   match self {
+                       Self::Identity256 => {
+                           let mut hasher = multihash::Identity256::default();
+                           io::copy(reader, &mut hasher)?;
+                           Ok(Multihash::wrap(multihash::IDENTITY, hasher.finalize()).unwrap())
+                       },
+                       Self::Strobe256 => {
+                           let mut hasher = multihash::Strobe256::default();
+                           io::copy(reader, &mut hasher)?;
+                           Ok(Multihash::wrap(0x38b64f, hasher.finalize()).unwrap())
+                       },
+                       _ => unreachable!(),
+                   }
                }
+
+                fn wrap(&self, digest: &[u8]) -> Result<Multihash, multihash::Error> {
+                    Multihash::wrap((*self).into(), digest)
+                }
             }
 
             impl From<Code> for u64 {

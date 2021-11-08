@@ -1,5 +1,11 @@
+#[cfg(feature = "std")]
+use std::io;
+
+#[cfg(not(feature = "std"))]
+use core2::io;
+
 /// Trait implemented by a hash function implementation.
-pub trait Hasher {
+pub trait Hasher: io::Write {
     /// Consume input and update internal state.
     fn update(&mut self, input: &[u8]);
 

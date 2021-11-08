@@ -35,7 +35,27 @@ pub trait MultihashDigest<const S: usize>:
     /// let hash = Code::Sha3_256.digest(b"Hello world!");
     /// println!("{:02x?}", hash);
     /// ```
-    fn digest(&self, input: &[u8]) -> Multihash<S>;
+    fn digest(&self, input: &[u8]) -> Multihash<S> {
+        let mut input = input;
+        self.digest_reader(&mut input).unwrap()
+    }
+
+    /// Calculate the hash of some input stream.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// // `Code` implements `MultihashDigest`
+    /// use multihash::{Code, MultihashDigest};
+    ///
+    /// let mut data = std::io::Cursor::new(b"Hello world!");
+    ///
+    /// let hash = Code::Sha3_256.digest_reader(&mut data).unwrap();
+    /// println!("{:02x?}", hash);
+    /// ```
+    fn digest_reader<R: io::Read>(&self, input: &mut R) -> io::Result<Multihash<S>>
+    where
+        Self: Sized;
 
     /// Create a multihash from an existing multihash digest.
     ///
@@ -49,7 +69,9 @@ pub trait MultihashDigest<const S: usize>:
     /// let hash = Code::Sha3_256.wrap(&hasher.finalize()).unwrap();
     /// println!("{:02x?}", hash);
     /// ```
-    fn wrap(&self, digest: &[u8]) -> Result<Multihash<S>, Error>;
+    fn wrap(&self, digest: &[u8]) -> Result<Multihash<S>, Error> {
+        Multihash::wrap((*self).into(), digest)
+    }
 }
 
 /// A Multihash instance that only supports the basic functionality and no hashing.

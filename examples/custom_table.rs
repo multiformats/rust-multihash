@@ -3,6 +3,12 @@ use std::convert::TryFrom;
 use multihash::derive::Multihash;
 use multihash::{Error, Hasher, MultihashDigest, MultihashGeneric, Sha2_256};
 
+#[cfg(feature = "std")]
+use std::io;
+
+#[cfg(not(feature = "std"))]
+use core2::io;
+
 // You can implement a custom hasher. This is a SHA2 256-bit hasher that returns a hash that is
 // truncated to 160 bits.
 #[derive(Default, Debug)]
@@ -16,6 +22,15 @@ impl Hasher for Sha2_256Truncated20 {
     }
     fn reset(&mut self) {
         self.0.reset();
+    }
+}
+
+impl io::Write for Sha2_256Truncated20 {
+    fn write(&mut self, input: &[u8]) -> io::Result<usize> {
+        self.0.write(input)
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
     }
 }
 
