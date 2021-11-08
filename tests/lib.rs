@@ -70,6 +70,13 @@ macro_rules! assert_encode {
                expected,
                "{:?} encodes correctly (from hasher)", stringify!($alg)
            );
+
+           // From a reader.
+           assert_eq!(
+               $code.digest_reader(&mut Cursor::new($data)).unwrap().to_bytes(),
+               expected,
+               "{:?} encodes correctly (from hasher)", stringify!($alg)
+           );
        )*
    }
 }

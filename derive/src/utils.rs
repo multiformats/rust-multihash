@@ -4,7 +4,7 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::Error;
 
-pub fn use_crate(name: &str) -> Result<syn::Ident, Error> {
+pub(crate) fn use_crate(name: &str) -> Result<syn::Ident, Error> {
     match crate_name(name) {
         Ok(FoundCrate::Name(krate)) => Ok(syn::Ident::new(&krate, Span::call_site())),
         Ok(FoundCrate::Itself) => Ok(syn::Ident::new("crate", Span::call_site())),
