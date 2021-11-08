@@ -175,7 +175,7 @@ impl<const S: usize> Multihash<S> {
     }
 
     /// Truncates the multihash to the given size. It's up to the caller to ensure that the new size
-    /// is safe to use.
+    /// is secure (cryptographically) to use.
     ///
     /// If the new size is larger than the current size, this method does nothing.
     ///
