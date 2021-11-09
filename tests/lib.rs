@@ -66,7 +66,7 @@ macro_rules! assert_encode {
            let mut hasher = <$alg>::default();
            hasher.update($data);
            assert_eq!(
-               $code.wrap(hasher.finalize()).to_bytes(),
+               $code.wrap(hasher.finalize()).unwrap().to_bytes(),
                expected,
                "{:?} encodes correctly (from hasher)", stringify!($alg)
            );
@@ -151,7 +151,7 @@ macro_rules! assert_roundtrip {
             {
                 let mut hasher = <$alg>::default();
                 hasher.update(b"helloworld");
-                let hash = $code.wrap(hasher.finalize());
+                let hash = $code.wrap(hasher.finalize()).unwrap();
                 assert_eq!(
                     Multihash::from_bytes(&hash.to_bytes()).unwrap().code(),
                     hash.code()
@@ -161,7 +161,7 @@ macro_rules! assert_roundtrip {
             {
                 let mut hasher = <$alg>::default();
                 hasher.write_all(b"helloworld").unwrap();
-                let hash = $code.wrap(hasher.finalize());
+                let hash = $code.wrap(hasher.finalize()).unwrap();
                 assert_eq!(
                     Multihash::from_bytes(&hash.to_bytes()).unwrap().code(),
                     hash.code()
@@ -217,7 +217,7 @@ where
     // Test from hasher digest conversion
     let mut hasher = H::default();
     hasher.update(b"hello world");
-    let multihash_from_digest = code.wrap(hasher.finalize());
+    let multihash_from_digest = code.wrap(hasher.finalize()).unwrap();
     assert_eq!(multihash_from_digest.code(), u64::from(code));
     assert_eq!(multihash_from_digest.size() as usize, digest.len());
     assert_eq!(multihash_from_digest.digest(), digest);

@@ -89,7 +89,7 @@ mod tests {
         let mut hasher = Sha3_256::default();
         hasher.update(b"hello world");
         let digest = hasher.finalize();
-        let hash = Code::Sha3_256.wrap(digest);
+        let hash = Code::Sha3_256.wrap(digest).unwrap();
         let hash2 = Code::Sha3_256.digest(b"hello world");
         assert_eq!(hash.code(), u64::from(Code::Sha3_256));
         assert_eq!(hash.size(), 32);
@@ -102,7 +102,7 @@ mod tests {
         let mut hasher = Sha3_512::default();
         hasher.update(b"hello world");
         let digest = hasher.finalize();
-        let hash = Code::Sha3_512.wrap(digest);
+        let hash = Code::Sha3_512.wrap(digest).unwrap();
         let hash2 = Code::Sha3_512.digest(b"hello world");
         assert_eq!(hash.code(), u64::from(Code::Sha3_512));
         assert_eq!(hash.size(), 64);

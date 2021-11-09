@@ -46,10 +46,10 @@ pub trait MultihashDigest<const S: usize>:
     ///
     /// let mut hasher = Sha3_256::default();
     /// hasher.update(b"Hello world!");
-    /// let hash = Code::Sha3_256.wrap(&hasher.finalize());
+    /// let hash = Code::Sha3_256.wrap(&hasher.finalize()).unwrap();
     /// println!("{:02x?}", hash);
     /// ```
-    fn wrap(&self, digest: &[u8]) -> Multihash<S>;
+    fn wrap(&self, digest: &[u8]) -> Result<Multihash<S>, Error>;
 }
 
 /// A Multihash instance that only supports the basic functionality and no hashing.

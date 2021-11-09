@@ -232,8 +232,8 @@ pub fn multihash(s: Structure) -> TokenStream {
                 }
             }
 
-            fn wrap(&self, digest: &[u8]) -> Multihash {
-                Multihash::wrap((*self).into(), digest).unwrap()
+            fn wrap(&self, digest: &[u8]) -> Result<Multihash, #mh_crate::Error> {
+                Multihash::wrap((*self).into(), digest)
             }
         }
 
@@ -298,8 +298,8 @@ mod tests {
                    }
                }
 
-               fn wrap(&self, digest: &[u8]) -> Multihash {
-                Multihash::wrap((*self).into(), digest).unwrap()
+               fn wrap(&self, digest: &[u8]) -> Result<Multihash, multihash::Error> {
+                Multihash::wrap((*self).into(), digest)
                }
             }
 
