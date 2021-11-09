@@ -471,6 +471,7 @@ dependencies = [
  "criterion",
  "digest",
  "hex",
+ "multihash",
  "multihash-derive",
  "parity-scale-codec",
  "quickcheck",
