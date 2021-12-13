@@ -22,6 +22,7 @@ mod kw {
 
 /// Attributes for the enum items.
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 enum MhAttr {
     Code(utils::Attr<kw::code, syn::Expr>),
     Hasher(utils::Attr<kw::hasher, Box<syn::Type>>),
