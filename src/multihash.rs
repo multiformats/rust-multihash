@@ -118,12 +118,12 @@ impl<const S: usize> Multihash<S> {
     }
 
     /// Returns the code of the multihash.
-    pub fn code(&self) -> u64 {
+    pub const fn code(&self) -> u64 {
         self.code
     }
 
     /// Returns the size of the digest.
-    pub fn size(&self) -> u8 {
+    pub const fn size(&self) -> u8 {
         self.size
     }
 
