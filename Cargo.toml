@@ -40,18 +40,18 @@ rand = { version = "0.7.3", optional = true }
 serde = { version = "1.0.116", optional = true, default-features = false, features = ["derive"] }
 serde-big-array = { version = "0.3.2", optional = true, features = ["const-generics"] }
 multihash-derive = { version = "0.7.2", path = "derive", default-features = false, optional = true }
-unsigned-varint = { version = "0.7.0", default-features = false }
+unsigned-varint = { version = "0.7.1", default-features = false }
 
-blake2b_simd = { version = "0.5.10", default-features = false, optional = true }
-blake2s_simd = { version = "0.5.10", default-features = false, optional = true }
-blake3 = { version = "1.0.0", default-features = false, optional = true }
-digest = { version = "0.9.0", default-features = false, optional = true }
-sha-1 = { version = "0.9.1", default-features = false, optional = true }
-sha-2 = { version = "0.9.0", default-features = false, optional = true, package = "sha2" }
-sha-3 = { version = "0.9.0", default-features = false, optional = true, package = "sha3" }
+blake2b_simd = { version = "1.0.0", default-features = false, optional = true }
+blake2s_simd = { version = "1.0.0", default-features = false, optional = true }
+blake3 = { version = "1.2.0", default-features = false, optional = true }
+digest = { version = "0.10.1", default-features = false, optional = true }
+sha-1 = { version = "0.10.0", default-features = false, optional = true }
+sha-2 = { version = "0.10.0", default-features = false, optional = true, package = "sha2" }
+sha-3 = { version = "0.10.0", default-features = false, optional = true, package = "sha3" }
 strobe-rs = { version = "0.6.2", default-features = false, optional = true }
 
-core2 = { version = "0.3", default-features = false }
+core2 = { version = "0.3.2", default-features = false }
 
 [dev-dependencies]
 criterion = "0.3.3"
