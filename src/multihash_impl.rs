@@ -7,8 +7,7 @@ pub use multihash_derive::Multihash;
 ///
 /// [`Multihash` derive]: crate::derive
 #[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
-#[cfg_attr(feature = "std", mh(alloc_size = 64, io_path = ::std::io))]
-#[cfg_attr(not(feature = "std"), mh(alloc_size = 64, io_path = ::core2::io))]
+#[mh(alloc_size = 64)]
 pub enum Code {
     /// SHA-256 (32-byte hash size)
     #[cfg(feature = "sha2")]
