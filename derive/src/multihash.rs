@@ -17,10 +17,10 @@ mod kw {
     custom_keyword!(hasher);
     custom_keyword!(mh);
     custom_keyword!(alloc_size);
-    custom_keyword!(io_path);
 }
 
 /// Attributes for the enum items.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 enum MhAttr {
     Code(utils::Attr<kw::code, syn::Expr>),
@@ -43,15 +43,12 @@ impl Parse for MhAttr {
 #[derive(Debug)]
 enum DeriveAttr {
     AllocSize(utils::Attr<kw::alloc_size, syn::LitInt>),
-    IoPath(utils::Attr<kw::io_path, syn::Path>),
 }
 
 impl Parse for DeriveAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         if input.peek(kw::alloc_size) {
             Ok(Self::AllocSize(input.parse()?))
-        } else if input.peek(kw::io_path) {
-            Ok(Self::IoPath(input.parse()?))
         } else {
             Err(syn::Error::new(input.span(), "unknown attribute"))
         }
@@ -148,11 +145,8 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
 /// Parse top-level enum [#mh()] attributes.
 ///
 /// Returns the `alloc_size` and whether errors regarding to `alloc_size` should be reported or not.
-#[allow(dead_code)] // TODO
-fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> (syn::LitInt, syn::Path) {
+fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> syn::LitInt {
     let mut alloc_size = None;
-
-    let mut io_path = syn::parse_quote!(::std::io);
 
     for attr in &ast.attrs {
         let derive_attrs: Result<utils::Attrs<DeriveAttr>, _> = syn::parse2(attr.tokens.clone());
@@ -162,15 +156,12 @@ fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> (syn::LitInt, syn::Path) {
                     DeriveAttr::AllocSize(alloc_size_attr) => {
                         alloc_size = Some(alloc_size_attr.value)
                     }
-                    DeriveAttr::IoPath(io_path_attr) => {
-                        io_path = io_path_attr.value;
-                    }
                 }
             }
         }
     }
     match alloc_size {
-        Some(alloc_size) => (alloc_size, io_path),
+        Some(alloc_size) => alloc_size,
         None => {
             let msg = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = 64)]";
             #[cfg(test)]
@@ -226,7 +217,7 @@ pub fn multihash(s: Structure) -> TokenStream {
         }
     };
     let code_enum = &s.ast().ident;
-    let (alloc_size, io_path) = parse_code_enum_attrs(s.ast());
+    let alloc_size = parse_code_enum_attrs(s.ast());
     let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
 
     error_code_duplicates(&hashes);
@@ -238,7 +229,8 @@ pub fn multihash(s: Structure) -> TokenStream {
     let code_into_u64 = hashes.iter().map(|h| h.code_into_u64(&params));
     let code_from_u64 = hashes.iter().map(|h| h.code_from_u64());
     let code_digest = hashes.iter().map(|h| h.code_digest());
-    let code_reader = hashes.iter().map(|h| h.code_reader());
+    let code_reader_std = hashes.iter().map(|h| h.code_reader());
+    let code_reader_core = code_reader_std.clone();
 
     quote! {
         /// A Multihash with the same allocated size as the Multihashes produces by this derive.
@@ -253,11 +245,22 @@ pub fn multihash(s: Structure) -> TokenStream {
                 }
             }
 
-            fn digest_reader<R: #io_path::Read>(&self, reader: &mut R) -> #io_path::Result<Multihash> {
-                use #io_path;
+            #[cfg(feature = "std")]
+            fn digest_reader<R: std::io::Read>(&self, reader: &mut R) -> std::io::Result<Multihash> {
+                use std::io;
                 use #mh_crate::Hasher;
                 match self {
-                    #(#code_reader,)*
+                    #(#code_reader_std,)*
+                    _ => unreachable!(),
+                }
+            }
+
+            #[cfg(not(feature = "std"))]
+            fn digest_reader<R: core2::io::Read>(&self, reader: &mut R) -> core2::io::Result<Multihash> {
+                use core2::io;
+                use #mh_crate::Hasher;
+                match self {
+                    #(#code_reader_core,)*
                     _ => unreachable!(),
                 }
             }
@@ -328,8 +331,28 @@ mod tests {
                    }
                }
 
-               fn digest_reader<R: ::std::io::Read>(&self, reader: &mut R) -> ::std::io::Result<Multihash> {
-                   use ::std::io;
+               #[cfg(feature = "std")]
+               fn digest_reader<R: std::io::Read>(&self, reader: &mut R) -> std::io::Result<Multihash> {
+                   use std::io;
+                   use multihash::Hasher;
+                   match self {
+                       Self::Identity256 => {
+                           let mut hasher = multihash::Identity256::default();
+                           io::copy(reader, &mut hasher)?;
+                           Ok(Multihash::wrap(multihash::IDENTITY, hasher.finalize()).unwrap())
+                       },
+                       Self::Strobe256 => {
+                           let mut hasher = multihash::Strobe256::default();
+                           io::copy(reader, &mut hasher)?;
+                           Ok(Multihash::wrap(0x38b64f, hasher.finalize()).unwrap())
+                       },
+                       _ => unreachable!(),
+                   }
+               }
+
+               #[cfg(not(feature = "std"))]
+               fn digest_reader<R: core2::io::Read>(&self, reader: &mut R) -> core2::io::Result<Multihash> {
+                   use core2::io;
                    use multihash::Hasher;
                    match self {
                        Self::Identity256 => {

@@ -22,7 +22,7 @@
 //! use multihash::MultihashDigest;
 //!
 //! #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
-//! #[mh(alloc_size = 64, io_path = ::std::io)]
+//! #[mh(alloc_size = 64)]
 //! pub enum Code {
 //!     #[mh(code = 0x01, hasher = multihash::Sha2_256)]
 //!     Foo,
