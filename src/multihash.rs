@@ -62,7 +62,7 @@ pub trait MultihashDigest<const S: usize>:
     /// # Example
     ///
     /// ```
-    /// use multihash::{Code, MultihashDigest, Sha3_256, Hasher};
+    /// use multihash::{Code, Hasher, MultihashDigest, Sha3_256};
     ///
     /// let mut hasher = Sha3_256::default();
     /// hasher.update(b"Hello world!");
