@@ -9,11 +9,15 @@ use std::io;
 #[cfg(not(feature = "std"))]
 use core2::io;
 
+struct __Assert;
+
 // You can implement a custom hasher. This is a SHA2 256-bit hasher that returns a hash that is
 // truncated to 160 bits.
 #[derive(Default, Debug)]
 pub struct Sha2_256Truncated20(Sha2_256);
 impl Hasher for Sha2_256Truncated20 {
+    const MAX_SIZE: usize = 20;
+
     fn update(&mut self, input: &[u8]) {
         self.0.update(input)
     }

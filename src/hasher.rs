@@ -6,6 +6,9 @@ use core2::io;
 
 /// Trait implemented by a hash function implementation.
 pub trait Hasher: io::Write {
+    /// The maximum size of the resulting digest.
+    const MAX_SIZE: usize;
+
     /// Consume input and update internal state.
     fn update(&mut self, input: &[u8]);
 

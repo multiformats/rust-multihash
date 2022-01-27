@@ -57,6 +57,7 @@ impl Parse for DeriveAttr {
 
 struct Params {
     code_enum: syn::Ident,
+    alloc_size: syn::LitInt,
 }
 
 #[derive(Debug)]
@@ -80,24 +81,32 @@ impl Hash {
         quote!(#code => Ok(Self::#ident))
     }
 
-    fn code_digest(&self) -> TokenStream {
+    fn code_digest(&self, params: &Params) -> TokenStream {
         let ident = &self.ident;
         let hasher = &self.hasher;
         let code = &self.code;
+        let alloc_size = &params.alloc_size;
         quote!(Self::#ident => {
             let mut hasher = #hasher::default();
             hasher.update(input);
+            // The `unwrap()` is safe to call. With this compile-time assert we make sure that the
+            // size of the digest is smaller or equal to the allocated size.
+            Assert::<{ #hasher::MAX_SIZE }, #alloc_size>::LESS_EQ;
             Multihash::wrap(#code, hasher.finalize()).unwrap()
         })
     }
 
-    fn code_reader(&self) -> TokenStream {
+    fn code_reader(&self, params: &Params) -> TokenStream {
         let ident = &self.ident;
         let hasher = &self.hasher;
         let code = &self.code;
+        let alloc_size = &params.alloc_size;
         quote!(Self::#ident => {
             let mut hasher = #hasher::default();
             io::copy(reader, &mut hasher)?;
+            // The `unwrap()` is safe to call. With this compile-time assert we make sure that the
+            // size of the digest is smaller or equal to the allocated size.
+            Assert::<{ #hasher::MAX_SIZE }, #alloc_size>::LESS_EQ;
             Ok(Multihash::wrap(#code, hasher.finalize()).unwrap())
         })
     }
@@ -224,71 +233,85 @@ pub fn multihash(s: Structure) -> TokenStream {
 
     let params = Params {
         code_enum: code_enum.clone(),
+        alloc_size: alloc_size.clone(),
     };
 
     let code_into_u64 = hashes.iter().map(|h| h.code_into_u64(&params));
     let code_from_u64 = hashes.iter().map(|h| h.code_from_u64());
-    let code_digest = hashes.iter().map(|h| h.code_digest());
-    let code_reader_std = hashes.iter().map(|h| h.code_reader());
+    let code_digest = hashes.iter().map(|h| h.code_digest(&params));
+    let code_reader_std = hashes.iter().map(|h| h.code_reader(&params));
     let code_reader_core = code_reader_std.clone();
 
     quote! {
         /// A Multihash with the same allocated size as the Multihashes produces by this derive.
         pub type Multihash = #mh_crate::MultihashGeneric<#alloc_size>;
 
-        impl #mh_crate::MultihashDigest<#alloc_size> for #code_enum {
-            fn digest(&self, input: &[u8]) -> Multihash {
-                use #mh_crate::Hasher;
-                match self {
-                    #(#code_digest,)*
-                    _ => unreachable!(),
+        // This is a hack to make sure that the `Assert` struct doesn't clash with any existing
+        // one which might be defined in a file using this derive.
+        const _: () = {
+            // Compile-time assert to make sure the hashers won't produce hashes that are biger
+            // than the allocated size.
+            // Based on
+            // https://github.com/japaric/heapless/blob/3b2bc421a06c083dc71bd66c73f0d98f5976e0cb/src/sealed.rs
+            struct Assert<const SIZE: usize, const MAX: usize> ();
+            impl<const SIZE: usize, const MAX: usize> Assert<SIZE, MAX> {
+                const LESS_EQ: usize = MAX - SIZE;
+            }
+
+            impl #mh_crate::MultihashDigest<#alloc_size> for #code_enum {
+                fn digest(&self, input: &[u8]) -> Multihash {
+                    use #mh_crate::Hasher;
+                    match self {
+                        #(#code_digest,)*
+                        _ => unreachable!(),
+                    }
+                }
+
+                #[cfg(feature = "std")]
+                fn digest_reader<R: std::io::Read>(&self, reader: &mut R) -> std::io::Result<Multihash> {
+                    use std::io;
+                    use #mh_crate::Hasher;
+                    match self {
+                        #(#code_reader_std,)*
+                        _ => unreachable!(),
+                    }
+                }
+
+                #[cfg(not(feature = "std"))]
+                fn digest_reader<R: core2::io::Read>(&self, reader: &mut R) -> core2::io::Result<Multihash> {
+                    use core2::io;
+                    use #mh_crate::Hasher;
+                    match self {
+                        #(#code_reader_core,)*
+                        _ => unreachable!(),
+                    }
+                }
+
+                fn wrap(&self, digest: &[u8]) -> Result<Multihash, #mh_crate::Error> {
+                    Multihash::wrap((*self).into(), digest)
                 }
             }
 
-            #[cfg(feature = "std")]
-            fn digest_reader<R: std::io::Read>(&self, reader: &mut R) -> std::io::Result<Multihash> {
-                use std::io;
-                use #mh_crate::Hasher;
-                match self {
-                    #(#code_reader_std,)*
-                    _ => unreachable!(),
+            impl From<#code_enum> for u64 {
+                fn from(code: #code_enum) -> Self {
+                    match code {
+                        #(#code_into_u64,)*
+                        _ => unreachable!(),
+                    }
                 }
             }
 
-            #[cfg(not(feature = "std"))]
-            fn digest_reader<R: core2::io::Read>(&self, reader: &mut R) -> core2::io::Result<Multihash> {
-                use core2::io;
-                use #mh_crate::Hasher;
-                match self {
-                    #(#code_reader_core,)*
-                    _ => unreachable!(),
+            impl core::convert::TryFrom<u64> for #code_enum {
+                type Error = #mh_crate::Error;
+
+                fn try_from(code: u64) -> Result<Self, Self::Error> {
+                    match code {
+                        #(#code_from_u64,)*
+                        _ => Err(#mh_crate::Error::UnsupportedCode(code))
+                    }
                 }
             }
-
-            fn wrap(&self, digest: &[u8]) -> Result<Multihash, #mh_crate::Error> {
-                Multihash::wrap((*self).into(), digest)
-            }
-        }
-
-        impl From<#code_enum> for u64 {
-            fn from(code: #code_enum) -> Self {
-                match code {
-                    #(#code_into_u64,)*
-                    _ => unreachable!(),
-                }
-            }
-        }
-
-        impl core::convert::TryFrom<u64> for #code_enum {
-            type Error = #mh_crate::Error;
-
-            fn try_from(code: u64) -> Result<Self, Self::Error> {
-                match code {
-                    #(#code_from_u64,)*
-                    _ => Err(#mh_crate::Error::UnsupportedCode(code))
-                }
-            }
-        }
+        };
     }
 }
 
@@ -313,88 +336,101 @@ mod tests {
             /// A Multihash with the same allocated size as the Multihashes produces by this derive.
             pub type Multihash = multihash::MultihashGeneric<32>;
 
-            impl multihash::MultihashDigest<32> for Code {
-               fn digest(&self, input: &[u8]) -> Multihash {
-                   use multihash::Hasher;
-                   match self {
-                       Self::Identity256 => {
-                           let mut hasher = multihash::Identity256::default();
-                           hasher.update(input);
-                           Multihash::wrap(multihash::IDENTITY, hasher.finalize()).unwrap()
-                       },
-                       Self::Strobe256 => {
-                           let mut hasher = multihash::Strobe256::default();
-                           hasher.update(input);
-                           Multihash::wrap(0x38b64f, hasher.finalize()).unwrap()
-                       },
-                       _ => unreachable!(),
-                   }
-               }
-
-               #[cfg(feature = "std")]
-               fn digest_reader<R: std::io::Read>(&self, reader: &mut R) -> std::io::Result<Multihash> {
-                   use std::io;
-                   use multihash::Hasher;
-                   match self {
-                       Self::Identity256 => {
-                           let mut hasher = multihash::Identity256::default();
-                           io::copy(reader, &mut hasher)?;
-                           Ok(Multihash::wrap(multihash::IDENTITY, hasher.finalize()).unwrap())
-                       },
-                       Self::Strobe256 => {
-                           let mut hasher = multihash::Strobe256::default();
-                           io::copy(reader, &mut hasher)?;
-                           Ok(Multihash::wrap(0x38b64f, hasher.finalize()).unwrap())
-                       },
-                       _ => unreachable!(),
-                   }
-               }
-
-               #[cfg(not(feature = "std"))]
-               fn digest_reader<R: core2::io::Read>(&self, reader: &mut R) -> core2::io::Result<Multihash> {
-                   use core2::io;
-                   use multihash::Hasher;
-                   match self {
-                       Self::Identity256 => {
-                           let mut hasher = multihash::Identity256::default();
-                           io::copy(reader, &mut hasher)?;
-                           Ok(Multihash::wrap(multihash::IDENTITY, hasher.finalize()).unwrap())
-                       },
-                       Self::Strobe256 => {
-                           let mut hasher = multihash::Strobe256::default();
-                           io::copy(reader, &mut hasher)?;
-                           Ok(Multihash::wrap(0x38b64f, hasher.finalize()).unwrap())
-                       },
-                       _ => unreachable!(),
-                   }
-               }
-
-                fn wrap(&self, digest: &[u8]) -> Result<Multihash, multihash::Error> {
-                    Multihash::wrap((*self).into(), digest)
+            const _: () = {
+                struct Assert<const SIZE: usize, const MAX: usize> ();
+                impl<const SIZE: usize, const MAX: usize> Assert<SIZE, MAX> {
+                    const LESS_EQ: usize = MAX - SIZE;
                 }
-            }
 
-            impl From<Code> for u64 {
-                fn from(code: Code) -> Self {
-                    match code {
-                        Code::Identity256 => multihash::IDENTITY,
-                        Code::Strobe256 => 0x38b64f,
-                       _ => unreachable!(),
+                impl multihash::MultihashDigest<32> for Code {
+                    fn digest(&self, input: &[u8]) -> Multihash {
+                        use multihash::Hasher;
+                        match self {
+                            Self::Identity256 => {
+                                let mut hasher = multihash::Identity256::default();
+                                hasher.update(input);
+                                Assert::<{ multihash::Identity256::MAX_SIZE }, 32>::LESS_EQ;
+                                Multihash::wrap(multihash::IDENTITY, hasher.finalize()).unwrap()
+                            },
+                            Self::Strobe256 => {
+                                let mut hasher = multihash::Strobe256::default();
+                                hasher.update(input);
+                                Assert::<{ multihash::Strobe256::MAX_SIZE }, 32>::LESS_EQ;
+                                Multihash::wrap(0x38b64f, hasher.finalize()).unwrap()
+                            },
+                            _ => unreachable!(),
+                        }
+                    }
+
+                    #[cfg(feature = "std")]
+                    fn digest_reader<R: std::io::Read>(&self, reader: &mut R) -> std::io::Result<Multihash> {
+                        use std::io;
+                        use multihash::Hasher;
+                        match self {
+                            Self::Identity256 => {
+                                let mut hasher = multihash::Identity256::default();
+                                io::copy(reader, &mut hasher)?;
+                                Assert::<{ multihash::Identity256::MAX_SIZE }, 32>::LESS_EQ;
+                                Ok(Multihash::wrap(multihash::IDENTITY, hasher.finalize()).unwrap())
+                            },
+                            Self::Strobe256 => {
+                                let mut hasher = multihash::Strobe256::default();
+                                io::copy(reader, &mut hasher)?;
+                                Assert::<{ multihash::Strobe256::MAX_SIZE }, 32>::LESS_EQ;
+                                Ok(Multihash::wrap(0x38b64f, hasher.finalize()).unwrap())
+                            },
+                            _ => unreachable!(),
+                        }
+                    }
+
+                    #[cfg(not(feature = "std"))]
+                    fn digest_reader<R: core2::io::Read>(&self, reader: &mut R) -> core2::io::Result<Multihash> {
+                        use core2::io;
+                        use multihash::Hasher;
+                        match self {
+                            Self::Identity256 => {
+                                let mut hasher = multihash::Identity256::default();
+                                io::copy(reader, &mut hasher)?;
+                                Assert::<{ multihash::Identity256::MAX_SIZE }, 32>::LESS_EQ;
+                                Ok(Multihash::wrap(multihash::IDENTITY, hasher.finalize()).unwrap())
+                            },
+                            Self::Strobe256 => {
+                                let mut hasher = multihash::Strobe256::default();
+                                io::copy(reader, &mut hasher)?;
+                                Assert::<{ multihash::Strobe256::MAX_SIZE }, 32>::LESS_EQ;
+                                Ok(Multihash::wrap(0x38b64f, hasher.finalize()).unwrap())
+                            },
+                            _ => unreachable!(),
+                        }
+                    }
+
+                     fn wrap(&self, digest: &[u8]) -> Result<Multihash, multihash::Error> {
+                         Multihash::wrap((*self).into(), digest)
+                     }
+                }
+
+                impl From<Code> for u64 {
+                    fn from(code: Code) -> Self {
+                        match code {
+                            Code::Identity256 => multihash::IDENTITY,
+                            Code::Strobe256 => 0x38b64f,
+                           _ => unreachable!(),
+                        }
                     }
                 }
-            }
 
-            impl core::convert::TryFrom<u64> for Code {
-                type Error = multihash::Error;
+                impl core::convert::TryFrom<u64> for Code {
+                    type Error = multihash::Error;
 
-                fn try_from(code: u64) -> Result<Self, Self::Error> {
-                    match code {
-                        multihash::IDENTITY => Ok(Self::Identity256),
-                        0x38b64f => Ok(Self::Strobe256),
-                        _ => Err(multihash::Error::UnsupportedCode(code))
+                    fn try_from(code: u64) -> Result<Self, Self::Error> {
+                        match code {
+                            multihash::IDENTITY => Ok(Self::Identity256),
+                            0x38b64f => Ok(Self::Strobe256),
+                            _ => Err(multihash::Error::UnsupportedCode(code))
+                        }
                     }
                 }
-            }
+            };
         };
         let derive_input = syn::parse2(input).unwrap();
         let s = Structure::new(&derive_input);

@@ -43,6 +43,8 @@ macro_rules! derive_hasher_blake {
         }
 
         impl<const S: usize> Hasher for $name<S> {
+            const MAX_SIZE: usize = S;
+
             fn update(&mut self, input: &[u8]) {
                 self.state.update(input);
             }
@@ -114,6 +116,8 @@ pub mod blake3 {
     }
 
     impl<const S: usize> Hasher for Blake3Hasher<S> {
+        const MAX_SIZE: usize = S;
+
         fn update(&mut self, input: &[u8]) {
             self.hasher.update(input);
         }
@@ -157,6 +161,8 @@ macro_rules! derive_hasher_sha {
         }
 
         impl $crate::hasher::Hasher for $name {
+            const MAX_SIZE: usize = $size;
+
             fn update(&mut self, input: &[u8]) {
                 use digest::Digest;
                 self.state.update(input)
@@ -244,6 +250,8 @@ pub mod identity {
     }
 
     impl<const S: usize> Hasher for IdentityHasher<S> {
+        const MAX_SIZE: usize = S;
+
         fn update(&mut self, input: &[u8]) {
             let start = self.i.min(self.bytes.len());
             let end = (self.i + input.len()).min(self.bytes.len());
@@ -293,6 +301,8 @@ pub mod strobe {
     }
 
     impl<const S: usize> Hasher for StrobeHasher<S> {
+        const MAX_SIZE: usize = S;
+
         fn update(&mut self, input: &[u8]) {
             self.strobe.ad(input, self.initialized);
             self.initialized = true;
