@@ -9,8 +9,6 @@ use std::io;
 #[cfg(not(feature = "std"))]
 use core2::io;
 
-struct __Assert;
-
 // You can implement a custom hasher. This is a SHA2 256-bit hasher that returns a hash that is
 // truncated to 160 bits.
 #[derive(Default, Debug)]
