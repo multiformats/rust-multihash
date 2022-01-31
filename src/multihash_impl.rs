@@ -6,6 +6,8 @@ pub use multihash_derive::Multihash;
 /// algorithms. See the [`Multihash` derive] for more information.
 ///
 /// [`Multihash` derive]: crate::derive
+#[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
+#[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
 #[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
