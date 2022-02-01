@@ -169,9 +169,9 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "core2"
-version = "0.3.3"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "239fa3ae9b63c2dc74bd3fa852d4792b8b305ae64eeede946265b6af62f1fff3"
+checksum = "b49ba7ef1ad6107f8824dbe97de947cbaac53c44e7f9756a1fba0d37c1eec505"
 dependencies = [
  "memchr",
 ]
@@ -882,9 +882,9 @@ dependencies = [
 
 [[package]]
 name = "strobe-rs"
-version = "0.6.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "120a04607c28f102213fb2f0f15e034b56d05b6186c8f33ea0a286cd6050a16e"
+checksum = "6ff6a920303c8c2f1f0c5dcb3442ae729de31cf2b3b18b929bac74c81f8582d9"
 dependencies = [
  "bitflags",
  "byteorder",
