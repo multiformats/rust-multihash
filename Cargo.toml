@@ -51,7 +51,7 @@ sha-2 = { version = "0.10.0", default-features = false, optional = true, package
 sha-3 = { version = "0.10.0", default-features = false, optional = true, package = "sha3" }
 strobe-rs = { version = "0.6.2", default-features = false, optional = true }
 
-core2 = { version = "0.3.2", default-features = false }
+core2 = { version = "0.4.0", default-features = false }
 
 [dev-dependencies]
 criterion = "0.3.3"
