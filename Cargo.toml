@@ -39,7 +39,7 @@ quickcheck = { version = "0.9.2", optional = true }
 rand = { version = "0.7.3", optional = true }
 serde = { version = "1.0.116", optional = true, default-features = false, features = ["derive"] }
 serde-big-array = { version = "0.3.2", optional = true, features = ["const-generics"] }
-multihash-derive = { version = "0.7.2", path = "derive", default-features = false, optional = true }
+multihash-derive = { version = "0.8.0", path = "derive", default-features = false, optional = true }
 unsigned-varint = { version = "0.7.1", default-features = false }
 
 blake2b_simd = { version = "1.0.0", default-features = false, optional = true }
