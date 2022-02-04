@@ -36,7 +36,7 @@ strobe = ["strobe-rs"]
 [dependencies]
 parity-scale-codec = { version = "3.0.0", default-features = false, features = ["derive"], optional = true }
 quickcheck = { version = "0.9.2", optional = true }
-rand = { version = "0.7.3", optional = true }
+rand = { version = "0.8.4", optional = true }
 serde = { version = "1.0.116", optional = true, default-features = false, features = ["derive"] }
 serde-big-array = { version = "0.3.2", optional = true, features = ["const-generics"] }
 multihash-derive = { version = "0.8.0", path = "derive", default-features = false, optional = true }
@@ -58,7 +58,7 @@ criterion = "0.3.3"
 hex = "0.4.2"
 serde_json = "1.0.58"
 quickcheck = "0.9.2"
-rand = "0.7.3"
+rand = "0.8.4"
 multihash = { path = ".", features = ["sha1", "strobe"] }
 
 [[bench]]
