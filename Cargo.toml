@@ -49,7 +49,7 @@ digest = { version = "0.10.1", default-features = false, optional = true }
 sha-1 = { version = "0.10.0", default-features = false, optional = true }
 sha-2 = { version = "0.10.0", default-features = false, optional = true, package = "sha2" }
 sha-3 = { version = "0.10.0", default-features = false, optional = true, package = "sha3" }
-strobe-rs = { version = "0.7.0", default-features = false, optional = true }
+strobe-rs = { version = "0.7.1", default-features = false, optional = true }
 
 core2 = { version = "0.4.0", default-features = false }
 
