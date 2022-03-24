@@ -71,12 +71,6 @@ pub enum Code {
     #[cfg(feature = "blake3")]
     #[mh(code = 0x1e, hasher = crate::Blake3_256)]
     Blake3_256,
-
-    // The following hashes are not cryptographically secure hashes and are not enabled by default
-    /// Identity hash (max. 64 bytes)
-    #[cfg(feature = "identity")]
-    #[mh(code = 0x00, hasher = crate::IdentityHasher::<64>)]
-    Identity,
 }
 
 #[cfg(test)]

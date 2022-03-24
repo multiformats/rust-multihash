@@ -27,7 +27,6 @@ serde-codec = ["serde", "serde-big-array"]
 
 blake2b = ["blake2b_simd"]
 blake2s = ["blake2s_simd"]
-identity = []
 sha1 = ["digest", "sha-1"]
 sha2 = ["digest", "sha-2"]
 sha3 = ["digest", "sha-3"]
