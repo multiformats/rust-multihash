@@ -21,6 +21,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arbitrary"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c38b6b6b79f671c25e1a3e785b7b82d7562ffc9cd3efdc98627e5668a2472490"
+
+[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -468,6 +474,7 @@ dependencies = [
 name = "multihash"
 version = "0.16.1"
 dependencies = [
+ "arbitrary",
  "blake2b_simd",
  "blake2s_simd",
  "blake3",
