@@ -38,12 +38,16 @@ impl<const S: usize> quickcheck::Arbitrary for MultihashGeneric<S> {
 impl<'a, const S: usize> arbitrary::Arbitrary<'a> for MultihashGeneric<S> {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let mut code = 0u64;
-        for x in u.arbitrary_iter::<u8>()? {
-            // arbitrary_iter gives next item with probability 1/2
+        let mut len_choice = u.arbitrary::<u8>()? | 1;
+
+        while len_choice & 1 == 1 {
+            len_choice >>= 1;
+
+            let x = u.arbitrary::<u8>();
             let next = code
-                .checked_shl(7)
+                .checked_shl(8)
                 .zip(x.ok())
-                .map(|(next, x)| next.saturating_add((x & 0x7F) as u64));
+                .map(|(next, x)| next.saturating_add(x as u64));
 
             match next {
                 None => break,
@@ -58,7 +62,7 @@ impl<'a, const S: usize> arbitrary::Arbitrary<'a> for MultihashGeneric<S> {
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
-        size_hint::and(<[usize; 2]>::size_hint(depth), (0, None))
+        size_hint::and(<[u8; 3]>::size_hint(depth), (0, Some(S + 8)))
     }
 }
 
@@ -69,13 +73,10 @@ mod tests {
 
     #[test]
     fn arbitrary() {
-        let mut u = Unstructured::new(&[
-            1, 2, 4, 13, 5, 6, 7, 8, 9, 6, 10, 243, 43, 231, 123, 43, 153,
-        ]);
+        let mut u = Unstructured::new(&[2, 4, 13, 5, 6, 7, 8, 9, 6]);
+
         let mh = <MultihashGeneric<16> as Arbitrary>::arbitrary(&mut u).unwrap();
-        let mh2 =
-            MultihashGeneric::<16>::wrap(2, &[5, 6, 7, 8, 9, 6, 10, 243, 43, 231, 123, 43, 153])
-                .unwrap();
+        let mh2 = MultihashGeneric::<16>::wrap(1037, &[6, 7, 8, 9, 6]).unwrap();
         assert_eq!(mh, mh2);
     }
 }
