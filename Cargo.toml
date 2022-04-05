@@ -62,7 +62,6 @@ quickcheck = "0.9.2"
 rand = "0.7.3"
 arbitrary = "1.1.0"
 multihash = { path = ".", features = ["sha1", "strobe"] }
-bytes = "1.1.0"
 
 [[bench]]
 name = "multihash"
