@@ -103,7 +103,7 @@ pub mod blake3 {
     }
 
     impl<const S: usize> Blake3Hasher<S> {
-        /// blake3's XOF function, fills the given slice with hash information
+        /// using blake3's XOF function, fills the given slice with hash output
         pub fn finalize_xof_fill(&mut self, digest_out: &mut [u8]) {
             let mut digest = self.hasher.finalize_xof();
             digest.fill(digest_out)
@@ -127,15 +127,9 @@ pub mod blake3 {
         }
 
         fn finalize(&mut self) -> &[u8] {
-            // let digest = self.hasher.finalize(); //default is 32 bytes anyway
-            // let digest_bytes = digest.as_bytes();
-            // let size = digest_bytes.len().min(S);
-            // let digest_out = &mut self.digest[..digest_bytes.len().max(S)];
-            // digest_out.copy_from_slice(digest_bytes);
             let Blake3Hasher { hasher, digest } = self;
             let mut output = hasher.finalize_xof();
             output.fill(digest);
-
             digest
         }
 
