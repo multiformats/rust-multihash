@@ -127,10 +127,9 @@ pub mod blake3 {
         }
 
         fn finalize(&mut self) -> &[u8] {
-            let Blake3Hasher { hasher, digest } = self;
-            let mut output = hasher.finalize_xof();
-            output.fill(digest);
-            digest
+            let mut output = self.hasher.finalize_xof();
+            output.fill(&mut self.digest);
+            &self.digest
         }
 
         fn reset(&mut self) {

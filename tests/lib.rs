@@ -337,7 +337,7 @@ fn multihash_errors() {
 }
 
 #[test]
-fn smaller_than_default_digest() {
+fn blak3_non_default_digest() {
     use multihash::Blake3Hasher;
     const DIGEST_SIZE: usize = 16;
     pub struct ContentHasher(Blake3Hasher<DIGEST_SIZE>);
@@ -369,6 +369,9 @@ fn smaller_than_default_digest() {
 
     let mut hasher = ContentHasher::new();
     hasher.write("foobar".as_bytes());
-    let _content_hash = hasher.finish();
+    let content_hash = hasher.finish();
     hasher.reset();
+    
+    let expected = hex::decode("aa51dcd43d5c6c5203ee16906fd6b35d").unwrap();
+    assert_eq!(&content_hash.0, expected.as_slice())
 }
