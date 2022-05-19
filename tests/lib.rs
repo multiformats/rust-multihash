@@ -371,7 +371,7 @@ fn blak3_non_default_digest() {
     hasher.write("foobar".as_bytes());
     let content_hash = hasher.finish();
     hasher.reset();
-    
+
     let expected = hex::decode("aa51dcd43d5c6c5203ee16906fd6b35d").unwrap();
     assert_eq!(&content_hash.0, expected.as_slice())
 }
