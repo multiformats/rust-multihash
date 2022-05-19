@@ -335,3 +335,43 @@ fn multihash_errors() {
         "Should error on wrong hash length"
     );
 }
+
+#[test]
+fn blak3_non_default_digest() {
+    use multihash::Blake3Hasher;
+    const DIGEST_SIZE: usize = 16;
+    pub struct ContentHasher(Blake3Hasher<DIGEST_SIZE>);
+
+    pub struct ContentHash([u8; DIGEST_SIZE]);
+
+    impl ContentHasher {
+        fn new() -> ContentHasher {
+            ContentHasher(Blake3Hasher::default())
+        }
+
+        fn write(&mut self, input: &[u8]) {
+            self.0.update(input);
+        }
+
+        fn finish(&mut self) -> ContentHash {
+            let hash = multihash::Code::Blake3_256.wrap(self.0.finalize()).unwrap();
+            let resized_hash = hash.resize::<DIGEST_SIZE>().unwrap();
+
+            let mut content = ContentHash([0u8; DIGEST_SIZE]);
+            content.0.copy_from_slice(resized_hash.digest());
+            content
+        }
+
+        fn reset(&mut self) {
+            self.0.reset();
+        }
+    }
+
+    let mut hasher = ContentHasher::new();
+    hasher.write("foobar".as_bytes());
+    let content_hash = hasher.finish();
+    hasher.reset();
+
+    let expected = hex::decode("aa51dcd43d5c6c5203ee16906fd6b35d").unwrap();
+    assert_eq!(&content_hash.0, expected.as_slice())
+}
