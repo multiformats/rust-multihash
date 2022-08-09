@@ -104,8 +104,8 @@ fn prefix_util() {
     let len_hex = hex::encode(len);
     println!(
         "prefix hex: code: {}, len: {}",
-        code_hex.clone(),
-        len_hex.clone()
+        code_hex,
+        len_hex
     );
 
     println!("{}{}{}", code_hex, len_hex, hash);
