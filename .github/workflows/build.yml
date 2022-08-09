@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
-        toolchain: [stable]
+        toolchain: [stable, nightly]
     runs-on: ${{ matrix.platform }}
 
     steps:
@@ -31,6 +31,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Check Code Format
+        if: ${{ matrix.toolchain == 'nightly' }}
         uses: actions-rs/cargo@v1
         with:
           command: fmt
