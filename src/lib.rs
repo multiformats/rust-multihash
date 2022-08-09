@@ -90,3 +90,5 @@ pub use crate::hasher_impl::sha3::{Keccak224, Keccak256, Keccak384, Keccak512};
 pub use crate::hasher_impl::sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 #[cfg(feature = "strobe")]
 pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};
+#[cfg(feature = "ripemd")]
+pub use crate::hasher_impl::ripemd::{Ripemd160, Ripemd256, Ripemd320};

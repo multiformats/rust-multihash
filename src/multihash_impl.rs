@@ -71,6 +71,18 @@ pub enum Code {
     #[cfg(feature = "blake3")]
     #[mh(code = 0x1e, hasher = crate::Blake3_256)]
     Blake3_256,
+    /// RIPEMD-160 (20-byte hash size)
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1053, hasher = crate::Ripemd160)]
+    Ripemd160,
+    /// RIPEMD-256 (32-byte hash size)
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1054, hasher = crate::Ripemd256)]
+    Ripemd256,
+    /// RIPEMD-320 (40-byte hash size)
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1055, hasher = crate::Ripemd320)]
+    Ripemd320,
 
     // The following hashes are not cryptographically secure hashes and are not enabled by default
     /// Identity hash (max. 64 bytes)
