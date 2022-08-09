@@ -15,7 +15,7 @@ edition = "2018"
 resolver = "2"
 
 [features]
-default = ["std", "derive", "multihash-impl", "secure-hashes", "ripemd"]
+default = ["std", "derive", "multihash-impl", "secure-hashes"]
 std = ["unsigned-varint/std", "multihash-derive/std", "alloc"]
 alloc = ["core2/alloc"]
 multihash-impl = ["derive"]

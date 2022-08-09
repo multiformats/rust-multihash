@@ -6,6 +6,9 @@ use multihash::{
     Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Strobe256, Strobe512,
 };
 
+#[cfg(feature = "ripemd")]
+use multihash::{Ripemd160, Ripemd256, Ripemd320};
+
 #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
@@ -47,6 +50,15 @@ pub enum Code {
     Strobe256,
     #[mh(code = 0x3312e8, hasher = Strobe512)]
     Strobe512,
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1053, hasher = Ripemd160)]
+    Ripemd160,
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1054, hasher = Ripemd256)]
+    Ripemd256,
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1055, hasher = Ripemd320)]
+    Ripemd320,
 }
 
 macro_rules! assert_encode {
@@ -74,6 +86,29 @@ macro_rules! assert_encode {
    }
 }
 
+
+#[allow(unused)]
+#[test]
+/// prefix/multihash generating tool to aid when adding new tests
+fn prefix_util() {
+    use unsigned_varint::encode;
+    // change these as needed
+    let empty = Code::Sha1.wrap(&[]).unwrap().to_bytes();
+    let hash = "7c8357577f51d4f0a8d393aa1aaafb28863d9421";
+    let len = (hash.len()/2) as u64; // always hex so len bytes is always half
+
+    // encode things
+    let mut buf = encode::u64_buffer();
+    let len = encode::u64(len, &mut buf);
+
+    let code_hex = hex::encode(&empty[..1]); // change if longer/shorter prefix
+    let len_hex = hex::encode(len);
+    println!("prefix hex: code: {}, len: {}", code_hex.clone(), len_hex.clone());
+
+    println!("{}{}{}", code_hex, len_hex, hash);
+    // panic!()
+}
+
 #[allow(clippy::cognitive_complexity)]
 #[test]
 fn multihash_encode() {
@@ -97,6 +132,13 @@ fn multihash_encode() {
         Blake2s128, Code::Blake2s128, b"hello world", "d0e4021037deae0226c30da2ab424a7b8ee14e83";
         Blake3_256, Code::Blake3_256, b"hello world", "1e20d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
     }
+
+    #[cfg(feature = "ripemd")]
+    assert_encode!{
+        Ripemd160, Code::Ripemd160, b"hello world", "d3201498c615784ccb5fe5936fbc0cbe9dfdb408d92f0f";
+        Ripemd256, Code::Ripemd256, b"hello world", "d420200d375cf9d9ee95a3bb15f757c81e93bb0ad963edf69dc4d12264031814608e37";
+        Ripemd320, Code::Ripemd320, b"hello world", "d520280e12fe7d075f8e319e07c106917eddb0135e9a10aefb50a8a07ccb0582ff1fa27b95ed5af57fd5c6";
+    }
 }
 
 macro_rules! assert_decode {
@@ -114,7 +156,7 @@ macro_rules! assert_decode {
 
 #[test]
 fn assert_decode() {
-    assert_decode! {
+    assert_decode!{
         Code::Identity, "000a68656c6c6f776f726c64";
         Code::Sha1, "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         Code::Sha2_256, "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
@@ -133,6 +175,12 @@ fn assert_decode() {
         Code::Blake2b256, "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
         Code::Blake2s128, "d0e4021037deae0226c30da2ab424a7b8ee14e83";
         Code::Blake3_256, "1e20d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
+    }
+    #[cfg(feature = "ripemd")]
+    assert_decode!{
+        Code::Ripemd160, "d3201498c615784ccb5fe5936fbc0cbe9dfdb408d92f0f";
+        Code::Ripemd256, "d420200d375cf9d9ee95a3bb15f757c81e93bb0ad963edf69dc4d12264031814608e37";
+        Code::Ripemd320, "d520280e12fe7d075f8e319e07c106917eddb0135e9a10aefb50a8a07ccb0582ff1fa27b95ed5af57fd5c6";
     }
 }
 
@@ -191,6 +239,13 @@ fn assert_roundtrip() {
         Code::Blake2s256, Blake2s256;
         Code::Blake3_256, Blake3_256;
     );
+
+    #[cfg(feature = "ripemd")]
+    assert_roundtrip!{
+        Code::Ripemd160, Ripemd160;
+        Code::Ripemd256, Ripemd256;
+        Code::Ripemd320, Ripemd320;
+    }
 }
 
 /// Testing the public interface of `Multihash` and coversions to it
@@ -300,6 +355,25 @@ fn test_multihash_methods() {
         "1e20",
         "d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24",
     );
+    #[cfg(feature = "ripemd")]
+    {
+        multihash_methods::<Ripemd160>(
+            Code::Ripemd160,
+            "d32014",
+            "98c615784ccb5fe5936fbc0cbe9dfdb408d92f0f",
+        );
+        multihash_methods::<Ripemd256>(
+            Code::Ripemd256,
+            "d42020",
+            "0d375cf9d9ee95a3bb15f757c81e93bb0ad963edf69dc4d12264031814608e37",
+        );
+        multihash_methods::<Ripemd320>(
+            Code::Ripemd320,
+            "d52028",
+            "0e12fe7d075f8e319e07c106917eddb0135e9a10aefb50a8a07ccb0582ff1fa27b95ed5af57fd5c6",
+        );
+    }
+    
 }
 
 #[test]
