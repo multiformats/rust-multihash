@@ -80,6 +80,8 @@ pub use crate::hasher_impl::blake2s::{Blake2s128, Blake2s256, Blake2sHasher};
 #[cfg(feature = "blake3")]
 pub use crate::hasher_impl::blake3::{Blake3Hasher, Blake3_256};
 pub use crate::hasher_impl::identity::{Identity256, IdentityHasher};
+#[cfg(feature = "ripemd")]
+pub use crate::hasher_impl::ripemd::{Ripemd160, Ripemd256, Ripemd320};
 #[cfg(feature = "sha1")]
 pub use crate::hasher_impl::sha1::Sha1;
 #[cfg(feature = "sha2")]
@@ -90,5 +92,3 @@ pub use crate::hasher_impl::sha3::{Keccak224, Keccak256, Keccak384, Keccak512};
 pub use crate::hasher_impl::sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 #[cfg(feature = "strobe")]
 pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};
-#[cfg(feature = "ripemd")]
-pub use crate::hasher_impl::ripemd::{Ripemd160, Ripemd256, Ripemd320};
