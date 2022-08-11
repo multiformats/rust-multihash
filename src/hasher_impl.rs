@@ -102,6 +102,14 @@ pub mod blake3 {
         digest: [u8; S],
     }
 
+    impl<const S: usize> Blake3Hasher<S> {
+        /// using blake3's XOF function, fills the given slice with hash output
+        pub fn finalize_xof_fill(&mut self, digest_out: &mut [u8]) {
+            let mut digest = self.hasher.finalize_xof();
+            digest.fill(digest_out)
+        }
+    }
+
     impl<const S: usize> Default for Blake3Hasher<S> {
         fn default() -> Self {
             let hasher = ::blake3::Hasher::new();
@@ -119,11 +127,9 @@ pub mod blake3 {
         }
 
         fn finalize(&mut self) -> &[u8] {
-            let digest = self.hasher.finalize(); //default is 32 bytes anyway
-            let digest_bytes = digest.as_bytes();
-            let digest_out = &mut self.digest[..digest_bytes.len().max(S)];
-            digest_out.copy_from_slice(digest_bytes);
-            digest_out
+            let mut output = self.hasher.finalize_xof();
+            output.fill(&mut self.digest);
+            &self.digest
         }
 
         fn reset(&mut self) {
@@ -138,7 +144,7 @@ pub mod blake3 {
 }
 
 #[cfg(feature = "digest")]
-macro_rules! derive_hasher_sha {
+macro_rules! derive_rustcrypto_hasher {
     ($module:ty, $name:ident, $size:expr) => {
         /// Multihash hasher.
         #[derive(Debug)]
@@ -194,30 +200,40 @@ macro_rules! derive_hasher_sha {
 pub mod sha1 {
     use super::*;
 
-    derive_hasher_sha!(::sha1::Sha1, Sha1, 20);
+    derive_rustcrypto_hasher!(::sha1::Sha1, Sha1, 20);
 }
 
 #[cfg(feature = "sha2")]
 pub mod sha2 {
     use super::*;
 
-    derive_hasher_sha!(sha_2::Sha256, Sha2_256, 32);
-    derive_hasher_sha!(sha_2::Sha512, Sha2_512, 64);
+    derive_rustcrypto_hasher!(sha_2::Sha256, Sha2_256, 32);
+    derive_rustcrypto_hasher!(sha_2::Sha512, Sha2_512, 64);
 }
 
 #[cfg(feature = "sha3")]
 pub mod sha3 {
     use super::*;
 
-    derive_hasher_sha!(sha_3::Sha3_224, Sha3_224, 28);
-    derive_hasher_sha!(sha_3::Sha3_256, Sha3_256, 32);
-    derive_hasher_sha!(sha_3::Sha3_384, Sha3_384, 48);
-    derive_hasher_sha!(sha_3::Sha3_512, Sha3_512, 64);
+    derive_rustcrypto_hasher!(sha_3::Sha3_224, Sha3_224, 28);
+    derive_rustcrypto_hasher!(sha_3::Sha3_256, Sha3_256, 32);
+    derive_rustcrypto_hasher!(sha_3::Sha3_384, Sha3_384, 48);
+    derive_rustcrypto_hasher!(sha_3::Sha3_512, Sha3_512, 64);
 
-    derive_hasher_sha!(sha_3::Keccak224, Keccak224, 28);
-    derive_hasher_sha!(sha_3::Keccak256, Keccak256, 32);
-    derive_hasher_sha!(sha_3::Keccak384, Keccak384, 48);
-    derive_hasher_sha!(sha_3::Keccak512, Keccak512, 64);
+    derive_rustcrypto_hasher!(sha_3::Keccak224, Keccak224, 28);
+    derive_rustcrypto_hasher!(sha_3::Keccak256, Keccak256, 32);
+    derive_rustcrypto_hasher!(sha_3::Keccak384, Keccak384, 48);
+    derive_rustcrypto_hasher!(sha_3::Keccak512, Keccak512, 64);
+}
+
+#[cfg(feature = "ripemd")]
+pub mod ripemd {
+
+    use super::*;
+
+    derive_rustcrypto_hasher!(ripemd_rs::Ripemd160, Ripemd160, 20);
+    derive_rustcrypto_hasher!(ripemd_rs::Ripemd256, Ripemd256, 32);
+    derive_rustcrypto_hasher!(ripemd_rs::Ripemd320, Ripemd320, 40);
 }
 
 pub mod identity {

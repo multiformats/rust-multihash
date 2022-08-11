@@ -6,6 +6,9 @@ use multihash::{
     Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Strobe256, Strobe512,
 };
 
+#[cfg(feature = "ripemd")]
+use multihash::{Ripemd160, Ripemd256, Ripemd320};
+
 #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
@@ -47,6 +50,15 @@ pub enum Code {
     Strobe256,
     #[mh(code = 0x3312e8, hasher = Strobe512)]
     Strobe512,
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1053, hasher = Ripemd160)]
+    Ripemd160,
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1054, hasher = Ripemd256)]
+    Ripemd256,
+    #[cfg(feature = "ripemd")]
+    #[mh(code = 0x1055, hasher = Ripemd320)]
+    Ripemd320,
 }
 
 macro_rules! assert_encode {
@@ -97,6 +109,13 @@ fn multihash_encode() {
         Blake2s128, Code::Blake2s128, b"hello world", "d0e4021037deae0226c30da2ab424a7b8ee14e83";
         Blake3_256, Code::Blake3_256, b"hello world", "1e20d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
     }
+
+    #[cfg(feature = "ripemd")]
+    assert_encode! {
+        Ripemd160, Code::Ripemd160, b"hello world", "d3201498c615784ccb5fe5936fbc0cbe9dfdb408d92f0f";
+        Ripemd256, Code::Ripemd256, b"hello world", "d420200d375cf9d9ee95a3bb15f757c81e93bb0ad963edf69dc4d12264031814608e37";
+        Ripemd320, Code::Ripemd320, b"hello world", "d520280e12fe7d075f8e319e07c106917eddb0135e9a10aefb50a8a07ccb0582ff1fa27b95ed5af57fd5c6";
+    }
 }
 
 macro_rules! assert_decode {
@@ -133,6 +152,12 @@ fn assert_decode() {
         Code::Blake2b256, "a0e40220256c83b297114d201b30179f3f0ef0cace9783622da5974326b436178aeef610";
         Code::Blake2s128, "d0e4021037deae0226c30da2ab424a7b8ee14e83";
         Code::Blake3_256, "1e20d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24";
+    }
+    #[cfg(feature = "ripemd")]
+    assert_decode! {
+        Code::Ripemd160, "d3201498c615784ccb5fe5936fbc0cbe9dfdb408d92f0f";
+        Code::Ripemd256, "d420200d375cf9d9ee95a3bb15f757c81e93bb0ad963edf69dc4d12264031814608e37";
+        Code::Ripemd320, "d520280e12fe7d075f8e319e07c106917eddb0135e9a10aefb50a8a07ccb0582ff1fa27b95ed5af57fd5c6";
     }
 }
 
@@ -191,6 +216,13 @@ fn assert_roundtrip() {
         Code::Blake2s256, Blake2s256;
         Code::Blake3_256, Blake3_256;
     );
+
+    #[cfg(feature = "ripemd")]
+    assert_roundtrip! {
+        Code::Ripemd160, Ripemd160;
+        Code::Ripemd256, Ripemd256;
+        Code::Ripemd320, Ripemd320;
+    }
 }
 
 /// Testing the public interface of `Multihash` and coversions to it
@@ -300,6 +332,24 @@ fn test_multihash_methods() {
         "1e20",
         "d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24",
     );
+    #[cfg(feature = "ripemd")]
+    {
+        multihash_methods::<Ripemd160>(
+            Code::Ripemd160,
+            "d32014",
+            "98c615784ccb5fe5936fbc0cbe9dfdb408d92f0f",
+        );
+        multihash_methods::<Ripemd256>(
+            Code::Ripemd256,
+            "d42020",
+            "0d375cf9d9ee95a3bb15f757c81e93bb0ad963edf69dc4d12264031814608e37",
+        );
+        multihash_methods::<Ripemd320>(
+            Code::Ripemd320,
+            "d52028",
+            "0e12fe7d075f8e319e07c106917eddb0135e9a10aefb50a8a07ccb0582ff1fa27b95ed5af57fd5c6",
+        );
+    }
 }
 
 #[test]
@@ -334,4 +384,44 @@ fn multihash_errors() {
         Multihash::from_bytes(&[identity_code, identity_length, 1, 2, 3, 4]).is_err(),
         "Should error on wrong hash length"
     );
+}
+
+#[test]
+fn blak3_non_default_digest() {
+    use multihash::Blake3Hasher;
+    const DIGEST_SIZE: usize = 16;
+    pub struct ContentHasher(Blake3Hasher<DIGEST_SIZE>);
+
+    pub struct ContentHash([u8; DIGEST_SIZE]);
+
+    impl ContentHasher {
+        fn new() -> ContentHasher {
+            ContentHasher(Blake3Hasher::default())
+        }
+
+        fn write(&mut self, input: &[u8]) {
+            self.0.update(input);
+        }
+
+        fn finish(&mut self) -> ContentHash {
+            let hash = multihash::Code::Blake3_256.wrap(self.0.finalize()).unwrap();
+            let resized_hash = hash.resize::<DIGEST_SIZE>().unwrap();
+
+            let mut content = ContentHash([0u8; DIGEST_SIZE]);
+            content.0.copy_from_slice(resized_hash.digest());
+            content
+        }
+
+        fn reset(&mut self) {
+            self.0.reset();
+        }
+    }
+
+    let mut hasher = ContentHasher::new();
+    hasher.write("foobar".as_bytes());
+    let content_hash = hasher.finish();
+    hasher.reset();
+
+    let expected = hex::decode("aa51dcd43d5c6c5203ee16906fd6b35d").unwrap();
+    assert_eq!(&content_hash.0, expected.as_slice())
 }
