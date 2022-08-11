@@ -83,12 +83,6 @@ pub enum Code {
     #[cfg(feature = "ripemd")]
     #[mh(code = 0x1055, hasher = crate::Ripemd320)]
     Ripemd320,
-
-    // The following hashes are not cryptographically secure hashes and are not enabled by default
-    /// Identity hash (max. 64 bytes)
-    #[cfg(feature = "identity")]
-    #[mh(code = 0x00, hasher = crate::IdentityHasher::<64>)]
-    Identity,
 }
 
 #[cfg(test)]

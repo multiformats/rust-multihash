@@ -1,7 +1,7 @@
 use multihash::derive::Multihash;
 use multihash::{Error, Hasher, MultihashDigest, MultihashGeneric, Sha2_256};
 
-/// update appends and truncates/ignores updates > S
+/// update appends to end of buffer but truncates/ignores bytes after len > S
 #[derive(Debug)]
 pub struct IdentityTrunk<const S: usize> {
     cursor: usize,
@@ -44,6 +44,7 @@ pub enum Code {
     Sha2_256,
 }
 
+#[allow(unused)]
 fn main() {
     // overwrite and trunk with code
 
