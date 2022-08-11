@@ -211,6 +211,26 @@ impl<const S: usize> Multihash<S> {
         mh.digest[..size].copy_from_slice(&self.digest[..size]);
         Ok(mh)
     }
+
+    /// Decomposes struct, useful when needing a `Sized` array or moving all the data into another type
+    ///
+    /// It is recommended to use `digest()` `code()` and `size()` for most cases
+    ///
+    /// ```
+    /// use multihash::{Code, MultihashDigest};
+    /// struct Foo<const S: usize> {
+    ///     arr: [u8; S],
+    ///     len: usize,
+    /// }
+    ///
+    /// let hash = Code::Sha3_256.digest(b"Hello world!");
+    /// let (.., arr, size) = hash.into_inner();
+    /// let foo = Foo { arr, len: size as usize };
+    /// ```
+    pub fn into_inner(self) -> (u64, [u8; S], u8) {
+        let Self { code, digest, size } = self;
+        (code, digest, size)
+    }
 }
 
 // Don't hash the whole allocated space, but just the actual digest
