@@ -97,7 +97,7 @@ pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};
 pub const IDENTITY_CODE: u64 = 0x0;
 /// Helper for generating Identity hashes (context https://github.com/multiformats/rust-multihash/pull/196).
 /// Will error if `data.len() > S`
-/// 
+///
 /// See examples for a few other approaches if this doesn't fit your application
 pub fn identity_hash<const S: usize>(data: impl AsRef<[u8]>) -> Result<MultihashGeneric<S>> {
     MultihashGeneric::wrap(IDENTITY_CODE, data.as_ref())
