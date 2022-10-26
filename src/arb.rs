@@ -1,10 +1,8 @@
 use quickcheck::Gen;
 use rand::{
     distributions::{weighted::WeightedIndex, Distribution},
-    Rng,
+    Rng, RngCore, SeedableRng,
 };
-use rand::SeedableRng;
-use rand::RngCore;
 
 use arbitrary::{size_hint, Unstructured};
 
