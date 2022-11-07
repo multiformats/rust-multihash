@@ -1,6 +1,6 @@
 [package]
 name = "multihash-derive"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Proc macro for deriving custom multihash tables."
