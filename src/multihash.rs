@@ -159,17 +159,30 @@ impl<const S: usize> Multihash<S> {
         Ok(result)
     }
 
-    /// Writes a multihash to a byte stream.
-    pub fn write<W: io::Write>(&self, w: W) -> Result<(), Error> {
+    /// Writes a multihash to a byte stream, returning the writend size.
+    pub fn write<W: io::Write>(&self, w: W) -> Result<usize, Error> {
         write_multihash(w, self.code(), self.size(), self.digest())
+    }
+
+    /// Returns the length in bytes needed to encode this multihash into bytes.
+    pub fn encoded_len(&self) -> usize {
+        let mut code_buf = varint_encode::u64_buffer();
+        let code = varint_encode::u64(self.code, &mut code_buf);
+
+        let mut size_buf = varint_encode::u8_buffer();
+        let size = varint_encode::u8(self.size, &mut size_buf);
+
+        code.len() + size.len() + self.size as usize
     }
 
     #[cfg(feature = "alloc")]
     /// Returns the bytes of a multihash.
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(self.size().into());
-        self.write(&mut bytes)
+        let written = self
+            .write(&mut bytes)
             .expect("writing to a vec should never fail");
+        debug_assert_eq!(written, bytes.len());
         bytes
     }
 
@@ -293,7 +306,7 @@ impl<const S: usize> parity_scale_codec::Decode for Multihash<S> {
 }
 
 /// Writes the multihash to a byte stream.
-pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<(), Error>
+pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<usize, Error>
 where
     W: io::Write,
 {
@@ -303,10 +316,13 @@ where
     let mut size_buf = varint_encode::u8_buffer();
     let size = varint_encode::u8(size, &mut size_buf);
 
+    let written = code.len() + size.len() + digest.len();
+
     w.write_all(code)?;
     w.write_all(size)?;
     w.write_all(digest)?;
-    Ok(())
+
+    Ok(written)
 }
 
 /// Reads a multihash from a byte stream that contains a full multihash (code, size and the digest)
@@ -361,9 +377,10 @@ mod tests {
     fn roundtrip() {
         let hash = Code::Sha2_256.digest(b"hello world");
         let mut buf = [0u8; 35];
-        hash.write(&mut buf[..]).unwrap();
+        let written = hash.write(&mut buf[..]).unwrap();
         let hash2 = Multihash::<32>::read(&buf[..]).unwrap();
         assert_eq!(hash, hash2);
+        assert_eq!(hash.encoded_len(), written);
     }
 
     #[test]
