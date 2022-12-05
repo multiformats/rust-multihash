@@ -11,8 +11,8 @@ authors = ["dignifiedquire <dignifiedquire@gmail.com>", "David Craven <david@cra
 license = "MIT"
 readme = "README.md"
 documentation = "https://docs.rs/multihash/"
-edition = "2018"
-resolver = "2"
+edition = "2021"
+rust-version = "1.59"
 
 [features]
 default = ["std", "derive", "multihash-impl", "secure-hashes"]
