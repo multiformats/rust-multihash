@@ -172,7 +172,7 @@ impl<const S: usize> Multihash<S> {
         let mut size_buf = varint_encode::u8_buffer();
         let size = varint_encode::u8(self.size, &mut size_buf);
 
-        code.len() + size.len() + self.size as usize
+        code.len() + size.len() + usize::from(self.size)
     }
 
     #[cfg(feature = "alloc")]
