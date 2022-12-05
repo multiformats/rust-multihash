@@ -159,7 +159,7 @@ impl<const S: usize> Multihash<S> {
         Ok(result)
     }
 
-    /// Writes a multihash to a byte stream, returning the writend size.
+    /// Writes a multihash to a byte stream, returning the written size.
     pub fn write<W: io::Write>(&self, w: W) -> Result<usize, Error> {
         write_multihash(w, self.code(), self.size(), self.digest())
     }
