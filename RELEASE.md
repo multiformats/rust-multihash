@@ -27,11 +27,11 @@ becomes:
 
 Publishing on crates.io, bumping version & generating tags is done using [`cargo-release`](https://github.com/crate-ci/cargo-release).
 
-This requires the following permissions 
+This requires the following permissions
 
 - on github.com/multiformats/rust-multihash
-  - creating tags 
-  - pushing to `main`
+  - creating tags
+  - pushing to `master`
 - on crates.io
   - publish access to all published crates
 
