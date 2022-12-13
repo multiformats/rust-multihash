@@ -230,9 +230,9 @@ pub mod sha3 {
 pub mod ripemd {
     use super::*;
 
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd160, Ripemd160, 20);
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd256, Ripemd256, 32);
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd320, Ripemd320, 40);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd160, Ripemd160, 20);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd256, Ripemd256, 32);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd320, Ripemd320, 40);
 }
 
 pub mod identity {
