@@ -33,8 +33,6 @@ multihash = "*"
 
 Then run `cargo build`.
 
-MSRV 1.51.0 due to use of const generics
-
 ## Usage
 
 ```rust

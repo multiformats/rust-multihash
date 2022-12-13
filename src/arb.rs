@@ -1,6 +1,6 @@
 use quickcheck::Gen;
 use rand::{
-    distributions::{weighted::WeightedIndex, Distribution},
+    distributions::{Distribution, WeightedIndex},
     Rng, RngCore, SeedableRng,
 };
 
