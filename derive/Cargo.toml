@@ -2,19 +2,19 @@
 name = "multihash-derive"
 version = "0.8.1"
 authors = ["David Craven <david@craven.ch>"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.60"
 description = "Proc macro for deriving custom multihash tables."
 license = "MIT"
 repository = "https://github.com/multiformats/multihash"
-resolver = "2"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-proc-macro2 = { version = "1.0.24", features = ["span-locations"] }
 proc-macro-crate = "~1.1.0"
 proc-macro-error = "1.0.4"
+proc-macro2 = { version = "1.0.24", features = ["span-locations"] }
 quote = "1.0.7"
 syn = "1.0.42"
 synstructure = "0.12.4"
@@ -24,5 +24,5 @@ default = ["std"]
 std = []
 
 [dev-dependencies]
-pretty_assertions = "1.0.0"
 multihash = { path = "..", default-features = false, features = ["derive", "sha2"] }
+pretty_assertions = "1.0.0"
