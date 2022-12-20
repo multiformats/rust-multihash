@@ -54,7 +54,7 @@ fn main() {
 
     // input bigger than default table, but still const sized
     let big_src = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus vehicula tempor magna quis egestas. Etiam quis rhoncus neque.";
-    
+
     let truncated = Code::IdentityTrunk.digest(big_src);
     assert_eq!(truncated.digest(), &big_src[..64]);
     //
