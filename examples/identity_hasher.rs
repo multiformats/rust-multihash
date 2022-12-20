@@ -44,16 +44,19 @@ pub enum Code {
     Sha2_256,
 }
 
-#[allow(unused)]
 fn main() {
     // overwrite and trunk with code
 
     let src = b"hello world!";
     let ident_trunk = Code::IdentityTrunk.digest(src);
 
+    assert_eq!(ident_trunk.digest(), src);
+
     // input bigger than default table, but still const sized
     let big_src = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus vehicula tempor magna quis egestas. Etiam quis rhoncus neque.";
-
+    
+    let truncated = Code::IdentityTrunk.digest(big_src);
+    assert_eq!(truncated.digest(), &big_src[..64]);
     //
     // Helper functions cannot be used with normal table if S != alloc_size, fancier const trait bounds in the future may allow for interop where S <= alloc_size
     //
@@ -73,5 +76,8 @@ fn main() {
 
     // makes use of the const sized input to infer the output size
     let big_arr_mh = identity_hash_arr(big_src);
+    assert_eq!(big_arr_mh.digest(), big_src);
+    // size must be specified
     let big_mh = identity_hash::<128>(big_src);
+    assert_eq!(big_mh.digest(), big_src);
 }

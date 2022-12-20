@@ -11,12 +11,11 @@
 //!
 //!  - `blake2b`: (default) Enable Blake2b hashers
 //!  - `blake2s`: (default) Enable Blake2s hashers
-//!  - `identity`: Enable the Identity hashers (using it is discouraged as it's not a hash function
-//!     in the sense that it produces a fixed sized output independent of the input size)
 //!  - `sha1`: Enable SHA-1 hasher
 //!  - `sha2`: (default) Enable SHA-2 hashers
 //!  - `sha3`: (default) Enable SHA-3 hashers
 //!  - `strobe`: Enable Strobe hashers
+//!  - `identity`: A depricated feature for identity hashes.
 //!
 //! In order to enable all cryptographically secure hashers, you can set the `secure-hashes`
 //! feature flag (enabled by default).
