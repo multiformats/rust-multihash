@@ -10,6 +10,13 @@ pub use multihash_derive::Multihash;
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
 #[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
 #[mh(alloc_size = 64)]
+#[cfg_attr(
+    feature = "identity",
+    deprecated(
+        since = "0.18.0",
+        note = "The `identity` feature will be removed without replacement. See https://github.com/multiformats/rust-multihash/issues/194."
+    )
+)]
 pub enum Code {
     /// SHA-256 (32-byte hash size)
     #[cfg(feature = "sha2")]
