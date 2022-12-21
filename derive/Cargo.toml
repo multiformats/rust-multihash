@@ -5,7 +5,7 @@ authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Proc macro for deriving custom multihash tables."
 license = "MIT"
-repository = "https://github.com/multiformats/multihash"
+repository = "https://github.com/multiformats/rust-multihash"
 resolver = "2"
 
 [lib]
