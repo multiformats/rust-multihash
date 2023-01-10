@@ -75,27 +75,30 @@ jobs:
           command: build
           args: --no-default-features --workspace --target thumbv6m-none-eabi
 
-  coverage:
-    name: Code Coverage
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Sources
-        uses: actions/checkout@v3
+# Tarpaulin requires an upgrade (that has not been released yet) to support Node 16.
+# See https://github.com/actions-rs/tarpaulin/issues/21
 
-      - name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Generate Code Coverage
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          args: --all-features
-
-      - name: Upload Code Coverage
-        uses: codecov/codecov-action@v3
+#  coverage:
+#    name: Code Coverage
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout Sources
+#        uses: actions/checkout@v3
+#
+#      - name: Install Rust Toolchain
+#        uses: actions-rs/toolchain@v1
+#        with:
+#          profile: minimal
+#          toolchain: stable
+#          override: true
+#
+#      - name: Generate Code Coverage
+#        uses: actions-rs/tarpaulin@v0.1
+#        with:
+#          args: --all-features
+#
+#      - name: Upload Code Coverage
+#        uses: codecov/codecov-action@v3
 
   cargo-deny:
     name: Cargo Deny
