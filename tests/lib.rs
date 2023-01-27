@@ -231,7 +231,7 @@ where
     H: Hasher + Default,
 {
     let digest = hex::decode(digest_str).unwrap();
-    let expected_bytes = hex::decode(format!("{}{}", prefix, digest_str)).unwrap();
+    let expected_bytes = hex::decode(format!("{prefix}{digest_str}")).unwrap();
     let mut expected_cursor = Cursor::new(&expected_bytes);
     let multihash = code.digest(b"hello world");
 

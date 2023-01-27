@@ -238,7 +238,10 @@ impl<const S: usize> Multihash<S> {
     ///
     /// let hash = Code::Sha3_256.digest(b"Hello world!");
     /// let (.., arr, size) = hash.into_inner();
-    /// let foo = Foo { arr, len: size as usize };
+    /// let foo = Foo {
+    ///     arr,
+    ///     len: size as usize,
+    /// };
     /// ```
     pub fn into_inner(self) -> (u64, [u8; S], u8) {
         let Self { code, digest, size } = self;
