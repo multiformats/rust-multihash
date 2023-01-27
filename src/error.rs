@@ -23,10 +23,10 @@ pub enum Error {
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
-            Self::Io(err) => write!(f, "{}", err),
-            Self::UnsupportedCode(code) => write!(f, "Unsupported multihash code {}.", code),
-            Self::InvalidSize(size) => write!(f, "Invalid multihash size {}.", size),
-            Self::Varint(err) => write!(f, "{}", err),
+            Self::Io(err) => write!(f, "{err}"),
+            Self::UnsupportedCode(code) => write!(f, "Unsupported multihash code {code}."),
+            Self::InvalidSize(size) => write!(f, "Invalid multihash size {size}."),
+            Self::Varint(err) => write!(f, "{err}"),
         }
     }
 }

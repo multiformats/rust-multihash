@@ -34,9 +34,9 @@ fn main() {
     // Create new hashes from some input data. This is done through the `Code` enum we derived
     // Multihash from.
     let blake_hash = Code::Blake2b200.digest(b"hello world!");
-    println!("{:02x?}", blake_hash);
+    println!("{blake_hash:02x?}");
     let truncated_sha2_hash = Code::Sha2_256Truncated20.digest(b"hello world!");
-    println!("{:02x?}", truncated_sha2_hash);
+    println!("{truncated_sha2_hash:02x?}");
 
     // Sometimes you might not need to hash new data, you just want to get the information about
     // a Multihash.

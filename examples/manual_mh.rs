@@ -14,9 +14,9 @@ fn prefix_util() {
 
     let code_hex = hex::encode(&empty[..1]); // change if longer/shorter prefix
     let len_hex = hex::encode(len);
-    println!("prefix hex: code: {}, len: {}", code_hex, len_hex);
+    println!("prefix hex: code: {code_hex}, len: {len_hex}");
 
-    println!("{}{}{}", code_hex, len_hex, hash);
+    println!("{code_hex}{len_hex}{hash}");
 }
 
 fn main() {
