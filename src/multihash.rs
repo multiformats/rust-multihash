@@ -71,8 +71,8 @@ pub trait MultihashDigest<const S: usize>:
 /// assert_eq!(mh.size(), 32);
 /// assert_eq!(mh.digest(), &digest_bytes[2..]);
 /// ```
-#[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
-#[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
+#[cfg_attr(any(feature = "serde-codec", feature = "serde"), derive(serde::Deserialize))]
+#[cfg_attr(any(feature = "serde-codec", feature = "serde"), derive(serde::Serialize))]
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialOrd)]
 pub struct Multihash<const S: usize> {
     /// The code of the Multihash.
@@ -80,7 +80,7 @@ pub struct Multihash<const S: usize> {
     /// The actual size of the digest in bytes (not the allocated size).
     size: u8,
     /// The digest.
-    #[cfg_attr(feature = "serde-codec", serde(with = "serde_big_array::BigArray"))]
+    #[cfg_attr(any(feature = "serde-codec", feature = "serde"), serde(with = "serde_big_array::BigArray"))]
     digest: [u8; S],
 }
 
@@ -396,7 +396,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "serde-codec")]
+    #[cfg(any(feature = "serde-codec", feature = "serde"))]
     fn test_serde() {
         let mh = Multihash::<32>::default();
         let bytes = serde_json::to_string(&mh).unwrap();
