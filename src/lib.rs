@@ -62,7 +62,11 @@ mod hasher;
 mod multihash;
 
 pub use crate::error::{Error, Result};
-pub use crate::multihash::{Multihash as MultihashGeneric, MultihashDigest};
+pub use crate::multihash::{Multihash, MultihashDigest};
 pub use hasher::Hasher;
 #[cfg(feature = "derive")]
 pub use multihash_derive as derive;
+
+/// Deprecated type-alias for the [`Multihash`] type.
+#[deprecated(since = "0.18.0", note = "Use `multihash::Multihash instead.")]
+pub type MultihashGeneric<const N: usize> = Multihash<N>;

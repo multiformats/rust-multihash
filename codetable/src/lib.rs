@@ -89,7 +89,7 @@ mod tests {
     use super::*;
     use crate::hasher_impl::sha3::{Sha3_256, Sha3_512};
     use multihash::MultihashDigest;
-    use multihash::{Hasher, MultihashGeneric};
+    use multihash::{Hasher, Multihash};
 
     #[test]
     fn test_hasher_256() {
@@ -122,7 +122,7 @@ mod tests {
         let hash = Code::Sha2_256.digest(b"hello world");
         let mut buf = [0u8; 35];
         let written = hash.write(&mut buf[..]).unwrap();
-        let hash2 = MultihashGeneric::<32>::read(&buf[..]).unwrap();
+        let hash2 = Multihash::<32>::read(&buf[..]).unwrap();
         assert_eq!(hash, hash2);
         assert_eq!(hash.encoded_len(), written);
     }
@@ -144,13 +144,13 @@ mod tests {
     #[test]
     fn test_resize_fits() {
         let hash = Code::Sha2_256.digest(b"hello world");
-        let _: MultihashGeneric<32> = hash.resize().unwrap();
+        let _: Multihash<32> = hash.resize().unwrap();
     }
 
     #[test]
     fn test_resize_up() {
         let hash = Code::Sha2_256.digest(b"hello world");
-        let _: MultihashGeneric<100> = hash.resize().unwrap();
+        let _: Multihash<100> = hash.resize().unwrap();
     }
 
     #[test]
