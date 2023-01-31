@@ -40,9 +40,18 @@ mod utils;
 
 use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;
-use synstructure::{decl_derive, Structure};
+use synstructure::macros::{parse, DeriveInput};
+use synstructure::{MacroResult, Structure};
 
-decl_derive!([Multihash, attributes(mh)] => #[proc_macro_error] multihash);
-fn multihash(s: Structure) -> TokenStream {
-    multihash::multihash(s).into()
+#[proc_macro_derive(Multihash, attributes(mh))]
+#[allow(non_snake_case)]
+#[proc_macro_error]
+pub fn Multihash(i: TokenStream) -> TokenStream {
+    match parse::<DeriveInput>(i) {
+        Ok(p) => match Structure::try_new(&p) {
+            Ok(s) => multihash::multihash(s).into_stream(),
+            Err(e) => e.to_compile_error().into(),
+        },
+        Err(e) => e.to_compile_error().into(),
+    }
 }

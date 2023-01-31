@@ -4,8 +4,8 @@ use rand::{
     Rng, RngCore, SeedableRng,
 };
 
-use arbitrary::{size_hint, Unstructured};
 use crate::Multihash;
+use arbitrary::{size_hint, Unstructured};
 
 /// Generates a random valid multihash.
 impl<const S: usize> quickcheck::Arbitrary for Multihash<S> {
