@@ -309,7 +309,7 @@ impl<const S: usize> parity_scale_codec::Decode for Multihash<S> {
 }
 
 /// Writes the multihash to a byte stream.
-pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<usize, Error>
+fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<usize, Error>
 where
     W: io::Write,
 {
@@ -334,7 +334,7 @@ where
 /// maximum/allocated size of the digest.
 ///
 /// Currently the maximum size for a digest is 255 bytes.
-pub fn read_multihash<R, const S: usize>(mut r: R) -> Result<(u64, u8, [u8; S]), Error>
+fn read_multihash<R, const S: usize>(mut r: R) -> Result<(u64, u8, [u8; S]), Error>
 where
     R: io::Read,
 {
