@@ -5,8 +5,6 @@ use core::convert::TryFrom;
 
 use core::convert::TryInto;
 use core::fmt::Debug;
-#[cfg(feature = "serde-codec")]
-use serde_big_array::BigArray;
 
 use unsigned_varint::encode as varint_encode;
 
@@ -82,7 +80,7 @@ pub struct Multihash<const S: usize> {
     /// The actual size of the digest in bytes (not the allocated size).
     size: u8,
     /// The digest.
-    #[cfg_attr(feature = "serde-codec", serde(with = "BigArray"))]
+    #[cfg_attr(feature = "serde-codec", serde(with = "serde_big_array::BigArray"))]
     digest: [u8; S],
 }
 
