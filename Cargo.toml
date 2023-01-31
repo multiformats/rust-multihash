@@ -15,10 +15,9 @@ edition = "2021"
 rust-version = "1.59"
 
 [features]
-default = ["std", "derive"]
-std = ["unsigned-varint/std", "multihash-derive?/std", "alloc"]
+default = ["std"]
+std = ["unsigned-varint/std", "alloc"]
 alloc = []
-derive = ["dep:multihash-derive"]
 arb = ["quickcheck", "rand", "arbitrary"]
 scale-codec = ["dep:parity-scale-codec"]
 serde-codec = ["dep:serde", "dep:serde-big-array"]
@@ -31,7 +30,6 @@ quickcheck = { version = "1.0.3", optional = true }
 rand = { version = "0.8.5", optional = true, features = ["small_rng"] }
 serde = { version = "1.0.116", optional = true, default-features = false, features = ["derive"] }
 serde-big-array = { version = "0.3.2", optional = true, features = ["const-generics"] }
-multihash-derive = { version = "0.8.0", path = "derive", default-features = false, optional = true }
 unsigned-varint = { version = "0.7.1", default-features = false }
 
 [dev-dependencies]
