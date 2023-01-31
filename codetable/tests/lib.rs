@@ -7,7 +7,7 @@ use multihash_codetable::{
     Strobe256, Strobe512,
 };
 
-#[derive(Clone, Copy, Debug, Eq, multihash_derive::Multihash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, multihash_derive::MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
     #[mh(code = 0x00, hasher = Identity256)]

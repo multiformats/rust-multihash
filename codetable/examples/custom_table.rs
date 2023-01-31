@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
 
-use multihash::derive::Multihash;
 use multihash::{Hasher, MultihashDigest as _};
 use multihash_codetable::Sha2_256;
+use multihash_derive::MultihashDigest;
 
 // You can implement a custom hasher. This is a SHA2 256-bit hasher that returns a hash that is
 // truncated to 160 bits.
@@ -20,7 +20,7 @@ impl Hasher for Sha2_256Truncated20 {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
     /// Example for using a custom hasher which returns truncated hashes

@@ -1,6 +1,6 @@
 mod hasher_impl;
 
-use multihash_derive::Multihash;
+use multihash_derive::MultihashDigest;
 
 pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bHasher};
 pub use crate::hasher_impl::blake2s::{Blake2s128, Blake2s256, Blake2sHasher};
@@ -21,7 +21,7 @@ pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};
 /// [`Multihash` derive]: crate::derive
 #[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
-#[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
     /// SHA-256 (32-byte hash size)

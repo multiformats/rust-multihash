@@ -46,6 +46,7 @@ use synstructure::{MacroResult, Structure};
 #[proc_macro_derive(Multihash, attributes(mh))]
 #[allow(non_snake_case)]
 #[proc_macro_error]
+#[deprecated(since = "0.8.1", note = "Use `MultihashDigest` derive instead.")]
 pub fn Multihash(i: TokenStream) -> TokenStream {
     match parse::<DeriveInput>(i) {
         Ok(p) => match Structure::try_new(&p) {
@@ -54,4 +55,12 @@ pub fn Multihash(i: TokenStream) -> TokenStream {
         },
         Err(e) => e.to_compile_error().into(),
     }
+}
+
+#[proc_macro_derive(MultihashDigest, attributes(mh))]
+#[allow(non_snake_case)]
+#[proc_macro_error]
+pub fn MultihashDigest(i: TokenStream) -> TokenStream {
+    #[allow(deprecated)]
+    Multihash(i)
 }
