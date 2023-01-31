@@ -1,4 +1,5 @@
-use multihash::{Code, MultihashDigest};
+use multihash::MultihashDigest;
+use multihash_codetable::Code;
 
 /// prefix/multihash generating tool to aid when adding new tests
 fn prefix_util() {

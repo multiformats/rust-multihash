@@ -1,10 +1,6 @@
-use crate::hasher::Hasher;
+use multihash::Hasher;
 
-#[cfg(feature = "std")]
 use std::io;
-
-#[cfg(not(feature = "std"))]
-use core2::io;
 
 macro_rules! derive_write {
     ($name:ident) => {
@@ -21,7 +17,6 @@ macro_rules! derive_write {
     };
 }
 
-#[cfg(any(feature = "blake2b", feature = "blake2s"))]
 macro_rules! derive_hasher_blake {
     ($module:ident, $name:ident) => {
         /// Multihash hasher.
@@ -65,7 +60,6 @@ macro_rules! derive_hasher_blake {
     };
 }
 
-#[cfg(feature = "blake2b")]
 pub mod blake2b {
     use super::*;
 
@@ -78,7 +72,6 @@ pub mod blake2b {
     pub type Blake2b512 = Blake2bHasher<64>;
 }
 
-#[cfg(feature = "blake2s")]
 pub mod blake2s {
     use super::*;
 
@@ -91,7 +84,6 @@ pub mod blake2s {
     pub type Blake2s256 = Blake2sHasher<32>;
 }
 
-#[cfg(feature = "blake3")]
 pub mod blake3 {
     use super::*;
 
@@ -143,7 +135,6 @@ pub mod blake3 {
     pub type Blake3_256 = Blake3Hasher<32>;
 }
 
-#[cfg(feature = "digest")]
 macro_rules! derive_rustcrypto_hasher {
     ($module:ty, $name:ident, $size:expr) => {
         /// Multihash hasher.
@@ -162,7 +153,7 @@ macro_rules! derive_rustcrypto_hasher {
             }
         }
 
-        impl $crate::hasher::Hasher for $name {
+        impl ::multihash::Hasher for $name {
             fn update(&mut self, input: &[u8]) {
                 use digest::Digest;
                 self.state.update(input)
@@ -196,14 +187,12 @@ macro_rules! derive_rustcrypto_hasher {
     };
 }
 
-#[cfg(feature = "sha1")]
 pub mod sha1 {
     use super::*;
 
     derive_rustcrypto_hasher!(::sha1::Sha1, Sha1, 20);
 }
 
-#[cfg(feature = "sha2")]
 pub mod sha2 {
     use super::*;
 
@@ -211,7 +200,6 @@ pub mod sha2 {
     derive_rustcrypto_hasher!(sha_2::Sha512, Sha2_512, 64);
 }
 
-#[cfg(feature = "sha3")]
 pub mod sha3 {
     use super::*;
 
@@ -226,7 +214,6 @@ pub mod sha3 {
     derive_rustcrypto_hasher!(sha_3::Keccak512, Keccak512, 64);
 }
 
-#[cfg(feature = "ripemd")]
 pub mod ripemd {
 
     use super::*;
@@ -286,7 +273,6 @@ pub mod identity {
     pub type Identity256 = IdentityHasher<32>;
 }
 
-#[cfg(feature = "strobe")]
 pub mod strobe {
     use super::*;
     use strobe_rs::{SecParam, Strobe};

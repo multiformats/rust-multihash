@@ -374,63 +374,20 @@ pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::multihash_impl::Code;
-
-    #[test]
-    fn roundtrip() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let mut buf = [0u8; 35];
-        let written = hash.write(&mut buf[..]).unwrap();
-        let hash2 = Multihash::<32>::read(&buf[..]).unwrap();
-        assert_eq!(hash, hash2);
-        assert_eq!(hash.encoded_len(), written);
-    }
-
-    #[test]
-    fn test_truncate_down() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let small = hash.truncate(20);
-        assert_eq!(small.size(), 20);
-    }
-
-    #[test]
-    fn test_truncate_up() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let small = hash.truncate(100);
-        assert_eq!(small.size(), 32);
-    }
-
-    #[test]
-    fn test_resize_fits() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let _: Multihash<32> = hash.resize().unwrap();
-    }
-
-    #[test]
-    fn test_resize_up() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let _: Multihash<100> = hash.resize().unwrap();
-    }
-
-    #[test]
-    fn test_resize_truncate() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        hash.resize::<20>().unwrap_err();
-    }
 
     #[test]
     #[cfg(feature = "scale-codec")]
     fn test_scale() {
         use parity_scale_codec::{Decode, Encode};
 
-        let mh1 = Code::Sha2_256.digest(b"hello world");
+        let mh1 = Multihash::<32>::wrap(0, b"hello world").unwrap();
         // println!("mh1: code = {}, size = {}, digest = {:?}", mh1.code(), mh1.size(), mh1.digest());
         let mh1_bytes = mh1.encode();
         // println!("Multihash<32>: {}", hex::encode(&mh1_bytes));
         let mh2: Multihash<32> = Decode::decode(&mut &mh1_bytes[..]).unwrap();
         assert_eq!(mh1, mh2);
 
-        let mh3: Multihash<64> = Code::Sha2_256.digest(b"hello world");
+        let mh3 = Multihash::<64>::wrap(0, b"hello world").unwrap();
         // println!("mh3: code = {}, size = {}, digest = {:?}", mh3.code(), mh3.size(), mh3.digest());
         let mh3_bytes = mh3.encode();
         // println!("Multihash<64>: {}", hex::encode(&mh3_bytes));

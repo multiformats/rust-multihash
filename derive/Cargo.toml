@@ -25,4 +25,4 @@ std = []
 
 [dev-dependencies]
 pretty_assertions = "1.0.0"
-multihash = { path = "..", default-features = false, features = ["derive", "sha2"] }
+#multihash = { path = "..", default-features = false, features = ["derive", "sha2"] }

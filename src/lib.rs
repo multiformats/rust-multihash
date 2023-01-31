@@ -59,36 +59,10 @@ extern crate alloc;
 mod arb;
 mod error;
 mod hasher;
-mod hasher_impl;
 mod multihash;
-#[cfg(feature = "multihash-impl")]
-mod multihash_impl;
 
 pub use crate::error::{Error, Result};
-pub use crate::hasher::Hasher;
 pub use crate::multihash::{Multihash as MultihashGeneric, MultihashDigest};
+pub use hasher::Hasher;
 #[cfg(feature = "derive")]
 pub use multihash_derive as derive;
-
-#[cfg(feature = "multihash-impl")]
-pub use crate::multihash_impl::{Code, Multihash};
-
-#[cfg(feature = "blake2b")]
-pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bHasher};
-#[cfg(feature = "blake2s")]
-pub use crate::hasher_impl::blake2s::{Blake2s128, Blake2s256, Blake2sHasher};
-#[cfg(feature = "blake3")]
-pub use crate::hasher_impl::blake3::{Blake3Hasher, Blake3_256};
-pub use crate::hasher_impl::identity::{Identity256, IdentityHasher};
-#[cfg(feature = "ripemd")]
-pub use crate::hasher_impl::ripemd::{Ripemd160, Ripemd256, Ripemd320};
-#[cfg(feature = "sha1")]
-pub use crate::hasher_impl::sha1::Sha1;
-#[cfg(feature = "sha2")]
-pub use crate::hasher_impl::sha2::{Sha2_256, Sha2_512};
-#[cfg(feature = "sha3")]
-pub use crate::hasher_impl::sha3::{Keccak224, Keccak256, Keccak384, Keccak512};
-#[cfg(feature = "sha3")]
-pub use crate::hasher_impl::sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
-#[cfg(feature = "strobe")]
-pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};

@@ -1,0 +1,29 @@
+[package]
+name = "multihash-codetable"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+blake2b_simd = { version = "1.0.0", default-features = false }
+blake2s_simd = { version = "1.0.0", default-features = false }
+blake3 = { version = "1.2.0", default-features = false }
+digest = { version = "0.10.1", default-features = false }
+sha-1 = { version = "0.10.0", default-features = false }
+sha-2 = { version = "0.10.0", default-features = false, package = "sha2" }
+sha-3 = { version = "0.10.0", default-features = false, package = "sha3" }
+strobe-rs = { version = "0.7.0", default-features = false }
+ripemd-rs = { package = "ripemd", version = "0.1.1"}
+multihash-derive = { version = "0.8.0", path = "../derive", default-features = false }
+multihash = { version = "0.18.0", path = "../" }
+
+[dev-dependencies]
+hex = "0.4.2"
+unsigned-varint = { version = "0.7.1", default-features = false }
+criterion = "0.3.3"
+rand = "0.8.5"
+
+[[bench]]
+name = "multihash"
+harness = false

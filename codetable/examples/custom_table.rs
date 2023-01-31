@@ -1,7 +1,8 @@
 use std::convert::TryFrom;
 
 use multihash::derive::Multihash;
-use multihash::{Error, Hasher, MultihashDigest, MultihashGeneric, Sha2_256};
+use multihash::{Hasher, MultihashDigest as _};
+use multihash_codetable::Sha2_256;
 
 // You can implement a custom hasher. This is a SHA2 256-bit hasher that returns a hash that is
 // truncated to 160 bits.
@@ -26,7 +27,7 @@ pub enum Code {
     #[mh(code = 0x12, hasher = Sha2_256Truncated20)]
     Sha2_256Truncated20,
     /// Example for using a hasher with a bit size that is not exported by default
-    #[mh(code = 0xb219, hasher = multihash::Blake2bHasher::<25>)]
+    #[mh(code = 0xb219, hasher = multihash_codetable::Blake2bHasher::<25>)]
     Blake2b200,
 }
 
