@@ -4,8 +4,6 @@ use core2::{error::Error as StdError, io::Error as IoError};
 use std::{error::Error as StdError, io::Error as IoError};
 
 use unsigned_varint::decode::Error as DecodeError;
-#[cfg(feature = "std")]
-use unsigned_varint::io::ReadError;
 
 /// Multihash error.
 #[derive(Debug)]
@@ -40,11 +38,11 @@ impl From<IoError> for Error {
 }
 
 #[cfg(feature = "std")]
-impl From<ReadError> for Error {
-    fn from(err: ReadError) -> Self {
+impl From<unsigned_varint::io::ReadError> for Error {
+    fn from(err: unsigned_varint::io::ReadError) -> Self {
         match err {
-            ReadError::Io(err) => Self::Io(err),
-            ReadError::Decode(err) => Self::Varint(err),
+            unsigned_varint::io::ReadError::Io(err) => Self::Io(err),
+            unsigned_varint::io::ReadError::Decode(err) => Self::Varint(err),
             _ => unreachable!(),
         }
     }
