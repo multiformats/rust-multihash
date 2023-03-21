@@ -45,7 +45,7 @@ impl From<ReadError> for Error {
         match err {
             ReadError::Io(err) => Self::Io(err),
             ReadError::Decode(err) => Self::Varint(err),
-            _ => unreachable!(),
+            other => Self::Io(io::Error::new(io::ErrorKind::Other, other)),
         }
     }
 }
