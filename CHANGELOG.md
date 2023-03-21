@@ -1,5 +1,4 @@
-# [v0.18.0](https://github.com/multiformats/rust-multihash/compare/v0.17.0...v) (2022-12-06)
-
+## [v0.18.0](https://github.com/multiformats/rust-multihash/compare/v0.17.0...v) (2022-12-06)
 
 ### Bug Fixes
 
