@@ -220,7 +220,7 @@ impl<const S: usize> Multihash<S> {
 }
 
 // Don't hash the whole allocated space, but just the actual digest
-#[allow(clippy::derive_hash_xor_eq)]
+#[allow(clippy::derived_hash_with_manual_eq)]
 impl<const S: usize> core::hash::Hash for Multihash<S> {
     fn hash<T: core::hash::Hasher>(&self, state: &mut T) {
         self.code.hash(state);
