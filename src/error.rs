@@ -1,7 +1,7 @@
 #[cfg(not(feature = "std"))]
-use core2::{error::Error as StdError, io::Error as IoError};
+use core2::{error::Error as StdError, io};
 #[cfg(feature = "std")]
-use std::{error::Error as StdError, io::Error as IoError};
+use std::{error::Error as StdError, io};
 
 use unsigned_varint::decode::Error as DecodeError;
 #[cfg(feature = "std")]
@@ -11,7 +11,7 @@ use unsigned_varint::io::ReadError;
 #[derive(Debug)]
 pub enum Error {
     /// Io error.
-    Io(IoError),
+    Io(io::Error),
     /// Unsupported multihash code.
     UnsupportedCode(u64),
     /// Invalid multihash size.
@@ -33,8 +33,8 @@ impl core::fmt::Display for Error {
 
 impl StdError for Error {}
 
-impl From<IoError> for Error {
-    fn from(err: IoError) -> Self {
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Self {
         Self::Io(err)
     }
 }
