@@ -16,11 +16,9 @@ pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};
 /// Default (cryptographically secure) Multihash implementation.
 ///
 /// This is a default set of hashing algorithms. Usually applications would use their own subset of
-/// algorithms. See the [`Multihash` derive] for more information.
+/// algorithms. See the [`multihash-derive`] crate for more information.
 ///
-/// [`Multihash` derive]: crate::derive
-#[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
-#[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
+/// [`multihash-derive`]: https://docs.rs/multihash-derive
 #[derive(Copy, Clone, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {

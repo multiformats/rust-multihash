@@ -1,5 +1,6 @@
 [package]
 name = "multihash-codetable"
+description = "Default multihash code-table with cryptographically secure hash implementations"
 version = "0.1.0"
 edition = "2021"
 
