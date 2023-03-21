@@ -1,5 +1,6 @@
 [workspace]
 members = ["derive", "derive-impl", ".", "codetable"]
+resolver = "2"
 
 [package]
 name = "multihash"

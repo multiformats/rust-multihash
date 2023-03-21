@@ -4,8 +4,7 @@ version = "0.8.1"
 edition = "2018"
 description = "Proc macro for deriving custom multihash tables."
 license = "MIT"
-repository = "https://github.com/multiformats/multihash"
-resolver = "2"
+repository = "https://github.com/multiformats/rust-multihash"
 
 [dependencies]
 multihash-derive-impl = { version = "0.1.0", path = "../derive-impl" }

@@ -5,8 +5,7 @@ authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Internal proc-macro crate for the MultihashDigest derive"
 license = "MIT"
-repository = "https://github.com/multiformats/multihash"
-resolver = "2"
+repository = "https://github.com/multiformats/rust-multihash"
 
 [lib]
 proc-macro = true
