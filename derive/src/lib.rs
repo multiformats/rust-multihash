@@ -89,29 +89,8 @@ pub trait MultihashDigest<const S: usize>:
     + 'static
 {
     /// Calculate the hash of some input data.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// // `Code` implements `MultihashDigest`
-    /// use multihash::{Code, MultihashDigest};
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!");
-    /// println!("{:02x?}", hash);
-    /// ```
     fn digest(&self, input: &[u8]) -> Multihash<S>;
 
     /// Create a multihash from an existing multihash digest.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use multihash::{Code, Hasher, MultihashDigest, Sha3_256};
-    ///
-    /// let mut hasher = Sha3_256::default();
-    /// hasher.update(b"Hello world!");
-    /// let hash = Code::Sha3_256.wrap(&hasher.finalize()).unwrap();
-    /// println!("{:02x?}", hash);
-    /// ```
-    fn wrap(&self, digest: &[u8]) -> std::result::Result<Multihash<S>, multihash::Error>;
+    fn wrap(&self, digest: &[u8]) -> std::result::Result<Multihash<S>, Error>;
 }
