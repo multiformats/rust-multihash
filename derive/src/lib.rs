@@ -60,6 +60,7 @@ pub use hasher::Hasher;
 pub use multihash::Error;
 pub use multihash::Multihash;
 #[doc(inline)]
+pub use multihash_derive_impl::Multihash; // This one is deprecated.
 pub use multihash_derive_impl::MultihashDigest;
 
 /// The given code is not supported by this codetable.
