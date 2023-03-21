@@ -12,7 +12,5 @@
 ### BREAKING CHANGES
 
 * update to Rust edition 2021
-* `Multihash::write()` returns bytes written
-
-    Prior to this change it returned an empty tuple `()`, now it returns
-the bytes written.
+* `Multihash::write()` returns bytes written:
+  Prior to this change it returned an empty tuple `()`, now it returns the bytes written.
