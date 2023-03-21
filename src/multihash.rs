@@ -107,7 +107,7 @@ impl<const S: usize> Multihash<S> {
     /// Wraps the digest in a multihash.
     pub const fn wrap(code: u64, input_digest: &[u8]) -> Result<Self, Error> {
         if input_digest.len() > S {
-            return Err(Error::InvalidSize(input_digest.len() as _));
+            return Err(Error::invalid_size(input_digest.len() as _));
         }
         let size = input_digest.len();
         let mut digest = [0; S];
@@ -158,7 +158,7 @@ impl<const S: usize> Multihash<S> {
         let result = Self::read(&mut bytes)?;
         // There were more bytes supplied than read
         if !bytes.is_empty() {
-            return Err(Error::InvalidSize(bytes.len().try_into().expect(
+            return Err(Error::invalid_size(bytes.len().try_into().expect(
                 "Currently the maximum size is 255, therefore always fits into usize",
             )));
         }
@@ -221,7 +221,7 @@ impl<const S: usize> Multihash<S> {
     pub fn resize<const R: usize>(&self) -> Result<Multihash<R>, Error> {
         let size = self.size as usize;
         if size > R {
-            return Err(Error::InvalidSize(self.size as u64));
+            return Err(Error::invalid_size(self.size as u64));
         }
         let mut mh = Multihash {
             code: self.code,
@@ -328,9 +328,12 @@ where
 
     let written = code.len() + size.len() + digest.len();
 
-    w.write_all(code)?;
-    w.write_all(size)?;
-    w.write_all(digest)?;
+    w.write_all(code)
+        .map_err(crate::error::io_to_multihash_error)?;
+    w.write_all(size)
+        .map_err(crate::error::io_to_multihash_error)?;
+    w.write_all(digest)
+        .map_err(crate::error::io_to_multihash_error)?;
 
     Ok(written)
 }
@@ -349,16 +352,19 @@ where
     let size = read_u64(&mut r)?;
 
     if size > S as u64 || size > u8::MAX as u64 {
-        return Err(Error::InvalidSize(size));
+        return Err(Error::invalid_size(size));
     }
 
     let mut digest = [0; S];
-    r.read_exact(&mut digest[..size as usize])?;
+    r.read_exact(&mut digest[..size as usize])
+        .map_err(crate::error::io_to_multihash_error)?;
     Ok((code, size as u8, digest))
 }
 
 #[cfg(feature = "std")]
-pub(crate) use unsigned_varint::io::read_u64;
+pub(crate) fn read_u64<R: io::Read>(r: R) -> Result<u64, Error> {
+    unsigned_varint::io::read_u64(r).map_err(crate::error::unsigned_variant_to_multihash_error)
+}
 
 /// Reads 64 bits from a byte array into a u64
 /// Adapted from unsigned-varint's generated read_u64 function at
@@ -368,14 +374,16 @@ pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
     use unsigned_varint::decode;
     let mut b = varint_encode::u64_buffer();
     for i in 0..b.len() {
-        let n = r.read(&mut (b[i..i + 1]))?;
+        let n = r
+            .read(&mut (b[i..i + 1]))
+            .map_err(crate::error::io_to_multihash_error)?;
         if n == 0 {
-            return Err(Error::Varint(decode::Error::Insufficient));
+            return Err(Error::insufficient_varint_bytes());
         } else if decode::is_last(b[i]) {
             return Ok(decode::u64(&b[..=i]).unwrap().0);
         }
     }
-    Err(Error::Varint(decode::Error::Overflow))
+    Err(Error::varint_overflow())
 }
 
 #[cfg(test)]

@@ -54,6 +54,7 @@
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
+extern crate core;
 
 #[cfg(any(test, feature = "arb"))]
 mod arb;

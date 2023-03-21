@@ -252,7 +252,7 @@ pub fn multihash(s: Structure) -> TokenStream {
             fn try_from(code: u64) -> Result<Self, Self::Error> {
                 match code {
                     #(#code_from_u64,)*
-                    _ => Err(#mh_crate::Error::UnsupportedCode(code))
+                    _ => Err(#mh_crate::Error::unsupported_code(code))
                 }
             }
         }
