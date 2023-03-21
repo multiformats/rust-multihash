@@ -47,6 +47,3 @@ impl From<unsigned_varint::io::ReadError> for Error {
         }
     }
 }
-
-/// Multihash result.
-pub type Result<T> = core::result::Result<T, Error>;

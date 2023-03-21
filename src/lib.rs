@@ -61,7 +61,11 @@ mod error;
 mod hasher;
 mod multihash;
 
-pub use crate::error::{Error, Result};
+/// Multihash result.
+#[deprecated(note = "Use `Result<T, multihash::Error>` instead")]
+pub type Result<T> = core::result::Result<T, Error>;
+
+pub use crate::error::Error;
 pub use crate::multihash::{Multihash, MultihashDigest};
 pub use hasher::Hasher;
 #[cfg(feature = "derive")]
