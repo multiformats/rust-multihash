@@ -1,3 +1,5 @@
+//! A procedural macro for custom Multihash code tables.
+//!
 //! This proc macro derives a custom Multihash code table from a list of hashers. It also
 //! generates a public type called `Multihash` which corresponds to the specified `alloc_size`.
 //!
@@ -18,19 +20,34 @@
 //! # Example
 //!
 //! ```
-//! use multihash::derive::Multihash;
-//! use multihash::MultihashDigest;
+//! use multihash_derive::{Hasher, MultihashDigest};
 //!
-//! #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
+//! struct FooHasher;
+//!
+//! impl Hasher for FooHasher {
+//!     // Implement hasher ...
+//! #    fn update(&mut self, input: &[u8]) {
+//! #
+//! #    }
+//! #
+//! #    fn finalize(&mut self) -> &[u8] {
+//! #        &[]
+//! #    }
+//! #
+//! #    fn reset(&mut self) {
+//! #
+//! #    }
+//! }
+//!
+//! #[derive(Clone, Copy, Debug, Eq, MultihashDigest, PartialEq)]
 //! #[mh(alloc_size = 64)]
 //! pub enum Code {
-//!     #[mh(code = 0x01, hasher = multihash::Sha2_256)]
-//!     Foo,
-//!     #[mh(code = 0x02, hasher = multihash::Sha2_512)]
-//!     Bar,
+//!     #[mh(code = 0x01, hasher = FooHasher)]
+//!     Foo
 //! }
 //!
 //! let hash = Code::Foo.digest(b"hello world!");
+//!
 //! println!("{:02x?}", hash);
 //! ```
 
@@ -40,6 +57,7 @@ use std::convert::TryFrom;
 use std::fmt;
 
 pub use hasher::Hasher;
+#[doc(inline)]
 pub use multihash_derive_impl::MultihashDigest;
 
 pub use multihash::*;
@@ -58,9 +76,7 @@ impl std::error::Error for UnsupportedCode {}
 
 /// Trait that implements hashing.
 ///
-/// It is usually implemented by a custom code table enum that derives the [`Multihash` derive].
-///
-/// [`Multihash` derive]: crate::derive
+/// Typically, you won't implement this yourself but use the [`MultihashDigest`](multihash_derive_impl::MultihashDigest) custom-derive.
 pub trait MultihashDigest<const S: usize>:
     TryFrom<u64, Error = UnsupportedCode>
     + Into<u64>
