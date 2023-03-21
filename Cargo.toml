@@ -39,5 +39,5 @@ core2 = { version = "0.4.0", default-features = false }
 hex = "0.4.2"
 serde_json = "1.0.58"
 quickcheck = "1.0.3"
-rand = { version = "0.8.5", features = ["small_rng"] }
+rand = "0.8.5"
 arbitrary = "1.1.0"
