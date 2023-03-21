@@ -22,7 +22,3 @@ synstructure = "0.12.4"
 [features]
 default = ["std"]
 std = []
-
-[dev-dependencies]
-pretty_assertions = "1.0.0"
-#multihash = { path = "..", default-features = false, features = ["derive", "sha2"] }

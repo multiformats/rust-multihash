@@ -29,7 +29,7 @@ use core2::io;
 ///     0x76, 0x22, 0xf3, 0xca, 0x71, 0xfb, 0xa1, 0xd9, 0x72, 0xfd, 0x94, 0xa3, 0x1c, 0x3b, 0xfb,
 ///     0xf2, 0x4e, 0x39, 0x38,
 /// ];
-/// let mh = Multihash::from_bytes(&digest_bytes).unwrap();
+/// let mh = Multihash::<32>::from_bytes(&digest_bytes).unwrap();
 /// assert_eq!(mh.code(), Sha3_256);
 /// assert_eq!(mh.size(), 32);
 /// assert_eq!(mh.digest(), &digest_bytes[2..]);
@@ -160,27 +160,15 @@ impl<const S: usize> Multihash<S> {
     /// is secure (cryptographically) to use.
     ///
     /// If the new size is larger than the current size, this method does nothing.
-    ///
-    /// ```
-    /// use multihash::{Code, MultihashDigest};
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!").truncate(20);
-    /// ```
     pub fn truncate(&self, size: u8) -> Self {
         let mut mh = *self;
         mh.size = mh.size.min(size);
         mh
     }
 
-    /// Resizes the backing multihash buffer. This function fails if the hash digest is larger than
-    /// the target size.
+    /// Resizes the backing multihash buffer.
     ///
-    /// ```
-    /// use multihash::{Code, MultihashDigest, MultihashGeneric};
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!");
-    /// let large_hash: MultihashGeneric<32> = hash.resize().unwrap();
-    /// ```
+    /// This function fails if the hash digest is larger than the target size.
     pub fn resize<const R: usize>(&self) -> Result<Multihash<R>, Error> {
         let size = self.size as usize;
         if size > R {
@@ -197,22 +185,7 @@ impl<const S: usize> Multihash<S> {
 
     /// Decomposes struct, useful when needing a `Sized` array or moving all the data into another type
     ///
-    /// It is recommended to use `digest()` `code()` and `size()` for most cases
-    ///
-    /// ```
-    /// use multihash::{Code, MultihashDigest};
-    /// struct Foo<const S: usize> {
-    ///     arr: [u8; S],
-    ///     len: usize,
-    /// }
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!");
-    /// let (.., arr, size) = hash.into_inner();
-    /// let foo = Foo {
-    ///     arr,
-    ///     len: size as usize,
-    /// };
-    /// ```
+    /// It is recommended to use `digest()` `code()` and `size()` for most cases.
     pub fn into_inner(self) -> (u64, [u8; S], u8) {
         let Self { code, digest, size } = self;
         (code, digest, size)

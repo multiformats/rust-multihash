@@ -10,3 +10,7 @@ resolver = "2"
 [dependencies]
 multihash-derive-impl = { version = "0.1.0", path = "../derive-impl" }
 multihash = { version = "0.18.0", path = "../" }
+
+[dev-dependencies]
+trybuild = "1.0.80"
+multihash-codetable = { path = "../codetable" }

@@ -19,7 +19,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore : `proc-macro-crate` does not work in docs, see https://github.com/bkchr/proc-macro-crate/issues/14
 //! use multihash_derive::{Hasher, MultihashDigest};
 //!
 //! struct FooHasher;
@@ -57,10 +57,10 @@ use std::convert::TryFrom;
 use std::fmt;
 
 pub use hasher::Hasher;
+pub use multihash::Error;
+pub use multihash::Multihash;
 #[doc(inline)]
 pub use multihash_derive_impl::MultihashDigest;
-
-pub use multihash::*;
 
 /// The given code is not supported by this codetable.
 #[derive(Debug)]
