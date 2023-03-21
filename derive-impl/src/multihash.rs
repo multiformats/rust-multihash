@@ -198,7 +198,7 @@ fn error_code_duplicates(hashes: &[Hash]) {
 struct ParseError(Span);
 
 pub fn multihash(s: Structure) -> TokenStream {
-    let mh_crate = match utils::use_crate("multihash") {
+    let mh_crate = match utils::use_crate("multihash-derive") {
         Ok(ident) => ident,
         Err(e) => {
             let err = syn::Error::new(Span::call_site(), e).to_compile_error();
@@ -247,12 +247,12 @@ pub fn multihash(s: Structure) -> TokenStream {
         }
 
         impl core::convert::TryFrom<u64> for #code_enum {
-            type Error = #mh_crate::Error;
+            type Error = #mh_crate::UnsupportedCode;
 
             fn try_from(code: u64) -> Result<Self, Self::Error> {
                 match code {
                     #(#code_from_u64,)*
-                    _ => Err(#mh_crate::Error::unsupported_code(code))
+                    _ => Err(#mh_crate::UnsupportedCode(code))
                 }
             }
         }

@@ -1,11 +1,11 @@
 use std::io::{Cursor, Write};
 
-use multihash::{Hasher, MultihashDigest};
 use multihash_codetable::{
     Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Identity256, Keccak224, Keccak256,
     Keccak384, Keccak512, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
     Strobe256, Strobe512,
 };
+use multihash_derive::{Hasher, MultihashDigest};
 
 #[derive(Clone, Copy, Debug, Eq, multihash_derive::MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
@@ -386,8 +386,8 @@ fn multihash_errors() {
 
 #[test]
 fn blak3_non_default_digest() {
-    use multihash::MultihashDigest;
     use multihash_codetable::Blake3Hasher;
+    use multihash_derive::MultihashDigest;
     const DIGEST_SIZE: usize = 16;
     pub struct ContentHasher(Blake3Hasher<DIGEST_SIZE>);
 

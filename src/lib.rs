@@ -59,7 +59,6 @@ extern crate core;
 #[cfg(any(test, feature = "arb"))]
 mod arb;
 mod error;
-mod hasher;
 mod multihash;
 
 /// Multihash result.
@@ -67,10 +66,7 @@ mod multihash;
 pub type Result<T> = core::result::Result<T, Error>;
 
 pub use crate::error::Error;
-pub use crate::multihash::{Multihash, MultihashDigest};
-pub use hasher::Hasher;
-#[cfg(feature = "derive")]
-pub use multihash_derive as derive;
+pub use crate::multihash::Multihash;
 
 /// Deprecated type-alias for the [`Multihash`] type.
 #[deprecated(since = "0.18.0", note = "Use `multihash::Multihash instead.")]

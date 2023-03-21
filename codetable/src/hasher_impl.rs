@@ -1,4 +1,4 @@
-use multihash::Hasher;
+use multihash_derive::Hasher;
 
 use std::io;
 
@@ -153,7 +153,7 @@ macro_rules! derive_rustcrypto_hasher {
             }
         }
 
-        impl ::multihash::Hasher for $name {
+        impl ::multihash_derive::Hasher for $name {
             fn update(&mut self, input: &[u8]) {
                 use digest::Digest;
                 self.state.update(input)

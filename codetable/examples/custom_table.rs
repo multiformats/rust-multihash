@@ -1,8 +1,7 @@
 use std::convert::TryFrom;
 
-use multihash::{Hasher, MultihashDigest as _};
 use multihash_codetable::Sha2_256;
-use multihash_derive::MultihashDigest;
+use multihash_derive::{Hasher, MultihashDigest};
 
 // You can implement a custom hasher. This is a SHA2 256-bit hasher that returns a hash that is
 // truncated to 160 bits.

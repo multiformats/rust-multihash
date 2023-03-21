@@ -16,7 +16,6 @@ sha-3 = { version = "0.10.0", default-features = false, package = "sha3" }
 strobe-rs = { version = "0.7.0", default-features = false }
 ripemd-rs = { package = "ripemd", version = "0.1.1"}
 multihash-derive = { version = "0.8.0", path = "../derive", default-features = false }
-multihash = { version = "0.18.0", path = "../" }
 
 [dev-dependencies]
 hex = "0.4.2"

@@ -1,5 +1,5 @@
 [workspace]
-members = ["derive", ".", "codetable"]
+members = ["derive", "derive-impl", ".", "codetable"]
 
 [package]
 name = "multihash"
@@ -38,3 +38,4 @@ hex = "0.4.2"
 serde_json = "1.0.58"
 quickcheck = "1.0.3"
 arbitrary = "1.1.0"
+rand = { version = "0.8.5", features = ["small_rng"] }

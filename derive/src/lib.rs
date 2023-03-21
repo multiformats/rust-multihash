@@ -33,34 +33,69 @@
 //! let hash = Code::Foo.digest(b"hello world!");
 //! println!("{:02x?}", hash);
 //! ```
-extern crate proc_macro;
 
-mod multihash;
-mod utils;
+mod hasher;
 
-use proc_macro::TokenStream;
-use proc_macro_error::proc_macro_error;
-use synstructure::macros::{parse, DeriveInput};
-use synstructure::{MacroResult, Structure};
+use std::convert::TryFrom;
+use std::fmt;
 
-#[proc_macro_derive(Multihash, attributes(mh))]
-#[allow(non_snake_case)]
-#[proc_macro_error]
-#[deprecated(since = "0.8.1", note = "Use `MultihashDigest` derive instead.")]
-pub fn Multihash(i: TokenStream) -> TokenStream {
-    match parse::<DeriveInput>(i) {
-        Ok(p) => match Structure::try_new(&p) {
-            Ok(s) => multihash::multihash(s).into_stream(),
-            Err(e) => e.to_compile_error().into(),
-        },
-        Err(e) => e.to_compile_error().into(),
+pub use hasher::Hasher;
+pub use multihash_derive_impl::MultihashDigest;
+
+pub use multihash::*;
+
+/// The given code is not supported by this codetable.
+#[derive(Debug)]
+pub struct UnsupportedCode(pub u64);
+
+impl fmt::Display for UnsupportedCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "the code {} is not supported by this codetable", self.0)
     }
 }
 
-#[proc_macro_derive(MultihashDigest, attributes(mh))]
-#[allow(non_snake_case)]
-#[proc_macro_error]
-pub fn MultihashDigest(i: TokenStream) -> TokenStream {
-    #[allow(deprecated)]
-    Multihash(i)
+impl std::error::Error for UnsupportedCode {}
+
+/// Trait that implements hashing.
+///
+/// It is usually implemented by a custom code table enum that derives the [`Multihash` derive].
+///
+/// [`Multihash` derive]: crate::derive
+pub trait MultihashDigest<const S: usize>:
+    TryFrom<u64, Error = UnsupportedCode>
+    + Into<u64>
+    + Send
+    + Sync
+    + Unpin
+    + Copy
+    + Eq
+    + fmt::Debug
+    + 'static
+{
+    /// Calculate the hash of some input data.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// // `Code` implements `MultihashDigest`
+    /// use multihash::{Code, MultihashDigest};
+    ///
+    /// let hash = Code::Sha3_256.digest(b"Hello world!");
+    /// println!("{:02x?}", hash);
+    /// ```
+    fn digest(&self, input: &[u8]) -> Multihash<S>;
+
+    /// Create a multihash from an existing multihash digest.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use multihash::{Code, Hasher, MultihashDigest, Sha3_256};
+    ///
+    /// let mut hasher = Sha3_256::default();
+    /// hasher.update(b"Hello world!");
+    /// let hash = Code::Sha3_256.wrap(&hasher.finalize()).unwrap();
+    /// println!("{:02x?}", hash);
+    /// ```
+    fn wrap(&self, digest: &[u8]) -> std::result::Result<Multihash<S>, multihash::Error>;
 }

@@ -1,7 +1,6 @@
 use crate::Error;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
-use core::convert::TryFrom;
 
 use core::convert::TryInto;
 use core::fmt::Debug;
@@ -13,42 +12,6 @@ use std::io;
 
 #[cfg(not(feature = "std"))]
 use core2::io;
-
-/// Trait that implements hashing.
-///
-/// It is usually implemented by a custom code table enum that derives the [`Multihash` derive].
-///
-/// [`Multihash` derive]: crate::derive
-pub trait MultihashDigest<const S: usize>:
-    TryFrom<u64> + Into<u64> + Send + Sync + Unpin + Copy + Eq + Debug + 'static
-{
-    /// Calculate the hash of some input data.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// // `Code` implements `MultihashDigest`
-    /// use multihash::{Code, MultihashDigest};
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!");
-    /// println!("{:02x?}", hash);
-    /// ```
-    fn digest(&self, input: &[u8]) -> Multihash<S>;
-
-    /// Create a multihash from an existing multihash digest.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use multihash::{Code, Hasher, MultihashDigest, Sha3_256};
-    ///
-    /// let mut hasher = Sha3_256::default();
-    /// hasher.update(b"Hello world!");
-    /// let hash = Code::Sha3_256.wrap(&hasher.finalize()).unwrap();
-    /// println!("{:02x?}", hash);
-    /// ```
-    fn wrap(&self, digest: &[u8]) -> Result<Multihash<S>, Error>;
-}
 
 /// A Multihash instance that only supports the basic functionality and no hashing.
 ///

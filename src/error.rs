@@ -12,14 +12,6 @@ pub struct Error {
 }
 
 impl Error {
-    /// The specified code is not supported by code table.
-    /// FIXME: This should not be in our public API because it is only needed by the custom derive which we have no knowledge of in this crate.
-    pub fn unsupported_code(code: u64) -> Self {
-        Self {
-            kind: Kind::UnsupportedCode(code),
-        }
-    }
-
     pub(crate) const fn invalid_size(size: u64) -> Self {
         Self {
             kind: Kind::InvalidSize(size),
@@ -51,8 +43,6 @@ impl core::fmt::Display for Error {
 enum Kind {
     /// Io error.
     Io(io::Error),
-    /// Unsupported multihash code.
-    UnsupportedCode(u64),
     /// Invalid multihash size.
     InvalidSize(u64),
     /// Invalid varint.
@@ -80,7 +70,6 @@ impl core::fmt::Display for Kind {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
             Self::Io(err) => write!(f, "{err}"),
-            Self::UnsupportedCode(code) => write!(f, "Unsupported multihash code {code}."),
             Self::InvalidSize(size) => write!(f, "Invalid multihash size {size}."),
             Self::Varint(err) => write!(f, "{err}"),
         }
@@ -91,7 +80,6 @@ impl StdError for Error {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match &self.kind {
             Kind::Io(inner) => Some(inner),
-            Kind::UnsupportedCode(_) => None,
             Kind::InvalidSize(_) => None,
             Kind::Varint(_) => None, // FIXME: Does not implement `core2::Error`.
         }

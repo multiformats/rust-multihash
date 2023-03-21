@@ -88,8 +88,8 @@ pub enum Code {
 mod tests {
     use super::*;
     use crate::hasher_impl::sha3::{Sha3_256, Sha3_512};
-    use multihash::MultihashDigest;
-    use multihash::{Hasher, Multihash};
+    use multihash_derive::MultihashDigest;
+    use multihash_derive::{Hasher, Multihash};
 
     #[test]
     fn test_hasher_256() {
