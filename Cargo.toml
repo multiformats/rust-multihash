@@ -19,9 +19,9 @@ rust-version = "1.59"
 default = ["std"]
 std = ["unsigned-varint/std", "alloc"]
 alloc = []
-arb = ["quickcheck", "rand", "arbitrary"]
+arb = ["dep:quickcheck", "dep:rand", "dep:arbitrary"]
 scale-codec = ["dep:parity-scale-codec"]
-serde-codec = ["serde"] # Deprecated, don't use.
+serde-codec = ["dep:serde"] # Deprecated, don't use.
 serde = ["dep:serde", "dep:serde-big-array"]
 
 [dependencies]
