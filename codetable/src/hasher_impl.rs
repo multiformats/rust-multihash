@@ -17,6 +17,7 @@ macro_rules! derive_write {
     };
 }
 
+#[cfg(any(feature = "blake2b", feature = "blake2s", feature = "blake3"))]
 macro_rules! derive_hasher_blake {
     ($module:ident, $name:ident) => {
         /// Multihash hasher.
@@ -60,6 +61,7 @@ macro_rules! derive_hasher_blake {
     };
 }
 
+#[cfg(feature = "blake2b")]
 pub mod blake2b {
     use super::*;
 
@@ -72,6 +74,7 @@ pub mod blake2b {
     pub type Blake2b512 = Blake2bHasher<64>;
 }
 
+#[cfg(feature = "blake2s")]
 pub mod blake2s {
     use super::*;
 
@@ -84,6 +87,7 @@ pub mod blake2s {
     pub type Blake2s256 = Blake2sHasher<32>;
 }
 
+#[cfg(feature = "blake3")]
 pub mod blake3 {
     use super::*;
 
@@ -135,6 +139,12 @@ pub mod blake3 {
     pub type Blake3_256 = Blake3Hasher<32>;
 }
 
+#[cfg(any(
+    feature = "sha1",
+    feature = "sha2",
+    feature = "sha3",
+    feature = "ripemd"
+))]
 macro_rules! derive_rustcrypto_hasher {
     ($module:ty, $name:ident, $size:expr) => {
         /// Multihash hasher.
@@ -187,40 +197,44 @@ macro_rules! derive_rustcrypto_hasher {
     };
 }
 
+#[cfg(feature = "sha1")]
 pub mod sha1 {
     use super::*;
 
     derive_rustcrypto_hasher!(::sha1::Sha1, Sha1, 20);
 }
 
+#[cfg(feature = "sha2")]
 pub mod sha2 {
     use super::*;
 
-    derive_rustcrypto_hasher!(sha_2::Sha256, Sha2_256, 32);
-    derive_rustcrypto_hasher!(sha_2::Sha512, Sha2_512, 64);
+    derive_rustcrypto_hasher!(::sha2::Sha256, Sha2_256, 32);
+    derive_rustcrypto_hasher!(::sha2::Sha512, Sha2_512, 64);
 }
 
+#[cfg(feature = "sha3")]
 pub mod sha3 {
     use super::*;
 
-    derive_rustcrypto_hasher!(sha_3::Sha3_224, Sha3_224, 28);
-    derive_rustcrypto_hasher!(sha_3::Sha3_256, Sha3_256, 32);
-    derive_rustcrypto_hasher!(sha_3::Sha3_384, Sha3_384, 48);
-    derive_rustcrypto_hasher!(sha_3::Sha3_512, Sha3_512, 64);
+    derive_rustcrypto_hasher!(::sha3::Sha3_224, Sha3_224, 28);
+    derive_rustcrypto_hasher!(::sha3::Sha3_256, Sha3_256, 32);
+    derive_rustcrypto_hasher!(::sha3::Sha3_384, Sha3_384, 48);
+    derive_rustcrypto_hasher!(::sha3::Sha3_512, Sha3_512, 64);
 
-    derive_rustcrypto_hasher!(sha_3::Keccak224, Keccak224, 28);
-    derive_rustcrypto_hasher!(sha_3::Keccak256, Keccak256, 32);
-    derive_rustcrypto_hasher!(sha_3::Keccak384, Keccak384, 48);
-    derive_rustcrypto_hasher!(sha_3::Keccak512, Keccak512, 64);
+    derive_rustcrypto_hasher!(::sha3::Keccak224, Keccak224, 28);
+    derive_rustcrypto_hasher!(::sha3::Keccak256, Keccak256, 32);
+    derive_rustcrypto_hasher!(::sha3::Keccak384, Keccak384, 48);
+    derive_rustcrypto_hasher!(::sha3::Keccak512, Keccak512, 64);
 }
 
+#[cfg(feature = "ripemd")]
 pub mod ripemd {
 
     use super::*;
 
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd160, Ripemd160, 20);
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd256, Ripemd256, 32);
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd320, Ripemd320, 40);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd160, Ripemd160, 20);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd256, Ripemd256, 32);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd320, Ripemd320, 40);
 }
 
 pub mod identity {
@@ -273,6 +287,7 @@ pub mod identity {
     pub type Identity256 = IdentityHasher<32>;
 }
 
+#[cfg(feature = "strobe")]
 pub mod strobe {
     use super::*;
     use strobe_rs::{SecParam, Strobe};

@@ -2,8 +2,8 @@ use std::io::{Cursor, Write};
 
 use multihash_codetable::{
     Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Identity256, Keccak224, Keccak256,
-    Keccak384, Keccak512, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
-    Strobe256, Strobe512,
+    Keccak384, Keccak512, Ripemd160, Ripemd256, Ripemd320, Sha1, Sha2_256, Sha2_512, Sha3_224,
+    Sha3_256, Sha3_384, Sha3_512, Strobe256, Strobe512,
 };
 use multihash_derive::{Hasher, MultihashDigest};
 
