@@ -73,7 +73,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --no-default-features --package multihash --target thumbv6m-none-eabi
+          args: --no-default-features --workspace --target thumbv6m-none-eabi
 
   coverage:
     name: Code Coverage

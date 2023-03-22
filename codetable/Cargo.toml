@@ -8,6 +8,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["std"]
+std = ["blake2b_simd/std", "blake2s_simd/std", "blake3/std", "digest/std", "sha-1/std", "sha-2/std", "sha-3/std", "strobe-rs/std", "ripemd-rs/std", "multihash-derive/std", "core2/std"]
+
 [dependencies]
 blake2b_simd = { version = "1.0.0", default-features = false }
 blake2s_simd = { version = "1.0.0", default-features = false }
@@ -17,8 +21,9 @@ sha-1 = { version = "0.10.0", default-features = false }
 sha-2 = { version = "0.10.0", default-features = false, package = "sha2" }
 sha-3 = { version = "0.10.0", default-features = false, package = "sha3" }
 strobe-rs = { version = "0.7.0", default-features = false }
-ripemd-rs = { package = "ripemd", version = "0.1.1"}
+ripemd-rs = { package = "ripemd", version = "0.1.1", default-features = false }
 multihash-derive = { version = "0.8.0", path = "../derive", default-features = false }
+core2 = { version = "0.4.0", default-features = false }
 
 [dev-dependencies]
 hex = "0.4.2"

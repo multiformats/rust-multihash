@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! A procedural macro for custom Multihash code tables.
 //!
 //! This proc macro derives a custom Multihash code table from a list of hashers. It also
@@ -53,8 +55,8 @@
 
 mod hasher;
 
-use std::convert::TryFrom;
-use std::fmt;
+use core::convert::TryFrom;
+use core::fmt;
 
 pub use hasher::Hasher;
 pub use multihash::Error;
@@ -73,7 +75,7 @@ impl fmt::Display for UnsupportedCode {
     }
 }
 
-impl std::error::Error for UnsupportedCode {}
+impl core2::error::Error for UnsupportedCode {}
 
 /// Trait that implements hashing.
 ///
@@ -93,5 +95,5 @@ pub trait MultihashDigest<const S: usize>:
     fn digest(&self, input: &[u8]) -> Multihash<S>;
 
     /// Create a multihash from an existing multihash digest.
-    fn wrap(&self, digest: &[u8]) -> std::result::Result<Multihash<S>, Error>;
+    fn wrap(&self, digest: &[u8]) -> Result<Multihash<S>, Error>;
 }

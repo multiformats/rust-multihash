@@ -1,6 +1,6 @@
 use multihash_derive::Hasher;
 
-use std::io;
+use core2::io;
 
 macro_rules! derive_write {
     ($name:ident) => {
