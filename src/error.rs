@@ -3,7 +3,7 @@ use core2::{error::Error as StdError, io};
 #[cfg(feature = "std")]
 use std::{error::Error as StdError, io};
 
-use unsigned_varint::decode::Error as DecodeError;
+use unsigned_varint::decode;
 
 /// Opaque error struct for operations involving a [`Multihash`](crate::Multihash).
 #[derive(Debug)]
@@ -21,14 +21,14 @@ impl Error {
     #[cfg(not(feature = "std"))]
     pub(crate) const fn insufficient_varint_bytes() -> Self {
         Self {
-            kind: Kind::Varint(unsigned_varint::decode::Error::Insufficient),
+            kind: Kind::Varint(decode::Error::Insufficient),
         }
     }
 
     #[cfg(not(feature = "std"))]
     pub(crate) const fn varint_overflow() -> Self {
         Self {
-            kind: Kind::Varint(unsigned_varint::decode::Error::Overflow),
+            kind: Kind::Varint(decode::Error::Overflow),
         }
     }
 }
@@ -46,7 +46,7 @@ enum Kind {
     /// Invalid multihash size.
     InvalidSize(u64),
     /// Invalid varint.
-    Varint(DecodeError),
+    Varint(decode::Error),
 }
 
 #[cfg(feature = "std")]
