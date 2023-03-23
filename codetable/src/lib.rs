@@ -116,8 +116,7 @@ pub enum Code {
 mod tests {
     use super::*;
     use crate::hasher_impl::sha3::{Sha3_256, Sha3_512};
-    use multihash_derive::MultihashDigest;
-    use multihash_derive::{Hasher, Multihash};
+    use multihash_derive::{Hasher, Multihash, MultihashDigest};
 
     #[test]
     #[cfg(feature = "sha3")]
