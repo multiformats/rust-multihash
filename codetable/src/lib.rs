@@ -59,11 +59,11 @@ pub enum Code {
     #[mh(code = 0x14, hasher = crate::Sha3_512)]
     Sha3_512,
     /// Keccak-224 (28-byte hash size)
-    #[cfg(feature = "sha2")]
+    #[cfg(feature = "sha3")]
     #[mh(code = 0x1a, hasher = crate::Keccak224)]
     Keccak224,
     /// Keccak-256 (32-byte hash size)
-    #[cfg(feature = "sha2")]
+    #[cfg(feature = "sha3")]
     #[mh(code = 0x1b, hasher = crate::Keccak256)]
     Keccak256,
     /// Keccak-384 (48-byte hash size)
@@ -91,7 +91,7 @@ pub enum Code {
     #[mh(code = 0xb260, hasher = crate::Blake2s256)]
     Blake2s256,
     /// BLAKE3-256 (32-byte hash size)
-    #[cfg(feature = "blake2s")]
+    #[cfg(feature = "blake3")]
     #[mh(code = 0x1e, hasher = crate::Blake3_256)]
     Blake3_256,
     /// RIPEMD-160 (20-byte hash size)
