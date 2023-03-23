@@ -7,7 +7,7 @@ use multihash_codetable::{
 };
 use multihash_derive::{Hasher, MultihashDigest};
 
-#[derive(Clone, Copy, Debug, Eq, multihash_derive::MultihashDigest, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
     #[mh(code = 0x00, hasher = Identity256)]
