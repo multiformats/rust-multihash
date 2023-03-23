@@ -21,7 +21,7 @@ std = ["unsigned-varint/std", "alloc"]
 alloc = []
 arb = ["dep:quickcheck", "dep:rand", "dep:arbitrary"]
 scale-codec = ["dep:parity-scale-codec"]
-serde-codec = ["dep:serde"] # Deprecated, don't use.
+serde-codec = ["serde"] # Deprecated, don't use.
 serde = ["dep:serde", "dep:serde-big-array"]
 
 [dependencies]
