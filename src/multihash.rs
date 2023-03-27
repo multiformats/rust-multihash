@@ -247,7 +247,8 @@ impl<const S: usize> Multihash<S> {
 }
 
 // Don't hash the whole allocated space, but just the actual digest
-#[allow(clippy::derive_hash_xor_eq)]
+#[allow(unknown_lints, renamed_and_removed_lints)]
+#[allow(clippy::derived_hash_with_manual_eq, clippy::derive_hash_xor_eq)]
 impl<const S: usize> core::hash::Hash for Multihash<S> {
     fn hash<T: core::hash::Hasher>(&self, state: &mut T) {
         self.code.hash(state);
@@ -362,7 +363,10 @@ pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
         if n == 0 {
             return Err(Error::Varint(decode::Error::Insufficient));
         } else if decode::is_last(b[i]) {
-            return Ok(decode::u64(&b[..=i]).unwrap().0);
+            match decode::u64(&b[..=i]) {
+                Ok(decoded) => return Ok(decoded.0),
+                Err(_) => return Err(Error::Varint(decode::Error::NotMinimal)),
+            };
         }
     }
     Err(Error::Varint(decode::Error::Overflow))
@@ -451,5 +455,13 @@ mod tests {
         let mh1 = Multihash::<32>::default();
         let mh2 = Multihash::<64>::default();
         assert_eq!(mh1, mh2);
+    }
+
+    #[test]
+    fn decode_non_minimal_error() {
+        // This is a non-minimal varint.
+        let data = [241, 0, 0, 0, 0, 0, 128, 132, 132, 132, 58];
+        let result = read_u64(&data[..]);
+        assert!(result.is_err());
     }
 }
