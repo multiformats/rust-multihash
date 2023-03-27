@@ -357,20 +357,23 @@ pub(crate) use unsigned_varint::io::read_u64;
 /// Adapted from unsigned-varint's generated read_u64 function at
 /// https://github.com/paritytech/unsigned-varint/blob/master/src/io.rs
 #[cfg(not(feature = "std"))]
-pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
-    use unsigned_varint::decode;
+pub fn read_u64(r: &mut ByteCursor) -> Result<u64, Error> {
     let mut b = varint_encode::u64_buffer();
     for i in 0..b.len() {
-        let n = r.read(&mut (b[i..i + 1]))?;
-        if n == 0 {
-            return Err(Error::Varint(decode::Error::Insufficient));
-        } else if decode::is_last(b[i]) {
-            return Ok(decode::u64(&b[..=i]).unwrap().0);
-        }
+      let n = r.read(&mut b[i..(i + 1)]);
+      if n == 0 {
+        return Err(Error::Varint(decode::Error::Overflow));
+      }
+      if decode::is_last(b[i]) {
+        match decode::u64(&b[..=i]) {
+          Ok(d) => return Ok(d.0),
+          Err(_) => return Err(Error::Varint(decode::Error::Overflow)),
+        };
+      }
     }
     Err(Error::Varint(decode::Error::Overflow))
-}
-
+  }
+  
 #[cfg(test)]
 mod tests {
     use super::*;
