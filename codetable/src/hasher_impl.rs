@@ -237,6 +237,7 @@ pub mod ripemd {
     derive_rustcrypto_hasher!(::ripemd::Ripemd320, Ripemd320, 40);
 }
 
+#[cfg(feature = "identity")]
 pub mod identity {
     use super::*;
 
