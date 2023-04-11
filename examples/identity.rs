@@ -1,6 +1,6 @@
 use multihash::Multihash;
 
-//! An example for how to use the "identity" hash of `Multihash`.
+//! An example for how to use the "identity" hash of [`Multihash`].
 //!
 //! Identity hashing means we don't actually perform any hashing.
 //! Instead, we just store data directly in place of the "digest".
