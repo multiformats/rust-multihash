@@ -223,55 +223,6 @@ pub mod ripemd {
     derive_rustcrypto_hasher!(::ripemd::Ripemd320, Ripemd320, 40);
 }
 
-#[cfg(feature = "identity")]
-pub mod identity {
-    /// Identity hasher with a maximum size.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the input is bigger than the maximum size.
-    #[derive(Debug)]
-    pub struct IdentityHasher<const S: usize> {
-        i: usize,
-        bytes: [u8; S],
-    }
-
-    impl<const S: usize> Default for IdentityHasher<S> {
-        fn default() -> Self {
-            Self {
-                i: 0,
-                bytes: [0u8; S],
-            }
-        }
-    }
-
-    impl<const S: usize> multihash_derive::Hasher for IdentityHasher<S> {
-        fn update(&mut self, input: &[u8]) {
-            let start = self.i.min(self.bytes.len());
-            let end = (self.i + input.len()).min(self.bytes.len());
-            self.bytes[start..end].copy_from_slice(input);
-            self.i = end;
-        }
-
-        fn finalize(&mut self) -> &[u8] {
-            &self.bytes[..self.i]
-        }
-
-        fn reset(&mut self) {
-            self.i = 0
-        }
-    }
-
-    derive_write!(IdentityHasher);
-
-    /// 32 byte Identity hasher (constrained to 32 bytes).
-    ///
-    /// # Panics
-    ///
-    /// Panics if the input is bigger than 32 bytes.
-    pub type Identity256 = IdentityHasher<32>;
-}
-
 #[cfg(feature = "strobe")]
 pub mod strobe {
     use strobe_rs::{SecParam, Strobe};
