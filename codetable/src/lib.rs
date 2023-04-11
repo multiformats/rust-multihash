@@ -1,14 +1,38 @@
-pub use multihash_derive::Multihash;
+#![cfg_attr(not(feature = "std"), no_std)]
+
+mod hasher_impl;
+
+use multihash_derive::MultihashDigest;
+
+#[cfg(feature = "blake2b")]
+pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bHasher};
+#[cfg(feature = "blake2s")]
+pub use crate::hasher_impl::blake2s::{Blake2s128, Blake2s256, Blake2sHasher};
+#[cfg(feature = "blake3")]
+pub use crate::hasher_impl::blake3::{Blake3Hasher, Blake3_256};
+#[cfg(feature = "identity")]
+pub use crate::hasher_impl::identity::{Identity256, IdentityHasher};
+#[cfg(feature = "ripemd")]
+pub use crate::hasher_impl::ripemd::{Ripemd160, Ripemd256, Ripemd320};
+#[cfg(feature = "sha1")]
+pub use crate::hasher_impl::sha1::Sha1;
+#[cfg(feature = "sha2")]
+pub use crate::hasher_impl::sha2::{Sha2_256, Sha2_512};
+#[cfg(feature = "sha3")]
+pub use crate::hasher_impl::sha3::{
+    Keccak224, Keccak256, Keccak384, Keccak512, Sha3_224, Sha3_256, Sha3_384, Sha3_512,
+};
+#[cfg(feature = "strobe")]
+pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};
 
 /// Default (cryptographically secure) Multihash implementation.
 ///
 /// This is a default set of hashing algorithms. Usually applications would use their own subset of
-/// algorithms. See the [`Multihash` derive] for more information.
+/// algorithms. See the [`multihash-derive`] crate for more information.
 ///
-/// [`Multihash` derive]: crate::derive
-#[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
-#[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
-#[derive(Copy, Clone, Debug, Eq, Multihash, PartialEq)]
+/// [`multihash-derive`]: https://docs.rs/multihash-derive
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Copy, Clone, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
     /// SHA-256 (32-byte hash size)
@@ -94,11 +118,11 @@ pub enum Code {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hasher::Hasher;
     use crate::hasher_impl::sha3::{Sha3_256, Sha3_512};
-    use crate::multihash::MultihashDigest;
+    use multihash_derive::{Hasher, Multihash, MultihashDigest};
 
     #[test]
+    #[cfg(feature = "sha3")]
     fn test_hasher_256() {
         let mut hasher = Sha3_256::default();
         hasher.update(b"hello world");
@@ -112,6 +136,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "sha3")]
     fn test_hasher_512() {
         let mut hasher = Sha3_512::default();
         hasher.update(b"hello world");
@@ -122,5 +147,53 @@ mod tests {
         assert_eq!(hash.size(), 64);
         assert_eq!(hash.digest(), digest);
         assert_eq!(hash, hash2);
+    }
+
+    #[test]
+    #[cfg(feature = "sha2")]
+    fn roundtrip() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let mut buf = [0u8; 35];
+        let written = hash.write(&mut buf[..]).unwrap();
+        let hash2 = Multihash::<32>::read(&buf[..]).unwrap();
+        assert_eq!(hash, hash2);
+        assert_eq!(hash.encoded_len(), written);
+    }
+
+    #[test]
+    #[cfg(feature = "sha2")]
+    fn test_truncate_down() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let small = hash.truncate(20);
+        assert_eq!(small.size(), 20);
+    }
+
+    #[test]
+    #[cfg(feature = "sha2")]
+    fn test_truncate_up() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let small = hash.truncate(100);
+        assert_eq!(small.size(), 32);
+    }
+
+    #[test]
+    #[cfg(feature = "sha2")]
+    fn test_resize_fits() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let _: Multihash<32> = hash.resize().unwrap();
+    }
+
+    #[test]
+    #[cfg(feature = "sha2")]
+    fn test_resize_up() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        let _: Multihash<100> = hash.resize().unwrap();
+    }
+
+    #[test]
+    #[cfg(feature = "sha2")]
+    fn test_resize_truncate() {
+        let hash = Code::Sha2_256.digest(b"hello world");
+        hash.resize::<20>().unwrap_err();
     }
 }

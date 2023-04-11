@@ -1,15 +1,13 @@
 use std::io::{Cursor, Write};
 
-use multihash::{
-    derive::Multihash, Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Hasher,
-    Identity256, Keccak224, Keccak256, Keccak384, Keccak512, MultihashDigest, Sha1, Sha2_256,
-    Sha2_512, Sha3_224, Sha3_256, Sha3_384, Sha3_512, Strobe256, Strobe512,
+use multihash_codetable::{
+    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Identity256, Keccak224, Keccak256,
+    Keccak384, Keccak512, Ripemd160, Ripemd256, Ripemd320, Sha1, Sha2_256, Sha2_512, Sha3_224,
+    Sha3_256, Sha3_384, Sha3_512, Strobe256, Strobe512,
 };
+use multihash_derive::{Hasher, MultihashDigest};
 
-#[cfg(feature = "ripemd")]
-use multihash::{Ripemd160, Ripemd256, Ripemd320};
-
-#[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
     #[mh(code = 0x00, hasher = Identity256)]
@@ -388,7 +386,8 @@ fn multihash_errors() {
 
 #[test]
 fn blak3_non_default_digest() {
-    use multihash::Blake3Hasher;
+    use multihash_codetable::Blake3Hasher;
+    use multihash_derive::MultihashDigest;
     const DIGEST_SIZE: usize = 16;
     pub struct ContentHasher(Blake3Hasher<DIGEST_SIZE>);
 
@@ -404,7 +403,9 @@ fn blak3_non_default_digest() {
         }
 
         fn finish(&mut self) -> ContentHash {
-            let hash = multihash::Code::Blake3_256.wrap(self.0.finalize()).unwrap();
+            let hash = multihash_codetable::Code::Blake3_256
+                .wrap(self.0.finalize())
+                .unwrap();
             let resized_hash = hash.resize::<DIGEST_SIZE>().unwrap();
 
             let mut content = ContentHash([0u8; DIGEST_SIZE]);

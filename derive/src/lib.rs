@@ -1,3 +1,7 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+//! A procedural macro for custom Multihash code tables.
+//!
 //! This proc macro derives a custom Multihash code table from a list of hashers. It also
 //! generates a public type called `Multihash` which corresponds to the specified `alloc_size`.
 //!
@@ -17,32 +21,79 @@
 //!
 //! # Example
 //!
-//! ```
-//! use multihash::derive::Multihash;
-//! use multihash::MultihashDigest;
+//! ```ignore : `proc-macro-crate` does not work in docs, see https://github.com/bkchr/proc-macro-crate/issues/14
+//! use multihash_derive::{Hasher, MultihashDigest};
 //!
-//! #[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
+//! struct FooHasher;
+//!
+//! impl Hasher for FooHasher {
+//!     // Implement hasher ...
+//! #    fn update(&mut self, input: &[u8]) {
+//! #
+//! #    }
+//! #
+//! #    fn finalize(&mut self) -> &[u8] {
+//! #        &[]
+//! #    }
+//! #
+//! #    fn reset(&mut self) {
+//! #
+//! #    }
+//! }
+//!
+//! #[derive(Clone, Copy, Debug, Eq, MultihashDigest, PartialEq)]
 //! #[mh(alloc_size = 64)]
 //! pub enum Code {
-//!     #[mh(code = 0x01, hasher = multihash::Sha2_256)]
-//!     Foo,
-//!     #[mh(code = 0x02, hasher = multihash::Sha2_512)]
-//!     Bar,
+//!     #[mh(code = 0x01, hasher = FooHasher)]
+//!     Foo
 //! }
 //!
 //! let hash = Code::Foo.digest(b"hello world!");
+//!
 //! println!("{:02x?}", hash);
 //! ```
-extern crate proc_macro;
 
-mod multihash;
-mod utils;
+mod hasher;
 
-use proc_macro::TokenStream;
-use proc_macro_error::proc_macro_error;
-use synstructure::{decl_derive, Structure};
+use core::convert::TryFrom;
+use core::fmt;
 
-decl_derive!([Multihash, attributes(mh)] => #[proc_macro_error] multihash);
-fn multihash(s: Structure) -> TokenStream {
-    multihash::multihash(s).into()
+pub use hasher::Hasher;
+pub use multihash::Error;
+pub use multihash::Multihash;
+#[doc(inline)]
+pub use multihash_derive_impl::Multihash; // This one is deprecated.
+pub use multihash_derive_impl::MultihashDigest;
+
+/// The given code is not supported by this codetable.
+#[derive(Debug)]
+pub struct UnsupportedCode(pub u64);
+
+impl fmt::Display for UnsupportedCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "the code {} is not supported by this codetable", self.0)
+    }
+}
+
+impl core2::error::Error for UnsupportedCode {}
+
+/// Trait that implements hashing.
+///
+/// Typically, you won't implement this yourself but use the [`MultihashDigest`](multihash_derive_impl::MultihashDigest) custom-derive.
+pub trait MultihashDigest<const S: usize>:
+    TryFrom<u64, Error = UnsupportedCode>
+    + Into<u64>
+    + Send
+    + Sync
+    + Unpin
+    + Copy
+    + Eq
+    + fmt::Debug
+    + 'static
+{
+    /// Calculate the hash of some input data.
+    fn digest(&self, input: &[u8]) -> Multihash<S>;
+
+    /// Create a multihash from an existing multihash digest.
+    fn wrap(&self, digest: &[u8]) -> Result<Multihash<S>, Error>;
 }

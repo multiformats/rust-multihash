@@ -43,13 +43,3 @@ impl<K: Parse, V: Parse> Parse for Attr<K, V> {
         })
     }
 }
-
-#[cfg(test)]
-pub(crate) fn assert_proc_macro(
-    result: proc_macro2::TokenStream,
-    expected: proc_macro2::TokenStream,
-) {
-    let result = result.to_string();
-    let expected = expected.to_string();
-    pretty_assertions::assert_eq!(result, expected);
-}

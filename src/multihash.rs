@@ -1,12 +1,9 @@
 use crate::Error;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
-use core::convert::TryFrom;
 
 use core::convert::TryInto;
 use core::fmt::Debug;
-#[cfg(feature = "serde-codec")]
-use serde_big_array::BigArray;
 
 use unsigned_varint::encode as varint_encode;
 
@@ -15,42 +12,6 @@ use std::io;
 
 #[cfg(not(feature = "std"))]
 use core2::io;
-
-/// Trait that implements hashing.
-///
-/// It is usually implemented by a custom code table enum that derives the [`Multihash` derive].
-///
-/// [`Multihash` derive]: crate::derive
-pub trait MultihashDigest<const S: usize>:
-    TryFrom<u64> + Into<u64> + Send + Sync + Unpin + Copy + Eq + Debug + 'static
-{
-    /// Calculate the hash of some input data.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// // `Code` implements `MultihashDigest`
-    /// use multihash::{Code, MultihashDigest};
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!");
-    /// println!("{:02x?}", hash);
-    /// ```
-    fn digest(&self, input: &[u8]) -> Multihash<S>;
-
-    /// Create a multihash from an existing multihash digest.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use multihash::{Code, Hasher, MultihashDigest, Sha3_256};
-    ///
-    /// let mut hasher = Sha3_256::default();
-    /// hasher.update(b"Hello world!");
-    /// let hash = Code::Sha3_256.wrap(&hasher.finalize()).unwrap();
-    /// println!("{:02x?}", hash);
-    /// ```
-    fn wrap(&self, digest: &[u8]) -> Result<Multihash<S>, Error>;
-}
 
 /// A Multihash instance that only supports the basic functionality and no hashing.
 ///
@@ -68,13 +29,13 @@ pub trait MultihashDigest<const S: usize>:
 ///     0x76, 0x22, 0xf3, 0xca, 0x71, 0xfb, 0xa1, 0xd9, 0x72, 0xfd, 0x94, 0xa3, 0x1c, 0x3b, 0xfb,
 ///     0xf2, 0x4e, 0x39, 0x38,
 /// ];
-/// let mh = Multihash::from_bytes(&digest_bytes).unwrap();
+/// let mh = Multihash::<32>::from_bytes(&digest_bytes).unwrap();
 /// assert_eq!(mh.code(), Sha3_256);
 /// assert_eq!(mh.size(), 32);
 /// assert_eq!(mh.digest(), &digest_bytes[2..]);
 /// ```
-#[cfg_attr(feature = "serde-codec", derive(serde::Deserialize))]
-#[cfg_attr(feature = "serde-codec", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialOrd)]
 pub struct Multihash<const S: usize> {
     /// The code of the Multihash.
@@ -82,7 +43,7 @@ pub struct Multihash<const S: usize> {
     /// The actual size of the digest in bytes (not the allocated size).
     size: u8,
     /// The digest.
-    #[cfg_attr(feature = "serde-codec", serde(with = "BigArray"))]
+    #[cfg_attr(feature = "serde", serde(with = "serde_big_array::BigArray"))]
     digest: [u8; S],
 }
 
@@ -100,7 +61,7 @@ impl<const S: usize> Multihash<S> {
     /// Wraps the digest in a multihash.
     pub const fn wrap(code: u64, input_digest: &[u8]) -> Result<Self, Error> {
         if input_digest.len() > S {
-            return Err(Error::InvalidSize(input_digest.len() as _));
+            return Err(Error::invalid_size(input_digest.len() as _));
         }
         let size = input_digest.len();
         let mut digest = [0; S];
@@ -151,7 +112,7 @@ impl<const S: usize> Multihash<S> {
         let result = Self::read(&mut bytes)?;
         // There were more bytes supplied than read
         if !bytes.is_empty() {
-            return Err(Error::InvalidSize(bytes.len().try_into().expect(
+            return Err(Error::invalid_size(bytes.len().try_into().expect(
                 "Currently the maximum size is 255, therefore always fits into usize",
             )));
         }
@@ -190,31 +151,19 @@ impl<const S: usize> Multihash<S> {
     /// is secure (cryptographically) to use.
     ///
     /// If the new size is larger than the current size, this method does nothing.
-    ///
-    /// ```
-    /// use multihash::{Code, MultihashDigest};
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!").truncate(20);
-    /// ```
     pub fn truncate(&self, size: u8) -> Self {
         let mut mh = *self;
         mh.size = mh.size.min(size);
         mh
     }
 
-    /// Resizes the backing multihash buffer. This function fails if the hash digest is larger than
-    /// the target size.
+    /// Resizes the backing multihash buffer.
     ///
-    /// ```
-    /// use multihash::{Code, MultihashDigest, MultihashGeneric};
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!");
-    /// let large_hash: MultihashGeneric<32> = hash.resize().unwrap();
-    /// ```
+    /// This function fails if the hash digest is larger than the target size.
     pub fn resize<const R: usize>(&self) -> Result<Multihash<R>, Error> {
         let size = self.size as usize;
         if size > R {
-            return Err(Error::InvalidSize(self.size as u64));
+            return Err(Error::invalid_size(self.size as u64));
         }
         let mut mh = Multihash {
             code: self.code,
@@ -227,22 +176,7 @@ impl<const S: usize> Multihash<S> {
 
     /// Decomposes struct, useful when needing a `Sized` array or moving all the data into another type
     ///
-    /// It is recommended to use `digest()` `code()` and `size()` for most cases
-    ///
-    /// ```
-    /// use multihash::{Code, MultihashDigest};
-    /// struct Foo<const S: usize> {
-    ///     arr: [u8; S],
-    ///     len: usize,
-    /// }
-    ///
-    /// let hash = Code::Sha3_256.digest(b"Hello world!");
-    /// let (.., arr, size) = hash.into_inner();
-    /// let foo = Foo {
-    ///     arr,
-    ///     len: size as usize,
-    /// };
-    /// ```
+    /// It is recommended to use `digest()` `code()` and `size()` for most cases.
     pub fn into_inner(self) -> (u64, [u8; S], u8) {
         let Self { code, digest, size } = self;
         (code, digest, size)
@@ -250,7 +184,7 @@ impl<const S: usize> Multihash<S> {
 }
 
 // Don't hash the whole allocated space, but just the actual digest
-#[allow(clippy::derive_hash_xor_eq)]
+#[allow(clippy::derived_hash_with_manual_eq)]
 impl<const S: usize> core::hash::Hash for Multihash<S> {
     fn hash<T: core::hash::Hasher>(&self, state: &mut T) {
         self.code.hash(state);
@@ -309,7 +243,7 @@ impl<const S: usize> parity_scale_codec::Decode for Multihash<S> {
 }
 
 /// Writes the multihash to a byte stream.
-pub fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<usize, Error>
+fn write_multihash<W>(mut w: W, code: u64, size: u8, digest: &[u8]) -> Result<usize, Error>
 where
     W: io::Write,
 {
@@ -321,9 +255,12 @@ where
 
     let written = code.len() + size.len() + digest.len();
 
-    w.write_all(code)?;
-    w.write_all(size)?;
-    w.write_all(digest)?;
+    w.write_all(code)
+        .map_err(crate::error::io_to_multihash_error)?;
+    w.write_all(size)
+        .map_err(crate::error::io_to_multihash_error)?;
+    w.write_all(digest)
+        .map_err(crate::error::io_to_multihash_error)?;
 
     Ok(written)
 }
@@ -334,7 +271,7 @@ where
 /// maximum/allocated size of the digest.
 ///
 /// Currently the maximum size for a digest is 255 bytes.
-pub fn read_multihash<R, const S: usize>(mut r: R) -> Result<(u64, u8, [u8; S]), Error>
+fn read_multihash<R, const S: usize>(mut r: R) -> Result<(u64, u8, [u8; S]), Error>
 where
     R: io::Read,
 {
@@ -342,16 +279,19 @@ where
     let size = read_u64(&mut r)?;
 
     if size > S as u64 || size > u8::MAX as u64 {
-        return Err(Error::InvalidSize(size));
+        return Err(Error::invalid_size(size));
     }
 
     let mut digest = [0; S];
-    r.read_exact(&mut digest[..size as usize])?;
+    r.read_exact(&mut digest[..size as usize])
+        .map_err(crate::error::io_to_multihash_error)?;
     Ok((code, size as u8, digest))
 }
 
 #[cfg(feature = "std")]
-pub(crate) use unsigned_varint::io::read_u64;
+pub(crate) fn read_u64<R: io::Read>(r: R) -> Result<u64, Error> {
+    unsigned_varint::io::read_u64(r).map_err(crate::error::unsigned_variant_to_multihash_error)
+}
 
 /// Reads 64 bits from a byte array into a u64
 /// Adapted from unsigned-varint's generated read_u64 function at
@@ -361,76 +301,35 @@ pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
     use unsigned_varint::decode;
     let mut b = varint_encode::u64_buffer();
     for i in 0..b.len() {
-        let n = r.read(&mut (b[i..i + 1]))?;
+        let n = r
+            .read(&mut (b[i..i + 1]))
+            .map_err(crate::error::io_to_multihash_error)?;
         if n == 0 {
-            return Err(Error::Varint(decode::Error::Insufficient));
+            return Err(Error::insufficient_varint_bytes());
         } else if decode::is_last(b[i]) {
             return Ok(decode::u64(&b[..=i]).unwrap().0);
         }
     }
-    Err(Error::Varint(decode::Error::Overflow))
+    Err(Error::varint_overflow())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::multihash_impl::Code;
-
-    #[test]
-    fn roundtrip() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let mut buf = [0u8; 35];
-        let written = hash.write(&mut buf[..]).unwrap();
-        let hash2 = Multihash::<32>::read(&buf[..]).unwrap();
-        assert_eq!(hash, hash2);
-        assert_eq!(hash.encoded_len(), written);
-    }
-
-    #[test]
-    fn test_truncate_down() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let small = hash.truncate(20);
-        assert_eq!(small.size(), 20);
-    }
-
-    #[test]
-    fn test_truncate_up() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let small = hash.truncate(100);
-        assert_eq!(small.size(), 32);
-    }
-
-    #[test]
-    fn test_resize_fits() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let _: Multihash<32> = hash.resize().unwrap();
-    }
-
-    #[test]
-    fn test_resize_up() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        let _: Multihash<100> = hash.resize().unwrap();
-    }
-
-    #[test]
-    fn test_resize_truncate() {
-        let hash = Code::Sha2_256.digest(b"hello world");
-        hash.resize::<20>().unwrap_err();
-    }
 
     #[test]
     #[cfg(feature = "scale-codec")]
     fn test_scale() {
         use parity_scale_codec::{Decode, Encode};
 
-        let mh1 = Code::Sha2_256.digest(b"hello world");
+        let mh1 = Multihash::<32>::wrap(0, b"hello world").unwrap();
         // println!("mh1: code = {}, size = {}, digest = {:?}", mh1.code(), mh1.size(), mh1.digest());
         let mh1_bytes = mh1.encode();
         // println!("Multihash<32>: {}", hex::encode(&mh1_bytes));
         let mh2: Multihash<32> = Decode::decode(&mut &mh1_bytes[..]).unwrap();
         assert_eq!(mh1, mh2);
 
-        let mh3: Multihash<64> = Code::Sha2_256.digest(b"hello world");
+        let mh3 = Multihash::<64>::wrap(0, b"hello world").unwrap();
         // println!("mh3: code = {}, size = {}, digest = {:?}", mh3.code(), mh3.size(), mh3.digest());
         let mh3_bytes = mh3.encode();
         // println!("Multihash<64>: {}", hex::encode(&mh3_bytes));
@@ -441,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "serde-codec")]
+    #[cfg(feature = "serde")]
     fn test_serde() {
         let mh = Multihash::<32>::default();
         let bytes = serde_json::to_string(&mh).unwrap();

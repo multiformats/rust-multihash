@@ -1,27 +1,22 @@
-use crate::hasher::Hasher;
-
-#[cfg(feature = "std")]
-use std::io;
-
-#[cfg(not(feature = "std"))]
-use core2::io;
-
+#[cfg(any(feature = "strobe", feature = "identity", feature = "blake3"))]
 macro_rules! derive_write {
     ($name:ident) => {
-        impl<const S: usize> io::Write for $name<S> {
-            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        impl<const S: usize> core2::io::Write for $name<S> {
+            fn write(&mut self, buf: &[u8]) -> core2::io::Result<usize> {
+                use multihash_derive::Hasher as _;
+
                 self.update(buf);
                 Ok(buf.len())
             }
 
-            fn flush(&mut self) -> io::Result<()> {
+            fn flush(&mut self) -> core2::io::Result<()> {
                 Ok(())
             }
         }
     };
 }
 
-#[cfg(any(feature = "blake2b", feature = "blake2s"))]
+#[cfg(any(feature = "blake2b", feature = "blake2s", feature = "blake3"))]
 macro_rules! derive_hasher_blake {
     ($module:ident, $name:ident) => {
         /// Multihash hasher.
@@ -42,7 +37,7 @@ macro_rules! derive_hasher_blake {
             }
         }
 
-        impl<const S: usize> Hasher for $name<S> {
+        impl<const S: usize> multihash_derive::Hasher for $name<S> {
             fn update(&mut self, input: &[u8]) {
                 self.state.update(input);
             }
@@ -67,8 +62,6 @@ macro_rules! derive_hasher_blake {
 
 #[cfg(feature = "blake2b")]
 pub mod blake2b {
-    use super::*;
-
     derive_hasher_blake!(blake2b_simd, Blake2bHasher);
 
     /// 256 bit blake2b hasher.
@@ -80,8 +73,6 @@ pub mod blake2b {
 
 #[cfg(feature = "blake2s")]
 pub mod blake2s {
-    use super::*;
-
     derive_hasher_blake!(blake2s_simd, Blake2sHasher);
 
     /// 256 bit blake2b hasher.
@@ -93,8 +84,6 @@ pub mod blake2s {
 
 #[cfg(feature = "blake3")]
 pub mod blake3 {
-    use super::*;
-
     /// Multihash hasher.
     #[derive(Debug)]
     pub struct Blake3Hasher<const S: usize> {
@@ -121,7 +110,7 @@ pub mod blake3 {
         }
     }
 
-    impl<const S: usize> Hasher for Blake3Hasher<S> {
+    impl<const S: usize> multihash_derive::Hasher for Blake3Hasher<S> {
         fn update(&mut self, input: &[u8]) {
             self.hasher.update(input);
         }
@@ -143,7 +132,12 @@ pub mod blake3 {
     pub type Blake3_256 = Blake3Hasher<32>;
 }
 
-#[cfg(feature = "digest")]
+#[cfg(any(
+    feature = "sha1",
+    feature = "sha2",
+    feature = "sha3",
+    feature = "ripemd"
+))]
 macro_rules! derive_rustcrypto_hasher {
     ($module:ty, $name:ident, $size:expr) => {
         /// Multihash hasher.
@@ -162,7 +156,7 @@ macro_rules! derive_rustcrypto_hasher {
             }
         }
 
-        impl $crate::hasher::Hasher for $name {
+        impl ::multihash_derive::Hasher for $name {
             fn update(&mut self, input: &[u8]) {
                 use digest::Digest;
                 self.state.update(input)
@@ -183,13 +177,15 @@ macro_rules! derive_rustcrypto_hasher {
             }
         }
 
-        impl io::Write for $name {
-            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        impl core2::io::Write for $name {
+            fn write(&mut self, buf: &[u8]) -> core2::io::Result<usize> {
+                use multihash_derive::Hasher as _;
+
                 self.update(buf);
                 Ok(buf.len())
             }
 
-            fn flush(&mut self) -> io::Result<()> {
+            fn flush(&mut self) -> core2::io::Result<()> {
                 Ok(())
             }
         }
@@ -198,47 +194,37 @@ macro_rules! derive_rustcrypto_hasher {
 
 #[cfg(feature = "sha1")]
 pub mod sha1 {
-    use super::*;
-
     derive_rustcrypto_hasher!(::sha1::Sha1, Sha1, 20);
 }
 
 #[cfg(feature = "sha2")]
 pub mod sha2 {
-    use super::*;
-
-    derive_rustcrypto_hasher!(sha_2::Sha256, Sha2_256, 32);
-    derive_rustcrypto_hasher!(sha_2::Sha512, Sha2_512, 64);
+    derive_rustcrypto_hasher!(::sha2::Sha256, Sha2_256, 32);
+    derive_rustcrypto_hasher!(::sha2::Sha512, Sha2_512, 64);
 }
 
 #[cfg(feature = "sha3")]
 pub mod sha3 {
-    use super::*;
+    derive_rustcrypto_hasher!(::sha3::Sha3_224, Sha3_224, 28);
+    derive_rustcrypto_hasher!(::sha3::Sha3_256, Sha3_256, 32);
+    derive_rustcrypto_hasher!(::sha3::Sha3_384, Sha3_384, 48);
+    derive_rustcrypto_hasher!(::sha3::Sha3_512, Sha3_512, 64);
 
-    derive_rustcrypto_hasher!(sha_3::Sha3_224, Sha3_224, 28);
-    derive_rustcrypto_hasher!(sha_3::Sha3_256, Sha3_256, 32);
-    derive_rustcrypto_hasher!(sha_3::Sha3_384, Sha3_384, 48);
-    derive_rustcrypto_hasher!(sha_3::Sha3_512, Sha3_512, 64);
-
-    derive_rustcrypto_hasher!(sha_3::Keccak224, Keccak224, 28);
-    derive_rustcrypto_hasher!(sha_3::Keccak256, Keccak256, 32);
-    derive_rustcrypto_hasher!(sha_3::Keccak384, Keccak384, 48);
-    derive_rustcrypto_hasher!(sha_3::Keccak512, Keccak512, 64);
+    derive_rustcrypto_hasher!(::sha3::Keccak224, Keccak224, 28);
+    derive_rustcrypto_hasher!(::sha3::Keccak256, Keccak256, 32);
+    derive_rustcrypto_hasher!(::sha3::Keccak384, Keccak384, 48);
+    derive_rustcrypto_hasher!(::sha3::Keccak512, Keccak512, 64);
 }
 
 #[cfg(feature = "ripemd")]
 pub mod ripemd {
-
-    use super::*;
-
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd160, Ripemd160, 20);
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd256, Ripemd256, 32);
-    derive_rustcrypto_hasher!(ripemd_rs::Ripemd320, Ripemd320, 40);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd160, Ripemd160, 20);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd256, Ripemd256, 32);
+    derive_rustcrypto_hasher!(::ripemd::Ripemd320, Ripemd320, 40);
 }
 
+#[cfg(feature = "identity")]
 pub mod identity {
-    use super::*;
-
     /// Identity hasher with a maximum size.
     ///
     /// # Panics
@@ -259,7 +245,7 @@ pub mod identity {
         }
     }
 
-    impl<const S: usize> Hasher for IdentityHasher<S> {
+    impl<const S: usize> multihash_derive::Hasher for IdentityHasher<S> {
         fn update(&mut self, input: &[u8]) {
             let start = self.i.min(self.bytes.len());
             let end = (self.i + input.len()).min(self.bytes.len());
@@ -288,7 +274,6 @@ pub mod identity {
 
 #[cfg(feature = "strobe")]
 pub mod strobe {
-    use super::*;
     use strobe_rs::{SecParam, Strobe};
 
     /// Strobe hasher.
@@ -308,7 +293,7 @@ pub mod strobe {
         }
     }
 
-    impl<const S: usize> Hasher for StrobeHasher<S> {
+    impl<const S: usize> multihash_derive::Hasher for StrobeHasher<S> {
         fn update(&mut self, input: &[u8]) {
             self.strobe.ad(input, self.initialized);
             self.initialized = true;
