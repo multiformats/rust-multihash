@@ -92,6 +92,7 @@ jobs:
       - name: Generate Code Coverage
         uses: actions-rs/tarpaulin@v0.1
         with:
+          version: 0.25.2
           args: --all-features
 
       - name: Upload Code Coverage
