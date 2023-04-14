@@ -13,9 +13,12 @@ use multihash::Multihash;
 //! 2. If yes, store the data inline.
 //! 3. If no, hash it make it fit into the provided buffer.
 
+/// See <https://github.com/multiformats/multicodec/blob/master/table.csv#L2> for reference.
+const IDENTITY_HASH_CODE: u64 = 0;
+
 fn main() {
-    let valid_identity_hash = Multihash::<64>::wrap(0, b"foobar").unwrap();
-    let invalid_identity_hash = Multihash::<2>::wrap(0, b"foobar");
+    let valid_identity_hash = Multihash::<64>::wrap(IDENTITY_HASH_CODE, b"foobar").unwrap();
+    let invalid_identity_hash = Multihash::<2>::wrap(IDENTITY_HASH_CODE, b"foobar");
 
     assert_eq!(valid_identity_hash.digest(), b"foobar");
     assert_eq!(invalid_identity_hash.unwrap_err().to_string(), "Invalid multihash size 6.");
