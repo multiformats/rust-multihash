@@ -290,7 +290,7 @@ where
 
 #[cfg(feature = "std")]
 pub(crate) fn read_u64<R: io::Read>(r: R) -> Result<u64, Error> {
-    unsigned_varint::io::read_u64(r).map_err(crate::error::unsigned_variant_to_multihash_error)
+    unsigned_varint::io::read_u64(r).map_err(crate::error::unsigned_varint_to_multihash_error)
 }
 
 /// Reads 64 bits from a byte array into a u64
