@@ -1,3 +1,11 @@
+# [v0.18.1](https://github.com/multiformats/rust-multihash/compare/v0.18.0...v0.18.1) (2023-04-14)
+
+
+### Bug Fixes
+
+* don't panic on non minimal varints ([#293](https://github.com/multiformats/rust-multihash/issues/293)) ([c3445fc](https://github.com/multiformats/rust-multihash/commit/c3445fc5041b0fc573945321ebd4b0cdffe0daa5)), closes [#282](https://github.com/multiformats/rust-multihash/issues/282)
+
+
 # [v0.18.0](https://github.com/multiformats/rust-multihash/compare/v0.17.0...v) (2022-12-06)
 
 
