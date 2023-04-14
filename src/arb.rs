@@ -4,13 +4,12 @@ use rand::{
     Rng, RngCore, SeedableRng,
 };
 
+use crate::Multihash;
 use arbitrary::{size_hint, Unstructured};
 
-use crate::MultihashGeneric;
-
 /// Generates a random valid multihash.
-impl<const S: usize> quickcheck::Arbitrary for MultihashGeneric<S> {
-    fn arbitrary(g: &mut Gen) -> MultihashGeneric<S> {
+impl<const S: usize> quickcheck::Arbitrary for Multihash<S> {
+    fn arbitrary(g: &mut Gen) -> Multihash<S> {
         // In real world lower multihash codes are more likely to happen, hence distribute them
         // with bias towards smaller values.
         let weights = [128, 64, 32, 16, 8, 4, 2, 1];
@@ -32,11 +31,11 @@ impl<const S: usize> quickcheck::Arbitrary for MultihashGeneric<S> {
         let size = rng.gen_range(0..S);
         let mut data = [0; S];
         rng.fill_bytes(&mut data);
-        MultihashGeneric::wrap(code, &data[..size]).unwrap()
+        Multihash::wrap(code, &data[..size]).unwrap()
     }
 }
 
-impl<'a, const S: usize> arbitrary::Arbitrary<'a> for MultihashGeneric<S> {
+impl<'a, const S: usize> arbitrary::Arbitrary<'a> for Multihash<S> {
     fn arbitrary(u: &mut Unstructured<'a>) -> arbitrary::Result<Self> {
         let mut code = 0u64;
         let mut len_choice = u.arbitrary::<u8>()? | 1;
@@ -59,7 +58,7 @@ impl<'a, const S: usize> arbitrary::Arbitrary<'a> for MultihashGeneric<S> {
         let size = u.int_in_range(0..=S)?;
         let data = u.bytes(size)?;
 
-        Ok(MultihashGeneric::wrap(code, data).unwrap())
+        Ok(Multihash::wrap(code, data).unwrap())
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
@@ -69,15 +68,15 @@ impl<'a, const S: usize> arbitrary::Arbitrary<'a> for MultihashGeneric<S> {
 
 #[cfg(test)]
 mod tests {
-    use crate::MultihashGeneric;
+    use crate::Multihash;
     use arbitrary::{Arbitrary, Unstructured};
 
     #[test]
     fn arbitrary() {
         let mut u = Unstructured::new(&[2, 4, 13, 5, 6, 7, 8, 9, 6]);
 
-        let mh = <MultihashGeneric<16> as Arbitrary>::arbitrary(&mut u).unwrap();
-        let mh2 = MultihashGeneric::<16>::wrap(1037, &[6, 7, 8, 9, 6]).unwrap();
+        let mh = <Multihash<16> as Arbitrary>::arbitrary(&mut u).unwrap();
+        let mh2 = Multihash::<16>::wrap(1037, &[6, 7, 8, 9, 6]).unwrap();
         assert_eq!(mh, mh2);
     }
 }

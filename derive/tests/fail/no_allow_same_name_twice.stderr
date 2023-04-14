@@ -1,0 +1,10 @@
+error[E0428]: the name `Foo` is defined multiple times
+  --> tests/fail/no_allow_same_name_twice.rs:22:5
+   |
+20 |     Foo,
+   |     --- previous definition of the type `Foo` here
+21 |     #[mh(code = 0x1, hasher = FooHasher)]
+22 |     Foo,
+   |     ^^^ `Foo` redefined here
+   |
+   = note: `Foo` must be defined only once in the type namespace of this enum
