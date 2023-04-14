@@ -61,11 +61,11 @@ pub(crate) fn unsigned_variant_to_multihash_error(err: unsigned_varint::io::Read
 }
 
 #[cfg(not(feature = "std"))]
-impl From<unsigned_varint::decode::Error> for Error {
-    fn from(error: unsigned_varint::decode::Error) -> Self {
-        Error {
-            kind: Kind::Varint(error),
-        }
+pub(crate) fn unsigned_varint_decode_to_multihash_error(
+    err: unsigned_varint::decode::Error,
+) -> Error {
+    Error {
+        kind: Kind::Varint(err),
     }
 }
 

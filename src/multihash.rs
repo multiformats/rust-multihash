@@ -309,7 +309,7 @@ pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
         } else if decode::is_last(b[i]) {
             return decode::u64(&b[..=i])
                 .map(|decoded| decoded.0)
-                .map_err(Into::into);
+                .map_err(crate::error::unsigned_varint_decode_to_multihash_error);
         }
     }
     Err(Error::varint_overflow())
