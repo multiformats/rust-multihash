@@ -1,5 +1,3 @@
-use multihash::Multihash;
-
 //! An example for how to use the "identity" hash of [`Multihash`].
 //!
 //! Identity hashing means we don't actually perform any hashing.
@@ -13,6 +11,8 @@ use multihash::Multihash;
 //! 2. If yes, store the data inline.
 //! 3. If no, hash it make it fit into the provided buffer.
 
+use multihash::Multihash;
+
 /// See <https://github.com/multiformats/multicodec/blob/master/table.csv#L2> for reference.
 const IDENTITY_HASH_CODE: u64 = 0;
 
@@ -21,5 +21,8 @@ fn main() {
     let invalid_identity_hash = Multihash::<2>::wrap(IDENTITY_HASH_CODE, b"foobar");
 
     assert_eq!(valid_identity_hash.digest(), b"foobar");
-    assert_eq!(invalid_identity_hash.unwrap_err().to_string(), "Invalid multihash size 6.");
+    assert_eq!(
+        invalid_identity_hash.unwrap_err().to_string(),
+        "Invalid multihash size 6."
+    );
 }
