@@ -56,7 +56,7 @@ pub(crate) fn unsigned_variant_to_multihash_error(err: unsigned_varint::io::Read
         unsigned_varint::io::ReadError::Decode(err) => Error {
             kind: Kind::Varint(err),
         },
-        _ => unreachable!(),
+        other => io_to_multihash_error(io::Error::new(io::ErrorKind::Other, other)),
     }
 }
 
