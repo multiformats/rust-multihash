@@ -307,9 +307,10 @@ pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
         if n == 0 {
             return Err(Error::insufficient_varint_bytes());
         } else if decode::is_last(b[i]) {
-            return decode::u64(&b[..=i])
-                .map(|decoded| decoded.0)
-                .map_err(crate::error::unsigned_varint_decode_to_multihash_error);
+            let (u64, _) = decode::u64(&b[..=i])
+                .map_err(crate::error::unsigned_varint_decode_to_multihash_error)?;
+
+            return Ok(u64);
         }
     }
     Err(Error::varint_overflow())
