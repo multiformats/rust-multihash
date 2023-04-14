@@ -60,6 +60,15 @@ pub(crate) fn unsigned_variant_to_multihash_error(err: unsigned_varint::io::Read
     }
 }
 
+#[cfg(not(feature = "std"))]
+pub(crate) fn unsigned_varint_decode_to_multihash_error(
+    err: unsigned_varint::decode::Error,
+) -> Error {
+    Error {
+        kind: Kind::Varint(err),
+    }
+}
+
 pub(crate) fn io_to_multihash_error(err: io::Error) -> Error {
     Error {
         kind: Kind::Io(err),

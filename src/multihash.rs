@@ -307,7 +307,9 @@ pub(crate) fn read_u64<R: io::Read>(mut r: R) -> Result<u64, Error> {
         if n == 0 {
             return Err(Error::insufficient_varint_bytes());
         } else if decode::is_last(b[i]) {
-            return Ok(decode::u64(&b[..=i]).unwrap().0);
+            return decode::u64(&b[..=i])
+                .map(|decoded| decoded.0)
+                .map_err(crate::error::unsigned_varint_decode_to_multihash_error);
         }
     }
     Err(Error::varint_overflow())
@@ -353,5 +355,13 @@ mod tests {
         let mh1 = Multihash::<32>::default();
         let mh2 = Multihash::<64>::default();
         assert_eq!(mh1, mh2);
+    }
+
+    #[test]
+    fn decode_non_minimal_error() {
+        // This is a non-minimal varint.
+        let data = [241, 0, 0, 0, 0, 0, 128, 132, 132, 132, 58];
+        let result = read_u64(&data[..]);
+        assert!(result.is_err());
     }
 }
