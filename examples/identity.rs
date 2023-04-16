@@ -17,12 +17,9 @@ use multihash::Multihash;
 const IDENTITY_HASH_CODE: u64 = 0;
 
 fn main() {
-    let valid_identity_hash = Multihash::<64>::wrap(IDENTITY_HASH_CODE, b"foobar").unwrap();
-    let invalid_identity_hash = Multihash::<2>::wrap(IDENTITY_HASH_CODE, b"foobar");
+    let identity_hash = Multihash::<64>::wrap(IDENTITY_HASH_CODE, b"foobar").unwrap();
+    let wrap_err = Multihash::<2>::wrap(IDENTITY_HASH_CODE, b"foobar").unwrap_err();
 
-    assert_eq!(valid_identity_hash.digest(), b"foobar");
-    assert_eq!(
-        invalid_identity_hash.unwrap_err().to_string(),
-        "Invalid multihash size 6."
-    );
+    assert_eq!(identity_hash.digest(), b"foobar");
+    assert_eq!(wrap_err.to_string(), "Invalid multihash size 6.");
 }
