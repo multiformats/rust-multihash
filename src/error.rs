@@ -50,7 +50,7 @@ enum Kind {
 }
 
 #[cfg(feature = "std")]
-pub(crate) fn unsigned_variant_to_multihash_error(err: unsigned_varint::io::ReadError) -> Error {
+pub(crate) fn unsigned_varint_to_multihash_error(err: unsigned_varint::io::ReadError) -> Error {
     match err {
         unsigned_varint::io::ReadError::Io(err) => io_to_multihash_error(err),
         unsigned_varint::io::ReadError::Decode(err) => Error {
