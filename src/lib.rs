@@ -29,6 +29,8 @@ extern crate alloc;
 mod arb;
 mod error;
 mod multihash;
+#[cfg(feature = "serde")]
+mod serde;
 
 /// Multihash result.
 #[deprecated(note = "Use `Result<T, multihash::Error>` instead")]
