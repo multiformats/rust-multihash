@@ -13,7 +13,7 @@ license = "MIT"
 readme = "README.md"
 documentation = "https://docs.rs/multihash/"
 edition = "2021"
-rust-version = "1.59"
+rust-version = "1.62"
 
 [features]
 default = ["std"]
