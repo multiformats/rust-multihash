@@ -76,7 +76,7 @@ jobs:
           args: --no-default-features --workspace --target thumbv6m-none-eabi
 
   msrv:
-    name: Check if multihash compiles with MSRV
+    name: MSRV
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Sources
