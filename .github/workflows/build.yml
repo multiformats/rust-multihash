@@ -91,6 +91,8 @@ jobs:
         with:
           toolchain: ${{ env.MSRV }}
 
+      - uses: Swatinem/rust-cache@v2
+
       - run: cargo +"$MSRV" build --all-features --package multihash
 
   coverage:
