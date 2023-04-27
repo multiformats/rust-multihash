@@ -75,6 +75,24 @@ jobs:
           command: build
           args: --no-default-features --workspace --target thumbv6m-none-eabi
 
+  msrv:
+    name: Check if multihash compiles with MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v3
+
+      - name: Extract MSRV from Cargo.toml
+        run: |
+          MSRV=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[] | select(.name == "multihash") | .rust_version')
+          echo "MSRV=$MSRV" >> $GITHUB_ENV
+
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.MSRV }}
+
+      - run: cargo build --all-features --package multihash
+
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
