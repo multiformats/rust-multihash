@@ -91,7 +91,7 @@ jobs:
         with:
           toolchain: ${{ env.MSRV }}
 
-      - run: cargo build --all-features --package multihash
+      - run: cargo +"$MSRV" build --all-features --package multihash
 
   coverage:
     name: Code Coverage
