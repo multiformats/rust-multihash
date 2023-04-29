@@ -2,7 +2,7 @@
 
 mod hasher_impl;
 
-use multihash_derive::MultihashDigest;
+pub use multihash_derive::MultihashDigest;
 
 #[cfg(feature = "blake2b")]
 pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bHasher};
