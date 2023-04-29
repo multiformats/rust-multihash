@@ -37,7 +37,7 @@ use core2::io;
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialOrd)]
-pub struct Multihash<const S: usize> {
+pub struct Multihash<const S: usize = 64> {
     /// The code of the Multihash.
     code: u64,
     /// The actual size of the digest in bytes (not the allocated size).
