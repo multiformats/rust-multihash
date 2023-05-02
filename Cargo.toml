@@ -22,14 +22,13 @@ alloc = []
 arb = ["dep:quickcheck", "dep:rand", "dep:arbitrary"]
 scale-codec = ["dep:parity-scale-codec"]
 serde-codec = ["serde"] # Deprecated, don't use.
-serde = ["dep:serde", "dep:serde-big-array"]
+serde = ["dep:serde"]
 
 [dependencies]
 parity-scale-codec = { version = "3.0.0", default-features = false, features = ["derive"], optional = true }
 quickcheck = { version = "1.0.3", optional = true }
 rand = { version = "0.8.5", optional = true, features = ["small_rng"] }
-serde = { version = "1.0.116", optional = true, default-features = false, features = ["derive"] }
-serde-big-array = { version = "0.5.1", optional = true }
+serde = { version = "1.0.116", optional = true, default-features = false }
 unsigned-varint = { version = "0.7.1", default-features = false }
 arbitrary = { version = "1.1.0", optional = true }
 
@@ -41,3 +40,4 @@ serde_json = "1.0.58"
 quickcheck = "1.0.3"
 rand = "0.8.5"
 arbitrary = "1.1.0"
+serde_test = "1.0.160"
