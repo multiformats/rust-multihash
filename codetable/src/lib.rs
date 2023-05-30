@@ -10,8 +10,6 @@ pub use crate::hasher_impl::blake2b::{Blake2b256, Blake2b512, Blake2bHasher};
 pub use crate::hasher_impl::blake2s::{Blake2s128, Blake2s256, Blake2sHasher};
 #[cfg(feature = "blake3")]
 pub use crate::hasher_impl::blake3::{Blake3Hasher, Blake3_256};
-#[cfg(feature = "identity")]
-pub use crate::hasher_impl::identity::{Identity256, IdentityHasher};
 #[cfg(feature = "ripemd")]
 pub use crate::hasher_impl::ripemd::{Ripemd160, Ripemd256, Ripemd320};
 #[cfg(feature = "sha1")]
@@ -107,12 +105,6 @@ pub enum Code {
     #[cfg(feature = "ripemd")]
     #[mh(code = 0x1055, hasher = crate::Ripemd320)]
     Ripemd320,
-
-    // The following hashes are not cryptographically secure hashes and are not enabled by default
-    /// Identity hash (max. 64 bytes)
-    #[cfg(feature = "identity")]
-    #[mh(code = 0x00, hasher = crate::IdentityHasher::<64>)]
-    Identity,
 }
 
 #[cfg(test)]

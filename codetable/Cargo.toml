@@ -15,7 +15,6 @@ sha1 = ["dep:sha-1"]
 strobe = ["dep:strobe-rs"]
 blake2b = ["dep:blake2b_simd"]
 blake2s = ["dep:blake2s_simd"]
-identity = []
 
 [dependencies]
 blake2b_simd = { version = "1.0.0", default-features = false, optional = true }

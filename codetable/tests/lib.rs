@@ -1,17 +1,15 @@
 use std::io::{Cursor, Write};
 
 use multihash_codetable::{
-    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Identity256, Keccak224, Keccak256,
-    Keccak384, Keccak512, Ripemd160, Ripemd256, Ripemd320, Sha1, Sha2_256, Sha2_512, Sha3_224,
-    Sha3_256, Sha3_384, Sha3_512, Strobe256, Strobe512,
+    Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Keccak224, Keccak256, Keccak384,
+    Keccak512, Ripemd160, Ripemd256, Ripemd320, Sha1, Sha2_256, Sha2_512, Sha3_224, Sha3_256,
+    Sha3_384, Sha3_512, Strobe256, Strobe512,
 };
 use multihash_derive::{Hasher, MultihashDigest};
 
 #[derive(Clone, Copy, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
-    #[mh(code = 0x00, hasher = Identity256)]
-    Identity,
     #[mh(code = 0x11, hasher = Sha1)]
     Sha1,
     #[mh(code = 0x12, hasher = Sha2_256)]
@@ -88,7 +86,6 @@ macro_rules! assert_encode {
 #[test]
 fn multihash_encode() {
     assert_encode! {
-        Identity256, Code::Identity, b"beep boop", "00096265657020626f6f70";
         Sha1, Code::Sha1, b"beep boop", "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         Sha2_256, Code::Sha2_256, b"helloworld", "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         Sha2_256, Code::Sha2_256, b"beep boop", "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -132,7 +129,6 @@ macro_rules! assert_decode {
 #[test]
 fn assert_decode() {
     assert_decode! {
-        Code::Identity, "000a68656c6c6f776f726c64";
         Code::Sha1, "11147c8357577f51d4f0a8d393aa1aaafb28863d9421";
         Code::Sha2_256, "1220936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af";
         Code::Sha2_256, "122090ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c";
@@ -198,7 +194,6 @@ macro_rules! assert_roundtrip {
 #[test]
 fn assert_roundtrip() {
     assert_roundtrip!(
-        Code::Identity, Identity256;
         Code::Sha1, Sha1;
         Code::Sha2_256, Sha2_256;
         Code::Sha2_512, Sha2_512;
@@ -255,7 +250,6 @@ where
 
 #[test]
 fn test_multihash_methods() {
-    multihash_methods::<Identity256>(Code::Identity, "000b", "68656c6c6f20776f726c64");
     multihash_methods::<Sha1>(
         Code::Sha1,
         "1114",
@@ -348,14 +342,6 @@ fn test_multihash_methods() {
             "0e12fe7d075f8e319e07c106917eddb0135e9a10aefb50a8a07ccb0582ff1fa27b95ed5af57fd5c6",
         );
     }
-}
-
-#[test]
-#[should_panic]
-fn test_long_identity_hash() {
-    // The identity hash allocates if the input size is bigger than the maximum size
-    let input = b"abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz";
-    Code::Identity.digest(input);
 }
 
 #[test]
