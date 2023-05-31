@@ -9,10 +9,11 @@ Install dependencies
 ```sh
 $ npm install -g conventional-changelog-cli
 $ cd rust-multihash
-$ conventional-changelog --preset angular
+$ conventional-changelog --preset conventionalcommits
 ```
 
-Add the output of that to `CHANGELOG.md`, and write a human-centric summary of changes.
+Add the output of that to `CHANGELOG.md`. Write a human-centric summary of changes and add migration instructions for breaking changes if needed.
+
 Update the linked output to reference the new version, which conventional-changelog doesn't know about:
 
 ```md
