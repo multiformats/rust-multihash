@@ -33,6 +33,11 @@ multihash = "*"
 
 Then run `cargo build`.
 
+## MSRV
+
+The minimum supported Rust version for this library is `1.64.0`.
+This is only guaranteed without additional features activated.
+
 ## Usage
 
 ```rust
