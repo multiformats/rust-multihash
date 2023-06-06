@@ -40,29 +40,36 @@ This is only guaranteed without additional features activated.
 
 ## Usage
 
+The `multihash` crate exposes a basic data structure for encoding and decoding multihash.
+It does not provide any hashing functionality itself.
+`Multihash` uses const-generics to define the internal buffer size.
+You should set this to the maximum size of the digest you want to support.
+
 ```rust
-use multihash::{Code, MultihashDigest};
+use multihash::Multihash;
+
+const SHA2_256: u64 = 0x12;
 
 fn main() {
-    let hash = Code::Sha2_256.digest(b"my hash");
-    println!("{:?}", hash);
+	let hash = Multihash::<64>::wrap(SHA2_256, b"my digest");
+	println!("{:?}", hash);
 }
 ```
 
 ### Using a custom code table
 
-You can derive your own application specific code table:
+You can derive your own application specific code table using the `multihash-derive` crate.
+The `multihash-codetable` provides predefined hasher implementations if you don't want to implement your own.
 
 ```rust
-use multihash::derive::Multihash;
-use multihash::MultihashCode;
+use multihash_derive::MultihashDigest;
 
-#[derive(Clone, Copy, Debug, Eq, Multihash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
 pub enum Code {
-    #[mh(code = 0x01, hasher = multihash::Sha2_256)]
+    #[mh(code = 0x01, hasher = multihash_codetable::Sha2_256)]
     Foo,
-    #[mh(code = 0x02, hasher = multihash::Sha2_512)]
+    #[mh(code = 0x02, hasher = multihash_codetable::Sha2_512)]
     Bar,
 }
 
