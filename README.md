@@ -45,9 +45,11 @@ You should set this to the maximum size of the digest you want to support.
 ```rust
 use multihash::Multihash;
 
+const SHA2_256: u64 = 0x12;
+
 fn main() {
-    let hash = Multihash::<64>::wrap(0x12, b"my digest");
-    println!("{:?}", hash);
+	let hash = Multihash::<64>::wrap(SHA2_256, b"my digest");
+	println!("{:?}", hash);
 }
 ```
 
