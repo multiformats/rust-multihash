@@ -26,7 +26,7 @@ sha2 = { version = "0.10.0", default-features = false, optional = true }
 sha3 = { version = "0.10.0", default-features = false, optional = true }
 strobe-rs = { version = "0.8.1", default-features = false, optional = true }
 ripemd = { version = "0.1.1", default-features = false, optional = true }
-multihash-derive = { version = "0.8.0", path = "../derive", default-features = false }
+multihash-derive = { version = "0.9.0", path = "../derive", default-features = false }
 core2 = { version = "0.4.0", default-features = false }
 serde = { version = "1.0.158", features = ["derive"], optional = true }
 
