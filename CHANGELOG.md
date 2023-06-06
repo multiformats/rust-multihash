@@ -1,3 +1,17 @@
+### Migrating
+
+When upgrading to `v0.19`, consider the following:
+
+- `Code` has moved to `multihash_codetable::Code`.
+  Either use that or define your own codetable using `multihash_derive`.
+
+- `multihash::Multihash` now requires the size of its internal buffer as a const-generic.
+  You can migrate your existing code by defining the following type-alias:
+
+  ```rust
+  type Multihash = multihash::Multihash<64>;
+  ```
+
 ## [v0.18.1](https://github.com/multiformats/rust-multihash/compare/v0.18.0...v0.18.1) (2023-04-14)
 
 
