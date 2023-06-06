@@ -13,7 +13,7 @@ When upgrading to `v0.19`, consider the following:
   ```
 
 - The `identity` hasher has been removed completely.
-  Check the [identity examples](examples/identity.rs) on how to replicate the functionality.
+  Check the [identity example](examples/identity.rs) on how to replicate the functionality.
 
 ## [v0.18.1](https://github.com/multiformats/rust-multihash/compare/v0.18.0...v0.18.1) (2023-04-14)
 
