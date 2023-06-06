@@ -24,9 +24,13 @@ becomes:
 # [v0.18.0](https://github.com/multiformats/rust-multihash/compare/v0.17.0...v0.18.0) (2022-12-06)
 ```
 
-## Publishing
+Create a pull request with the changelog changes and the correct version bumps to the crates.
 
-Publishing on crates.io, bumping version & generating tags is done using [`cargo-release`](https://github.com/crate-ci/cargo-release).
+
+Publishing
+----------
+
+Once the PR above is merged, the crate can be published. This is done using [`cargo-release`](https://github.com/crate-ci/cargo-release).
 
 This requires the following permissions
 
@@ -39,11 +43,11 @@ This requires the following permissions
 Dry run
 
 ```sh
-$ cargo release <patch|minor|major>
+$ cargo release --workspace
 ```
 
 Actual publishing
 
 ```sh
-$ cargo release --execute <patch|minor|major>
+$ cargo release --workspace --execute
 ```
