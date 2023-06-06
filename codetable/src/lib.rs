@@ -1,5 +1,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+//! A batteries-included code table of multihashes.
+//!
+//! Whilst the `multihash` crate itself only defines the data structure, this crate defines a codetable via [`multihash_derive`] for several hashers.
+//! Although convenient, depending on this crate will increase the dependency footprint of your project.
+//!
+//! It is only recommended as a getting-started-quickly solution.
+//! For production, you should either define your own codetable or rely only on the `multihash` crate itself.
+
 mod hasher_impl;
 
 pub use multihash_derive::MultihashDigest;

@@ -19,6 +19,9 @@
 //! can be useful if you e.g. have specified type aliases for your hash digests and you are sure
 //! you use the correct value for `alloc_size`.
 //!
+//! When you want to define your own codetable, you should only depend on `multihash-derive`.
+//! It re-exports the `multihash` crate for you.
+//!
 //! # Example
 //!
 //! ```ignore : `proc-macro-crate` does not work in docs, see https://github.com/bkchr/proc-macro-crate/issues/14
