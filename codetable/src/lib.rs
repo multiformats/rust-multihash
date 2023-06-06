@@ -6,7 +6,7 @@
 //! Although convenient, depending on this crate will increase the dependency footprint of your project.
 //!
 //! It is only recommended as a getting-started-quickly solution.
-//! For production, you should either define your own codetable or rely only the `multihash` crate itself.
+//! For production, you should either define your own codetable or rely only on the `multihash` crate itself.
 
 mod hasher_impl;
 
