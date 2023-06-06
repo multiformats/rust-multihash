@@ -33,7 +33,10 @@ multihash = "*"
 
 Then run `cargo build`.
 
-MSRV 1.51.0 due to use of const generics
+## MSRV
+
+The minimum supported Rust version for this library is `1.64.0`.
+This is only guaranteed without additional features activated.
 
 ## Usage
 

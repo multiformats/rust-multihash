@@ -93,7 +93,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - run: cargo +"$MSRV" build --all-features --package multihash
+      - run: cargo +"$MSRV" build --package multihash
 
   coverage:
     name: Code Coverage
