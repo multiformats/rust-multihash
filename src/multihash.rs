@@ -104,6 +104,8 @@ impl<const S: usize> Multihash<S> {
     }
 
     /// Wraps the digest in a multihash.
+    #[deprecated]
+    #[doc(hidden)]
     pub const fn wrap(code: u64, input_digest: &[u8]) -> Result<Self, Error> {
         match Self::new(code, input_digest) {
             Ok(ok) => Ok(ok),
