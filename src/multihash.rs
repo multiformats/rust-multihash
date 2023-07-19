@@ -54,7 +54,41 @@ impl<const S: usize> Default for Multihash<S> {
     }
 }
 
+/// Returned from [`Multihash::new`]
+#[non_exhaustive]
+pub enum CreationError {
+    /// The digest exceeds the capacity of the multihash
+    DigestTooBig,
+}
+
 impl<const S: usize> Multihash<S> {
+    /// Wrap the digest in a multihash
+    /// ```rust
+    /// # use multihash::Multihash;
+    /// const MULTIHASH: Multihash<64> = match Multihash::new(0, &[]) {
+    ///     Ok(ok) => ok,
+    ///     Err(_) => panic!(),
+    /// };
+    /// ```
+    pub const fn new(code: u64, input_digest: &[u8]) -> Result<Self, CreationError> {
+        if input_digest.len() > S {
+            return Err(CreationError::DigestTooBig);
+        }
+
+        let size = input_digest.len();
+        let mut digest = [0; S];
+        let mut i = 0;
+        while i < size {
+            digest[i] = input_digest[i];
+            i += 1;
+        }
+        Ok(Self {
+            code,
+            size: size as u8,
+            digest,
+        })
+    }
+
     /// Wraps the digest in a multihash.
     pub const fn wrap(code: u64, input_digest: &[u8]) -> Result<Self, Error> {
         if input_digest.len() > S {
