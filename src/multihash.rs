@@ -3,7 +3,7 @@ use crate::Error;
 use alloc::vec::Vec;
 
 use core::convert::TryInto;
-use core::fmt::Debug;
+use core::fmt::{self, Debug};
 
 use unsigned_varint::encode as varint_encode;
 
@@ -55,11 +55,25 @@ impl<const S: usize> Default for Multihash<S> {
 }
 
 /// Returned from [`Multihash::new`]
+#[derive(Debug)]
 #[non_exhaustive]
 pub enum CreationError {
     /// The digest exceeds the capacity of the multihash
     DigestTooBig,
 }
+
+impl fmt::Display for CreationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CreationError::DigestTooBig => {
+                f.write_str("The digest exceeds the capacity of the multihash")
+            }
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for CreationError {}
 
 impl<const S: usize> Multihash<S> {
     /// Wrap the digest in a multihash
