@@ -105,21 +105,10 @@ impl<const S: usize> Multihash<S> {
 
     /// Wraps the digest in a multihash.
     pub const fn wrap(code: u64, input_digest: &[u8]) -> Result<Self, Error> {
-        if input_digest.len() > S {
-            return Err(Error::invalid_size(input_digest.len() as _));
+        match Self::new(code, input_digest) {
+            Ok(ok) => Ok(ok),
+            Err(CreationError::DigestTooBig) => Err(Error::invalid_size(input_digest.len() as _)),
         }
-        let size = input_digest.len();
-        let mut digest = [0; S];
-        let mut i = 0;
-        while i < size {
-            digest[i] = input_digest[i];
-            i += 1;
-        }
-        Ok(Self {
-            code,
-            size: size as u8,
-            digest,
-        })
     }
 
     /// Returns the code of the multihash.
