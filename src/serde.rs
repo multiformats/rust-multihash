@@ -75,7 +75,7 @@ mod tests {
         // This is a concatenation of `SHA2_256_CODE + DIGEST_LENGTH + DIGEST`.
         let expected_json = format!("[{},{},159,228,204,198,222,22,114,79,58,48,199,232,242,84,243,198,71,25,134,172,177,248,216,207,142,150,206,42,215,219,231,251]", SHA2_256_CODE as u8, DIGEST.len() as u8);
 
-        let mh = Multihash::<32>::wrap(SHA2_256_CODE, &DIGEST).unwrap();
+        let mh = Multihash::<32>::new(SHA2_256_CODE, &DIGEST).unwrap();
 
         let json = serde_json::to_string(&mh).unwrap();
         assert_eq!(json, expected_json);
@@ -124,7 +124,7 @@ mod tests {
             251,
         ];
 
-        let mh = Multihash::<32>::wrap(SHA2_256_CODE, &DIGEST).unwrap();
+        let mh = Multihash::<32>::new(SHA2_256_CODE, &DIGEST).unwrap();
 
         // As bytes.
         assert_tokens(&mh, &[Token::Bytes(&ENCODED_MULTIHASH_BYTES)]);

@@ -23,7 +23,7 @@ fn uses_correct_hasher() {
     hasher.update(b"foobar");
     let digest = hasher.finalize();
 
-    let multihash2 = Multihash::wrap(0x38b64f, digest).unwrap();
+    let multihash2 = Multihash::new(0x38b64f, digest).unwrap();
 
     assert_eq!(multihash1, multihash2)
 }

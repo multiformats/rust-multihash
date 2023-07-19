@@ -228,7 +228,7 @@ where
     let mut expected_cursor = Cursor::new(&expected_bytes);
     let multihash = code.digest(b"hello world");
 
-    assert_eq!(Multihash::wrap(code.into(), &digest).unwrap(), multihash);
+    assert_eq!(Multihash::new(code.into(), &digest).unwrap(), multihash);
     assert_eq!(multihash.code(), u64::from(code));
     assert_eq!(multihash.size() as usize, digest.len());
     assert_eq!(multihash.digest(), digest);

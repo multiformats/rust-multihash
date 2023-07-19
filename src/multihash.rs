@@ -360,14 +360,14 @@ mod tests {
     fn test_scale() {
         use parity_scale_codec::{Decode, Encode};
 
-        let mh1 = Multihash::<32>::wrap(0, b"hello world").unwrap();
+        let mh1 = Multihash::<32>::new(0, b"hello world").unwrap();
         // println!("mh1: code = {}, size = {}, digest = {:?}", mh1.code(), mh1.size(), mh1.digest());
         let mh1_bytes = mh1.encode();
         // println!("Multihash<32>: {}", hex::encode(&mh1_bytes));
         let mh2: Multihash<32> = Decode::decode(&mut &mh1_bytes[..]).unwrap();
         assert_eq!(mh1, mh2);
 
-        let mh3 = Multihash::<64>::wrap(0, b"hello world").unwrap();
+        let mh3 = Multihash::<64>::new(0, b"hello world").unwrap();
         // println!("mh3: code = {}, size = {}, digest = {:?}", mh3.code(), mh3.size(), mh3.digest());
         let mh3_bytes = mh3.encode();
         // println!("Multihash<64>: {}", hex::encode(&mh3_bytes));

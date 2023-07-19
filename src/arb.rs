@@ -31,7 +31,7 @@ impl<const S: usize> quickcheck::Arbitrary for Multihash<S> {
         let size = rng.gen_range(0..S);
         let mut data = [0; S];
         rng.fill_bytes(&mut data);
-        Multihash::wrap(code, &data[..size]).unwrap()
+        Multihash::new(code, &data[..size]).unwrap()
     }
 }
 
@@ -58,7 +58,7 @@ impl<'a, const S: usize> arbitrary::Arbitrary<'a> for Multihash<S> {
         let size = u.int_in_range(0..=S)?;
         let data = u.bytes(size)?;
 
-        Ok(Multihash::wrap(code, data).unwrap())
+        Ok(Multihash::new(code, data).unwrap())
     }
 
     fn size_hint(depth: usize) -> (usize, Option<usize>) {
@@ -76,7 +76,7 @@ mod tests {
         let mut u = Unstructured::new(&[2, 4, 13, 5, 6, 7, 8, 9, 6]);
 
         let mh = <Multihash<16> as Arbitrary>::arbitrary(&mut u).unwrap();
-        let mh2 = Multihash::<16>::wrap(1037, &[6, 7, 8, 9, 6]).unwrap();
+        let mh2 = Multihash::<16>::new(1037, &[6, 7, 8, 9, 6]).unwrap();
         assert_eq!(mh, mh2);
     }
 }
