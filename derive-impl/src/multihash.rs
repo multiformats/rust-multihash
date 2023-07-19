@@ -233,7 +233,7 @@ pub fn multihash(s: Structure) -> TokenStream {
             }
 
             fn wrap(&self, digest: &[u8]) -> Result<Multihash, #mh_crate::Error> {
-                Multihash::wrap((*self).into(), digest)
+                Multihash::new((*self).into(), digest).map_err(#mh_crate::Error::from)
             }
         }
 

@@ -54,29 +54,36 @@ impl<const S: usize> Default for Multihash<S> {
     }
 }
 
-/// Returned from [`Multihash::new`]
+/// Returned from [`Multihash::new`] if the digest cannot fit inside the multihash.
 #[derive(Debug)]
-#[non_exhaustive]
-pub enum CreationError {
-    /// The digest exceeds the capacity of the multihash
-    DigestTooBig,
-}
+pub struct DigestTooBig(usize);
 
-impl fmt::Display for CreationError {
+impl fmt::Display for DigestTooBig {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            CreationError::DigestTooBig => {
-                f.write_str("The digest exceeds the capacity of the multihash")
-            }
-        }
+        // Must match the error message for `crate::Error`
+        f.write_fmt(format_args!("Invalid multihash size {}.", self.0))
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for CreationError {}
+impl std::error::Error for DigestTooBig {}
+
+// Allows implementations of `multihash_derive::MultihashDigest` to construct the
+// error required by that trait without using the deprecated `Multihash::wrap`
+//
+// (This includes the derive macro for that trait)
+impl From<DigestTooBig> for crate::Error {
+    fn from(value: DigestTooBig) -> Self {
+        Error::invalid_size(value.0 as _)
+    }
+}
 
 impl<const S: usize> Multihash<S> {
-    /// Wrap the digest in a multihash
+    /// Constructs a new [`Multihash`].
+    ///
+    /// The provided digest must be created from a hash-function with the registered code.
+    ///
+    /// This function may be called in const contexts.
     /// ```rust
     /// # use multihash::Multihash;
     /// const MULTIHASH: Multihash<64> = match Multihash::new(0, &[]) {
@@ -84,12 +91,12 @@ impl<const S: usize> Multihash<S> {
     ///     Err(_) => panic!(),
     /// };
     /// ```
-    pub const fn new(code: u64, input_digest: &[u8]) -> Result<Self, CreationError> {
-        if input_digest.len() > S {
-            return Err(CreationError::DigestTooBig);
+    pub const fn new(code: u64, input_digest: &[u8]) -> Result<Self, DigestTooBig> {
+        let size = input_digest.len();
+        if size > S {
+            return Err(DigestTooBig(size));
         }
 
-        let size = input_digest.len();
         let mut digest = [0; S];
         let mut i = 0;
         while i < size {
@@ -104,12 +111,12 @@ impl<const S: usize> Multihash<S> {
     }
 
     /// Wraps the digest in a multihash.
-    #[deprecated = "use Multihash::new insteads"]
+    #[deprecated = "Use Multihash::new instead, which allows accessing a Multihash in const contexts"]
     #[doc(hidden)]
     pub const fn wrap(code: u64, input_digest: &[u8]) -> Result<Self, Error> {
         match Self::new(code, input_digest) {
             Ok(ok) => Ok(ok),
-            Err(CreationError::DigestTooBig) => Err(Error::invalid_size(input_digest.len() as _)),
+            Err(DigestTooBig(u)) => Err(Error::invalid_size(u as _)),
         }
     }
 
