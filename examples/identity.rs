@@ -3,7 +3,7 @@
 //! Identity hashing means we don't actually perform any hashing.
 //! Instead, we just store data directly in place of the "digest".
 //!
-//! [`Multihash::wrap`] returns an error in case the provided digest is too big for the available space.
+//! [`Multihash::new`] returns an error in case the provided digest is too big for the available space.
 //! Make sure you construct a [`Multihash`] with a large enough buffer for your data.
 //!
 //! Typically, the way you want to use the "identity" hash is:

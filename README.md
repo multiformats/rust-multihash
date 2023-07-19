@@ -51,7 +51,7 @@ use multihash::Multihash;
 const SHA2_256: u64 = 0x12;
 
 fn main() {
-	let hash = Multihash::<64>::wrap(SHA2_256, b"my digest");
+	let hash = Multihash::<64>::new(SHA2_256, b"my digest");
 	println!("{:?}", hash);
 }
 ```

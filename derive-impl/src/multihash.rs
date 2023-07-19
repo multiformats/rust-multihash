@@ -87,7 +87,7 @@ impl Hash {
         quote!(Self::#ident => {
             let mut hasher = #hasher::default();
             hasher.update(input);
-            Multihash::wrap(#code, hasher.finalize()).unwrap()
+            Multihash::new(#code, hasher.finalize()).unwrap()
         })
     }
 }
