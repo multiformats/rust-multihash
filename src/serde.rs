@@ -1,20 +1,76 @@
 //! Multihash Serde (de)serialization
 
-use std::fmt;
+use core::{fmt, ptr, slice};
 
 use serde::{
     de::{self, SeqAccess, Visitor},
-    Deserialize, Deserializer, Serialize, Serializer,
+    ser, Deserialize, Deserializer, Serialize, Serializer,
 };
 
 use crate::Multihash;
+
+/// The maximum serialization size of `code` is 9 bytes (a large varint encoded u64) and for `size`
+/// is 2 bytes  (a large varint encoded u8), this makes a total of 11 bytes.
+const MAXIMUM_PREFIX_SIZE: usize = 11;
+
+/// The is currently no way to allocate an array that is some constant size bigger then a given
+/// const generic. Once `generic_const_exprs` are a thing, this struct will no longer be needed.
+/// Until then we introduce a hack. We allocate a struct, which contains two independent arrays,
+/// which can be specified with const generics. We then treat the whole struct as a slice of
+/// continuous memory.
+#[repr(C, packed)]
+struct Buffer<const SIZE_FIRST: usize, const SIZE_SECOND: usize> {
+    first: [u8; SIZE_FIRST],
+    second: [u8; SIZE_SECOND],
+}
+
+#[allow(unsafe_code)]
+impl<const SIZE_FIRST: usize, const SIZE_SECOND: usize> Buffer<SIZE_FIRST, SIZE_SECOND> {
+    fn new() -> Self {
+        let buffer = Self {
+            first: [0; SIZE_FIRST],
+            second: [0; SIZE_SECOND],
+        };
+
+        // Make sure that the struct allocated continuous memory, as we exploit that fact with the
+        // `as_slice` and `as_mut_slice()` methods.
+        let start_first = ptr::addr_of!(buffer.first) as *const u8;
+        let start_second = ptr::addr_of!(buffer.second) as *const u8;
+        unsafe {
+            // This should never happen, hence it's OK to panic.
+            if start_second.offset_from(start_first) != SIZE_FIRST as isize {
+                panic!("alignment of the struct is wrong")
+            }
+        }
+
+        buffer
+    }
+
+    fn len(&self) -> usize {
+        SIZE_FIRST + SIZE_SECOND
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        let start = ptr::addr_of!(self.first) as *const u8;
+        unsafe { slice::from_raw_parts(start, self.len()) }
+    }
+
+    fn as_mut_slice(&mut self) -> &mut [u8] {
+        let start = ptr::addr_of_mut!(self.first) as *mut u8;
+        unsafe { slice::from_raw_parts_mut(start, self.len()) }
+    }
+}
 
 impl<const SIZE: usize> Serialize for Multihash<SIZE> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        serializer.serialize_bytes(&self.to_bytes())
+        let mut buffer = Buffer::<MAXIMUM_PREFIX_SIZE, SIZE>::new();
+        let bytes_written = self
+            .write(buffer.as_mut_slice())
+            .map_err(|_| ser::Error::custom("Failed to serialize Multihash"))?;
+        serializer.serialize_bytes(&buffer.as_slice()[..bytes_written])
     }
 }
 
@@ -32,7 +88,7 @@ impl<'de, const SIZE: usize> Visitor<'de> for BytesVisitor<SIZE> {
         E: de::Error,
     {
         Multihash::<SIZE>::from_bytes(bytes)
-            .map_err(|err| de::Error::custom(format!("Failed to deserialize Multihash: {}", err)))
+            .map_err(|_| de::Error::custom("Failed to deserialize Multihash"))
     }
 
     // Some Serde data formats interpret a byte stream as a sequence of bytes (e.g. `serde_json`).
@@ -40,12 +96,21 @@ impl<'de, const SIZE: usize> Visitor<'de> for BytesVisitor<SIZE> {
     where
         A: SeqAccess<'de>,
     {
-        let mut bytes = Vec::new();
+        let mut buffer = Buffer::<MAXIMUM_PREFIX_SIZE, SIZE>::new();
+        let bytes = buffer.as_mut_slice();
+
+        // Fill the bytes slices with the given sequence
+        let mut pos = 0;
         while let Some(byte) = seq.next_element()? {
-            bytes.push(byte);
+            bytes[pos] = byte;
+            pos += 1;
+            if pos >= bytes.len() {
+                return Err(de::Error::custom("Failed to deserialize Multihash"));
+            }
         }
-        Multihash::<SIZE>::from_bytes(&bytes)
-            .map_err(|err| de::Error::custom(format!("Failed to deserialize Multihash: {}", err)))
+
+        Multihash::<SIZE>::from_bytes(&bytes[..pos])
+            .map_err(|_| de::Error::custom("Failed to deserialize Multihash"))
     }
 }
 

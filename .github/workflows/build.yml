@@ -60,6 +60,22 @@ jobs:
         run: cargo build --no-default-features --workspace --target thumbv6m-none-eabi
         shell: bash
 
+  build-no-std-with-serde:
+    name: Build no_std with `serde` feature enabled
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v3
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv6m-none-eabi
+
+      - name: Build
+        run: cargo build --no-default-features --features serde --workspace --target thumbv6m-none-eabi
+        shell: bash
+
   msrv:
     name: MSRV
     runs-on: ubuntu-latest
