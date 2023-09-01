@@ -1,6 +1,6 @@
 //! Multihash Serde (de)serialization
 
-use core::{fmt, ptr, slice};
+use core::{fmt, mem, ptr, slice};
 
 use serde::{
     de::{self, SeqAccess, Visitor},
@@ -27,37 +27,20 @@ struct Buffer<const SIZE_FIRST: usize, const SIZE_SECOND: usize> {
 #[allow(unsafe_code)]
 impl<const SIZE_FIRST: usize, const SIZE_SECOND: usize> Buffer<SIZE_FIRST, SIZE_SECOND> {
     fn new() -> Self {
-        let buffer = Self {
+        Self {
             first: [0; SIZE_FIRST],
             second: [0; SIZE_SECOND],
-        };
-
-        // Make sure that the struct allocated continuous memory, as we exploit that fact with the
-        // `as_slice` and `as_mut_slice()` methods.
-        let start_first = ptr::addr_of!(buffer.first) as *const u8;
-        let start_second = ptr::addr_of!(buffer.second) as *const u8;
-        unsafe {
-            // This should never happen, hence it's OK to panic.
-            if start_second.offset_from(start_first) != SIZE_FIRST as isize {
-                panic!("alignment of the struct is wrong")
-            }
         }
-
-        buffer
-    }
-
-    fn len(&self) -> usize {
-        SIZE_FIRST + SIZE_SECOND
     }
 
     fn as_slice(&self) -> &[u8] {
         let start = ptr::addr_of!(self.first) as *const u8;
-        unsafe { slice::from_raw_parts(start, self.len()) }
+        unsafe { slice::from_raw_parts(start, mem::size_of::<Self>()) }
     }
 
     fn as_mut_slice(&mut self) -> &mut [u8] {
         let start = ptr::addr_of_mut!(self.first) as *mut u8;
-        unsafe { slice::from_raw_parts_mut(start, self.len()) }
+        unsafe { slice::from_raw_parts_mut(start, mem::size_of::<Self>()) }
     }
 }
 
@@ -236,5 +219,21 @@ mod tests {
                 Token::SeqEnd,
             ],
         );
+    }
+
+    #[test]
+    fn test_buffer_alignment() {
+        const SIZE_FIRST: usize = 11;
+        const SIZE_SECOND: usize = 13;
+        let buffer = Buffer::<SIZE_FIRST, SIZE_SECOND>::new();
+
+        // Make sure that the struct allocated continuous memory, as we exploit that fact with the
+        // `as_slice` and `as_mut_slice()` methods.
+        let start_first = ptr::addr_of!(buffer.first) as *const u8;
+        let start_second = ptr::addr_of!(buffer.second) as *const u8;
+        #[allow(unsafe_code)]
+        unsafe {
+            assert_eq!(start_second.offset_from(start_first), SIZE_FIRST as isize);
+        };
     }
 }
