@@ -1,6 +1,6 @@
 //! Multihash Serde (de)serialization
 
-use core::{fmt, mem, ptr, slice};
+use core::{fmt, mem, slice};
 
 use serde::{
     de::{self, SeqAccess, Visitor},
@@ -34,13 +34,11 @@ impl<const SIZE_FIRST: usize, const SIZE_SECOND: usize> Buffer<SIZE_FIRST, SIZE_
     }
 
     fn as_slice(&self) -> &[u8] {
-        let start = ptr::addr_of!(self.first) as *const u8;
-        unsafe { slice::from_raw_parts(start, mem::size_of::<Self>()) }
+        unsafe { slice::from_raw_parts(self as *const _ as _, mem::size_of::<Self>()) }
     }
 
     fn as_mut_slice(&mut self) -> &mut [u8] {
-        let start = ptr::addr_of_mut!(self.first) as *mut u8;
-        unsafe { slice::from_raw_parts_mut(start, mem::size_of::<Self>()) }
+        unsafe { slice::from_raw_parts_mut(self as *mut _ as _, mem::size_of::<Self>()) }
     }
 }
 
@@ -109,6 +107,8 @@ impl<'de, const SIZE: usize> Deserialize<'de> for Multihash<SIZE> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use std::ptr;
 
     use serde_test::{assert_tokens, Token};
 
@@ -235,5 +235,16 @@ mod tests {
         unsafe {
             assert_eq!(start_second.offset_from(start_first), SIZE_FIRST as isize);
         };
+    }
+
+    #[test]
+    fn test_buffer() {
+        const SIZE_FIRST: usize = 3;
+        const SIZE_SECOND: usize = 8;
+        let mut buffer = Buffer::<SIZE_FIRST, SIZE_SECOND>::new();
+
+        let data: [u8; SIZE_FIRST + SIZE_SECOND] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        buffer.as_mut_slice().copy_from_slice(&data);
+        assert_eq!(buffer.as_slice(), data);
     }
 }
