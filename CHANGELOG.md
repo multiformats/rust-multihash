@@ -1,3 +1,10 @@
+## [](https://github.com/multiformats/rust-multihash/compare/v0.19.0...v0.19.1) (2023-09-06)
+
+### Bug Fixes
+
+* make Serde (de)serialization no_std compatible ([#337](https://github.com/multiformats/rust-multihash/issues/337)) ([7ad5161](https://github.com/multiformats/rust-multihash/commit/7ad51614ad347bfa8c6f421986abc517e04091f6)), closes 336[#](https://github.com/multiformats/rust-multihash/issues/336). This was a regression introduced in v0.19.0.
+
+
 ## [](https://github.com/multiformats/rust-multihash/compare/v0.18.0...v0.19.0) (2023-06-06)
 
 
