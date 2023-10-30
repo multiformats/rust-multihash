@@ -1,4 +1,10 @@
-#[cfg(any(feature = "strobe", feature = "identity", feature = "blake3"))]
+#[cfg(any(
+    feature = "strobe",
+    feature = "identity",
+    feature = "blake2b",
+    feature = "blake2s",
+    feature = "blake3"
+))]
 macro_rules! derive_write {
     ($name:ident) => {
         impl<const S: usize> core2::io::Write for $name<S> {
