@@ -123,8 +123,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-deny
-        run: cargo install cargo-deny
-        shell: bash
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
 
       - name: Cargo Deny - Check
         run: cargo deny check
