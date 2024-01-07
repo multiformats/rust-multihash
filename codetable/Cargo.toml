@@ -57,3 +57,7 @@ required-features = ["blake2b", "sha2"]
 name = "manual_mh"
 path = "examples/manual_mh.rs"
 required-features = ["sha2"]
+
+[package.metadata.docs.rs]
+features = ["std", "sha1", "sha2", "sha3", "ripemd", "strobe", "blake2b", "blake2s", "blake3", "serde"]
+rustdoc-args = ["--cfg", "docs_rs"]
