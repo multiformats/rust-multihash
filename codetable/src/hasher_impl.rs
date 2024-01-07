@@ -22,7 +22,7 @@ macro_rules! derive_write {
     };
 }
 
-#[cfg(any(feature = "blake2b", feature = "blake2s", feature = "blake3"))]
+#[cfg(any(feature = "blake2b", feature = "blake2s"))]
 macro_rules! derive_hasher_blake {
     ($module:ident, $name:ident) => {
         /// Multihash hasher.
@@ -81,10 +81,10 @@ pub mod blake2b {
 pub mod blake2s {
     derive_hasher_blake!(blake2s_simd, Blake2sHasher);
 
-    /// 256 bit blake2b hasher.
+    /// 256 bit blake2s hasher.
     pub type Blake2s128 = Blake2sHasher<16>;
 
-    /// 512 bit blake2b hasher.
+    /// 512 bit blake2s hasher.
     pub type Blake2s256 = Blake2sHasher<32>;
 }
 

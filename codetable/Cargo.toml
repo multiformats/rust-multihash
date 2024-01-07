@@ -11,10 +11,14 @@ edition = "2021"
 [features]
 default = ["std"]
 std = ["blake2b_simd?/std", "blake2s_simd?/std", "blake3?/std", "digest?/std", "sha1?/std", "sha2?/std", "sha3?/std", "strobe-rs?/std", "ripemd?/std", "multihash-derive/std", "core2/std"]
-sha1 = ["dep:sha1"]
+sha1 = ["dep:digest", "dep:sha1"]
+sha2 = ["dep:digest", "dep:sha2"]
+sha3 = ["dep:digest", "dep:sha3"]
+ripemd = ["dep:digest", "dep:ripemd"]
 strobe = ["dep:strobe-rs"]
 blake2b = ["dep:blake2b_simd"]
 blake2s = ["dep:blake2s_simd"]
+blake3 = ["dep:blake3"]
 
 [dependencies]
 blake2b_simd = { version = "1.0.0", default-features = false, optional = true }
@@ -43,3 +47,13 @@ harness = false
 [[test]]
 name = "lib"
 required-features = ["sha1", "sha2", "sha3", "ripemd", "strobe", "blake2b", "blake2s", "blake3"]
+
+[[example]]
+name = "custom_table"
+path = "examples/custom_table.rs"
+required-features = ["blake2b", "sha2"]
+
+[[example]]
+name = "manual_mh"
+path = "examples/manual_mh.rs"
+required-features = ["sha2"]
