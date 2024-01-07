@@ -115,11 +115,15 @@ pub enum Code {
     Ripemd320,
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(feature = "sha2", feature = "sha3")))]
 mod tests {
     use super::*;
+    #[cfg(feature = "sha3")]
     use crate::hasher_impl::sha3::{Sha3_256, Sha3_512};
-    use multihash_derive::{Hasher, Multihash, MultihashDigest};
+    #[cfg(feature = "sha3")]
+    use multihash_derive::Hasher;
+    #[cfg(feature = "sha2")]
+    use multihash_derive::{Multihash, MultihashDigest};
 
     #[test]
     #[cfg(feature = "sha3")]
