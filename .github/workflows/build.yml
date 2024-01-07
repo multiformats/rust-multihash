@@ -131,6 +131,28 @@ jobs:
         run: cargo deny check
         shell: bash
 
+  # todo: run on all crates
+  cargo-hack-codetable:
+    name: Cargo Hack - codetable
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-hack
+
+      - name: Cargo Hack - Check each feature
+        run: cargo hack check -p multihash-codetable --each-feature
+        shell: bash
+        env:
+          RUSTFLAGS: -D warnings
+
   semver-checks:
     runs-on: ubuntu-latest
     steps:
