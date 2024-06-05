@@ -2,9 +2,7 @@ use std::collections::HashSet;
 
 use crate::utils;
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
-#[cfg(not(test))]
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
 #[cfg(not(test))]
 use syn::spanned::Spanned;
