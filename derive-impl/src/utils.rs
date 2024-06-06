@@ -14,16 +14,23 @@ pub fn use_crate(name: &str) -> Result<syn::Ident, Error> {
 
 #[derive(Debug)]
 pub struct Attrs<A> {
+    pub ident: syn::Ident,
     pub paren: syn::token::Paren,
     pub attrs: Punctuated<A, syn::token::Comma>,
 }
 
 impl<A: Parse> Parse for Attrs<A> {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        // Maybe check if ident == "mh"
+        let ident = input.parse()?;
         let content;
         let paren = syn::parenthesized!(content in input);
-        let attrs = content.parse_terminated(A::parse)?;
-        Ok(Self { paren, attrs })
+        let attrs = content.parse_terminated(A::parse, syn::token::Comma)?;
+        Ok(Self {
+            ident,
+            paren,
+            attrs,
+        })
     }
 }
 
