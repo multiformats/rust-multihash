@@ -36,7 +36,7 @@ serde = { version = "1.0.158", features = ["derive"], default-features = false, 
 
 [dev-dependencies]
 hex = "0.4.2"
-unsigned-varint = { version = "0.7.1", default-features = false }
+unsigned-varint = { version = "0.8.0", default-features = false }
 criterion = "0.5.1"
 rand = "0.8.5"
 
