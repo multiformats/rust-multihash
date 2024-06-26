@@ -1,7 +1,7 @@
 [package]
 name = "multihash-codetable"
 description = "Default multihash code-table with cryptographically secure hash implementations"
-version = "0.1.2"
+version = "0.1.3"
 repository = "https://github.com/multiformats/rust-multihash"
 license = "MIT"
 edition = "2021"
