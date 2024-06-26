@@ -1,3 +1,4 @@
+#![cfg_attr(feature = "arb", allow(unreachable_code))] // Otherwise the "Cargo Hack" check fails since "arb" includes no hash algos by default
 #![cfg_attr(docs_rs, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -46,6 +47,7 @@ pub use crate::hasher_impl::strobe::{Strobe256, Strobe512, StrobeHasher};
 /// algorithms. See the [`multihash-derive`] crate for more information.
 ///
 /// [`multihash-derive`]: https://docs.rs/multihash-derive
+#[cfg_attr(feature = "arb", derive(arbitrary::Arbitrary))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Copy, Clone, Debug, Eq, MultihashDigest, PartialEq)]
 #[mh(alloc_size = 64)]
