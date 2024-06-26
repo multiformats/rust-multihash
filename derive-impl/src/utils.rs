@@ -13,8 +13,12 @@ pub fn use_crate(name: &str) -> Result<syn::Ident, Error> {
 }
 
 #[derive(Debug)]
-pub struct Attrs<A> {
+pub(crate) struct Attrs<A> {
+    // The information is part of the parsed AST, we preserve it even if it isn't used yet.
+    #[allow(dead_code)]
     pub ident: syn::Ident,
+    // The information is part of the parsed AST, we preserve it even if it isn't used yet.
+    #[allow(dead_code)]
     pub paren: syn::token::Paren,
     pub attrs: Punctuated<A, syn::token::Comma>,
 }
@@ -35,8 +39,12 @@ impl<A: Parse> Parse for Attrs<A> {
 }
 
 #[derive(Debug)]
-pub struct Attr<K, V> {
+pub(crate) struct Attr<K, V> {
+    // The information is part of the parsed AST, we preserve it even if it isn't used yet.
+    #[allow(dead_code)]
     pub key: K,
+    // The information is part of the parsed AST, we preserve it even if it isn't used yet.
+    #[allow(dead_code)]
     pub eq: syn::token::Eq,
     pub value: V,
 }
