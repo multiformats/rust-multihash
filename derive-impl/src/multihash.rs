@@ -112,14 +112,14 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
             #[cfg(test)]
             panic!("{}", msg);
             #[cfg(not(test))]
-            proc_macro_error::abort!(ident, msg);
+            proc_macro_error2::abort!(ident, msg);
         });
         let hasher = hasher.unwrap_or_else(|| {
             let msg = "Missing hasher attribute: e.g. #[mh(hasher = multihash::Sha2_256)]";
             #[cfg(test)]
             panic!("{}", msg);
             #[cfg(not(test))]
-            proc_macro_error::abort!(ident, msg);
+            proc_macro_error2::abort!(ident, msg);
         });
         Self {
             ident,
@@ -156,7 +156,7 @@ fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> syn::LitInt {
             #[cfg(test)]
             panic!("{}", msg);
             #[cfg(not(test))]
-            proc_macro_error::abort!(&ast.ident, msg);
+            proc_macro_error2::abort!(&ast.ident, msg);
         }
     }
 }
@@ -184,7 +184,7 @@ fn error_code_duplicates(hashes: &[Hash]) {
             {
                 let already_defined = uniq.get(code).unwrap();
                 let line = already_defined.to_token_stream().span().start().line;
-                proc_macro_error::emit_error!(
+                proc_macro_error2::emit_error!(
                     &hash.code, msg;
                     note = "previous definition of `{}` at line {}", quote!(#code), line;
                 );
