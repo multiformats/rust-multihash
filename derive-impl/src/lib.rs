@@ -4,13 +4,11 @@
 //! For example, the actual trait that we are deriving `MultihashDigest`, as well as the `Hasher` trait and
 //! the `UnsupportedCode` error type.
 
-extern crate proc_macro;
-
 mod multihash;
 mod utils;
 
 use proc_macro::TokenStream;
-use proc_macro_error::proc_macro_error;
+use proc_macro_error2::proc_macro_error;
 use synstructure::macros::{parse, DeriveInput};
 use synstructure::{MacroResult, Structure};
 
