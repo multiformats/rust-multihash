@@ -1,6 +1,5 @@
 #[cfg(any(
     feature = "strobe",
-    feature = "identity",
     feature = "blake2b",
     feature = "blake2s",
     feature = "blake3"
