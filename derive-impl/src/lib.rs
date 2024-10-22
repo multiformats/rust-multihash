@@ -10,13 +10,11 @@ mod multihash;
 mod utils;
 
 use proc_macro::TokenStream;
-use proc_macro_error::proc_macro_error;
 use synstructure::macros::{parse, DeriveInput};
 use synstructure::{MacroResult, Structure};
 
 #[proc_macro_derive(Multihash, attributes(mh))]
 #[allow(non_snake_case)]
-#[proc_macro_error]
 #[deprecated(since = "0.8.1", note = "Use `MultihashDigest` derive instead.")]
 pub fn Multihash(i: TokenStream) -> TokenStream {
     match parse::<DeriveInput>(i) {
@@ -31,7 +29,6 @@ pub fn Multihash(i: TokenStream) -> TokenStream {
 /// Custom derive for the `MultihashDigest` trait.
 #[proc_macro_derive(MultihashDigest, attributes(mh))]
 #[allow(non_snake_case)]
-#[proc_macro_error]
 pub fn MultihashDigest(i: TokenStream) -> TokenStream {
     #[allow(deprecated)]
     Multihash(i)

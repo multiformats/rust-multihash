@@ -1,7 +1,4 @@
-error: the #mh(code) attribute `0x0` is defined multiple times
-
-         = note: previous definition of `0x0` at line 0
-
+error: the #mh(code) attribute `0x0` is defined multiple times, previous definition at line 0
   --> tests/fail/no_allow_same_code_twice.rs:21:17
    |
 21 |     #[mh(code = 0x0, hasher = FooHasher)]

@@ -1,10 +1,10 @@
 use std::collections::HashSet;
+use std::convert::TryFrom;
 
 use crate::utils;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
-#[cfg(not(test))]
 use syn::spanned::Spanned;
 use synstructure::{Structure, VariantInfo};
 
@@ -90,8 +90,9 @@ impl Hash {
     }
 }
 
-impl<'a> From<&'a VariantInfo<'a>> for Hash {
-    fn from(bi: &'a VariantInfo<'a>) -> Self {
+impl<'a> TryFrom<&'a VariantInfo<'a>> for Hash {
+    type Error = syn::Error;
+    fn try_from(bi: &'a VariantInfo<'a>) -> Result<Self, syn::Error> {
         let mut code = None;
         let mut hasher = None;
         for attr in bi.ast().attrs {
@@ -107,32 +108,32 @@ impl<'a> From<&'a VariantInfo<'a>> for Hash {
         }
 
         let ident = bi.ast().ident.clone();
-        let code = code.unwrap_or_else(|| {
+        let code = code.ok_or_else(|| -> syn::Error {
             let msg = "Missing code attribute: e.g. #[mh(code = multihash::SHA3_256)]";
             #[cfg(test)]
             panic!("{}", msg);
             #[cfg(not(test))]
-            proc_macro_error::abort!(ident, msg);
-        });
-        let hasher = hasher.unwrap_or_else(|| {
+            syn::Error::new(bi.ast().ident.span(), msg)
+        })?;
+        let hasher = hasher.ok_or_else(|| -> syn::Error {
             let msg = "Missing hasher attribute: e.g. #[mh(hasher = multihash::Sha2_256)]";
             #[cfg(test)]
             panic!("{}", msg);
             #[cfg(not(test))]
-            proc_macro_error::abort!(ident, msg);
-        });
-        Self {
+            syn::Error::new(bi.ast().ident.span(), msg)
+        })?;
+        Ok(Self {
             ident,
             code,
             hasher,
-        }
+        })
     }
 }
 
 /// Parse top-level enum [#mh()] attributes.
 ///
 /// Returns the `alloc_size` and whether errors regarding to `alloc_size` should be reported or not.
-fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> syn::LitInt {
+fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> syn::Result<syn::LitInt> {
     let mut alloc_size = None;
 
     for attr in &ast.attrs {
@@ -149,63 +150,69 @@ fn parse_code_enum_attrs(ast: &syn::DeriveInput) -> syn::LitInt {
             }
         }
     }
-    match alloc_size {
-        Some(alloc_size) => alloc_size,
-        None => {
-            let msg = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = 64)]";
-            #[cfg(test)]
-            panic!("{}", msg);
-            #[cfg(not(test))]
-            proc_macro_error::abort!(&ast.ident, msg);
-        }
-    }
+    alloc_size.ok_or_else(|| -> syn::Error {
+        let msg = "enum is missing `alloc_size` attribute: e.g. #[mh(alloc_size = 64)]";
+        #[cfg(test)]
+        panic!("{}", msg);
+        #[cfg(not(test))]
+        syn::Error::new(ast.span(), msg)
+    })
 }
 
 /// Return an error if the same code is used several times.
 ///
 /// This only checks for string equality, though this should still catch most errors caused by
 /// copy and pasting.
-fn error_code_duplicates(hashes: &[Hash]) {
+fn check_error_code_duplicates(hashes: &[Hash]) -> Result<(), syn::Error> {
     // Use a temporary store to determine whether a certain value is unique or not
     let mut uniq = HashSet::new();
 
-    hashes.iter().for_each(|hash| {
+    let mut errors = hashes.iter().filter_map(|hash| -> Option<syn::Error> {
         let code = &hash.code;
+        // It's a duplicate
+        if uniq.insert(code) {
+            return None;
+        }
+
+        let already_defined = uniq.get(code).unwrap();
+        let line = already_defined.to_token_stream().span().start().line;
+
         let msg = format!(
-            "the #mh(code) attribute `{}` is defined multiple times",
-            quote!(#code)
+            "the #mh(code) attribute `{}` is defined multiple times, previous definition at line {}",
+            quote!(#code), line
         );
 
-        // It's a duplicate
-        if !uniq.insert(code) {
-            #[cfg(test)]
-            panic!("{}", msg);
-            #[cfg(not(test))]
-            {
-                let already_defined = uniq.get(code).unwrap();
-                let line = already_defined.to_token_stream().span().start().line;
-                proc_macro_error::emit_error!(
-                    &hash.code, msg;
-                    note = "previous definition of `{}` at line {}", quote!(#code), line;
-                );
-            }
-        }
+        #[cfg(test)]
+        panic!("{}", msg);
+        #[cfg(not(test))]
+        Some(syn::Error::new(hash.code.span(), msg))
     });
+    if let Some(mut error) = errors.next() {
+        error.extend(errors);
+        Err(error)
+    } else {
+        Ok(())
+    }
 }
 
 pub fn multihash(s: Structure) -> TokenStream {
-    let mh_crate = match utils::use_crate("multihash-derive") {
-        Ok(ident) => ident,
-        Err(e) => {
-            let err = syn::Error::new(Span::call_site(), e).to_compile_error();
-            return quote!(#err);
-        }
-    };
+    match multihash_inner(s) {
+        Ok(ts) => ts,
+        Err(e) => e.to_compile_error(),
+    }
+}
+fn multihash_inner(s: Structure) -> syn::Result<TokenStream> {
+    let mh_crate =
+        utils::use_crate("multihash-derive").map_err(|e| syn::Error::new(Span::call_site(), e))?;
     let code_enum = &s.ast().ident;
-    let alloc_size = parse_code_enum_attrs(s.ast());
-    let hashes: Vec<_> = s.variants().iter().map(Hash::from).collect();
+    let alloc_size = parse_code_enum_attrs(s.ast())?;
+    let hashes: Vec<_> = s
+        .variants()
+        .iter()
+        .map(Hash::try_from)
+        .collect::<Result<_, _>>()?;
 
-    error_code_duplicates(&hashes);
+    check_error_code_duplicates(&hashes)?;
 
     let params = Params {
         code_enum: code_enum.clone(),
@@ -215,7 +222,7 @@ pub fn multihash(s: Structure) -> TokenStream {
     let code_from_u64 = hashes.iter().map(|h| h.code_from_u64());
     let code_digest = hashes.iter().map(|h| h.code_digest());
 
-    quote! {
+    Ok(quote! {
         /// A Multihash with the same allocated size as the Multihashes produces by this derive.
         pub type Multihash = #mh_crate::Multihash<#alloc_size>;
 
@@ -252,5 +259,5 @@ pub fn multihash(s: Structure) -> TokenStream {
                 }
             }
         }
-    }
+    })
 }
