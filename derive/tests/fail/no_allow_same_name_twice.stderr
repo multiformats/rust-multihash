@@ -37,12 +37,14 @@ note: `Code` defined here
 warning: unreachable pattern
   --> tests/fail/no_allow_same_name_twice.rs:18:10
    |
-18 |   pub enum Code {
-   |  __________^
-19 | |     #[mh(code = 0x0, hasher = FooHasher)]
-20 | |     Foo,
-21 | |     #[mh(code = 0x1, hasher = FooHasher)]
-22 | |     Foo,
-   | |_______^
+18 |    pub enum Code {
+   |   __________^
+   |  |__________|
+19 | ||     #[mh(code = 0x0, hasher = FooHasher)]
+20 | ||     Foo,
+   | ||_______- matches all the relevant values
+21 | |      #[mh(code = 0x1, hasher = FooHasher)]
+22 | |      Foo,
+   | |________^ no value can reach this
    |
    = note: `#[warn(unreachable_patterns)]` on by default
