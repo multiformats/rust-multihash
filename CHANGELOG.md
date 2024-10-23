@@ -1,3 +1,19 @@
+
+## [](https://github.com/multiformats/rust-multihash/compare/v0.19.1...v0.19.2) (2023-10-23)
+
+### Dependency Updates
+
+- `multihash` 0.19.2
+  - update `unsigned-varint`
+- `codetable` 0.1.4
+  - update `strobe`
+- `multihash-derive` 0.9.1
+  - update `multihash-derive-impl`
+- `multihash-derive-impl` 0.9.1
+  - remove `proc-macro-error` dependency
+  - update `synstructure`
+  - update `syn` to v2
+
 ## [](https://github.com/multiformats/rust-multihash/compare/v0.19.0...v0.19.1) (2023-09-06)
 
 ### Bug Fixes

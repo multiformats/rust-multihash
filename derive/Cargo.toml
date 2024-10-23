@@ -1,6 +1,6 @@
 [package]
 name = "multihash-derive"
-version = "0.9.0"
+version = "0.9.1"
 edition = "2018"
 description = "Proc macro for deriving custom multihash tables."
 license = "MIT"
@@ -11,8 +11,8 @@ default = ["std"]
 std = ["multihash/std", "core2/std"]
 
 [dependencies]
-multihash-derive-impl = { version = "0.1.1", path = "../derive-impl" }
-multihash = { version = "0.19.0", path = "../", default-features = false }
+multihash-derive-impl = { version = "0.1.2", path = "../derive-impl" }
+multihash = { version = "0.19.2", path = "../", default-features = false }
 core2 = { version = "0.4.0", default-features = false }
 
 [dev-dependencies]
