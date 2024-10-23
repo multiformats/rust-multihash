@@ -1,6 +1,6 @@
 [package]
 name = "multihash-derive-impl"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["David Craven <david@craven.ch>"]
 edition = "2018"
 description = "Internal proc-macro crate for the MultihashDigest derive"
