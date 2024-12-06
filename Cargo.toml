@@ -18,7 +18,7 @@ rust-version = "1.64"
 [features]
 default = ["std"]
 std = ["unsigned-varint/std", "alloc"]
-alloc = []
+alloc = ["core2/alloc"]
 arb = ["dep:quickcheck", "dep:rand", "dep:arbitrary"]
 scale-codec = ["dep:parity-scale-codec"]
 serde-codec = ["serde"] # Deprecated, don't use.
