@@ -110,7 +110,7 @@ jobs:
         run: cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out Xml
 
       - name: Upload Code Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
 
   cargo-deny:
     name: Cargo Deny
