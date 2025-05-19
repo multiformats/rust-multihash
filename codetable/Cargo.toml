@@ -39,7 +39,7 @@ arbitrary = { version = "1.3.2", optional = true, features = ["derive"] }
 [dev-dependencies]
 hex = "0.4.2"
 unsigned-varint = { version = "0.8.0", default-features = false }
-criterion = "0.5.1"
+criterion = "0.6.0"
 rand = "0.8.5"
 
 [[bench]]
