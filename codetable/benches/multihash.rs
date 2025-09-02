@@ -1,4 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
+
+use criterion::{criterion_group, criterion_main, Criterion};
 use rand::Rng;
 
 use multihash_codetable::{
@@ -45,8 +47,8 @@ macro_rules! group_stream {
 }
 
 fn bench_digest(c: &mut Criterion) {
-    let mut rng = rand::thread_rng();
-    let data: Vec<u8> = (0..1024).map(|_| rng.gen()).collect();
+    let mut rng = rand::rng();
+    let data: Vec<u8> = (0..1024).map(|_| rng.random()).collect();
     group_digest!(c,
         "sha1" => Sha1, &data
         "sha2_256" => Sha2_256, &data
@@ -71,8 +73,8 @@ fn bench_digest(c: &mut Criterion) {
 
 /// Chunks the data into 256-byte slices.
 fn bench_stream(c: &mut Criterion) {
-    let mut rng = rand::thread_rng();
-    let data: Vec<u8> = (0..1024).map(|_| rng.gen()).collect();
+    let mut rng = rand::rng();
+    let data: Vec<u8> = (0..1024).map(|_| rng.random()).collect();
     group_stream!(c,
         "sha1" => Sha1, &data
         "sha2_256" => Sha2_256, &data

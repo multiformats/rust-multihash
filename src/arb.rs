@@ -1,6 +1,6 @@
 use quickcheck::Gen;
 use rand::{
-    distributions::{weighted::WeightedIndex, Distribution},
+    distr::{weighted::WeightedIndex, Distribution},
     Rng, RngCore, SeedableRng,
 };
 
@@ -16,19 +16,19 @@ impl<const S: usize> quickcheck::Arbitrary for Multihash<S> {
         let dist = WeightedIndex::new(weights.iter()).unwrap();
         let mut rng = rand::rngs::SmallRng::seed_from_u64(u64::arbitrary(g));
         let code = match dist.sample(&mut rng) {
-            0 => rng.gen_range(0..u64::pow(2, 7)),
-            1 => rng.gen_range(u64::pow(2, 7)..u64::pow(2, 14)),
-            2 => rng.gen_range(u64::pow(2, 14)..u64::pow(2, 21)),
-            3 => rng.gen_range(u64::pow(2, 21)..u64::pow(2, 28)),
-            4 => rng.gen_range(u64::pow(2, 28)..u64::pow(2, 35)),
-            5 => rng.gen_range(u64::pow(2, 35)..u64::pow(2, 42)),
-            6 => rng.gen_range(u64::pow(2, 42)..u64::pow(2, 49)),
-            7 => rng.gen_range(u64::pow(2, 56)..u64::pow(2, 63)),
+            0 => rng.random_range(0..u64::pow(2, 7)),
+            1 => rng.random_range(u64::pow(2, 7)..u64::pow(2, 14)),
+            2 => rng.random_range(u64::pow(2, 14)..u64::pow(2, 21)),
+            3 => rng.random_range(u64::pow(2, 21)..u64::pow(2, 28)),
+            4 => rng.random_range(u64::pow(2, 28)..u64::pow(2, 35)),
+            5 => rng.random_range(u64::pow(2, 35)..u64::pow(2, 42)),
+            6 => rng.random_range(u64::pow(2, 42)..u64::pow(2, 49)),
+            7 => rng.random_range(u64::pow(2, 56)..u64::pow(2, 63)),
             _ => unreachable!(),
         };
 
         // Maximum size is S byte due to the generic.
-        let size = rng.gen_range(0..S);
+        let size = rng.random_range(0..S);
         let mut data = [0; S];
         rng.fill_bytes(&mut data);
         Multihash::wrap(code, &data[..size]).unwrap()
