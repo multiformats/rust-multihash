@@ -15,6 +15,9 @@ documentation = "https://docs.rs/multihash/"
 edition = "2021"
 rust-version = "1.64"
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 default = ["std"]
 std = ["unsigned-varint/std", "alloc"]
