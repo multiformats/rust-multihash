@@ -62,11 +62,9 @@ impl<const S: usize> Multihash<S> {
         }
         let size = input_digest.len();
         let mut digest = [0; S];
-        let mut i = 0;
-        while i < size {
-            digest[i] = input_digest[i];
-            i += 1;
-        }
+        // NOTE: cant use range systax in const fn yet
+        digest.split_at_mut(size).0.copy_from_slice(input_digest);
+
         Ok(Self {
             code,
             size: size as u8,
