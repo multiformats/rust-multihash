@@ -10,7 +10,7 @@ edition = "2021"
 
 [features]
 default = ["std"]
-std = ["blake2b_simd?/std", "blake2s_simd?/std", "blake3?/std", "digest?/std", "sha1?/std", "sha2?/std", "sha3?/std", "strobe-rs?/std", "ripemd?/std", "multihash-derive/std", "core2/std"]
+std = ["blake2b_simd?/std", "blake2s_simd?/std", "blake3?/std", "digest?/std", "sha1?/std", "sha2?/std", "sha3?/std", "ripemd?/std", "multihash-derive/std", "core2/std"]
 arb = ["dep:arbitrary", "std"]
 sha1 = ["dep:digest", "dep:sha1"]
 sha2 = ["dep:digest", "dep:sha2"]
