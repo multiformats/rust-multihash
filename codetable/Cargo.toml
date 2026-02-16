@@ -25,7 +25,7 @@ blake3 = ["dep:blake3"]
 blake2b_simd = { version = "1.0.0", default-features = false, optional = true }
 blake2s_simd = { version = "1.0.0", default-features = false, optional = true }
 blake3 = { version = "1.2.0", default-features = false, optional = true }
-digest = { version = "0.10.1", default-features = false, optional = true }
+digest = { version = "0.11.0", default-features = false, optional = true }
 sha1 = { version = "0.10.5", default-features = false, optional = true }
 sha2 = { version = "0.10.0", default-features = false, optional = true }
 sha3 = { version = "0.10.0", default-features = false, optional = true }
