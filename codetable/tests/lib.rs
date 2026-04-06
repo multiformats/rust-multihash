@@ -78,6 +78,19 @@ macro_rules! assert_encode {
                expected,
                "{:?} encodes correctly (from hasher)", stringify!($alg)
            );
+
+           // `digest-io` compatibility
+           #[cfg(feature = "digest-traits")]
+           {
+                let mut hasher = digest_io::IoWrapper(<$alg>::default());
+                let mut reader = std::io::Cursor::new($data);
+                std::io::copy(&mut reader, &mut hasher).unwrap();
+                assert_eq!(
+                    $code.wrap(hasher.0.finalize()).unwrap().to_bytes(),
+                    expected,
+                    "{:?} encodes correctly (from hasher)", stringify!($alg)
+                );
+           }
        )*
    }
 }
