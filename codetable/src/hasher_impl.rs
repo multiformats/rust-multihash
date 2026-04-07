@@ -61,7 +61,6 @@ macro_rules! derive_hasher_blake {
             }
         }
 
-        #[cfg(feature = "digest-traits")]
         impl<const S: usize> ::digest::Update for $name<S> {
             fn update(&mut self, data: &[u8]) {
                 ::multihash_derive::Hasher::update(self, data)
@@ -138,7 +137,6 @@ pub mod blake3 {
         }
     }
 
-    #[cfg(feature = "digest-traits")]
     impl<const S: usize> ::digest::Update for Blake3Hasher<S> {
         fn update(&mut self, data: &[u8]) {
             ::multihash_derive::Hasher::update(self, data)
@@ -209,7 +207,6 @@ macro_rules! derive_rustcrypto_hasher {
             }
         }
 
-        #[cfg(feature = "digest-traits")]
         impl ::digest::Update for $name {
             fn update(&mut self, data: &[u8]) {
                 ::multihash_derive::Hasher::update(self, data)
