@@ -58,28 +58,39 @@ pub enum Code {
 }
 
 macro_rules! assert_encode {
-   // Mutlihash enum member, Multihash code, input, Multihash as hex
-   {$( $alg:ty, $code:expr, $data:expr, $expect:expr; )*} => {
-       $(
-           let expected = hex::decode($expect).unwrap();
+    // Mutlihash enum member, Multihash code, input, Multihash as hex
+    {$( $alg:ty, $code:expr, $data:expr, $expect:expr; )*} => {
+        $(
+            let expected = hex::decode($expect).unwrap();
 
-           // From code
-           assert_eq!(
-               $code.digest($data).to_bytes(),
-               expected,
-               "{:?} encodes correctly (from code)", stringify!($alg)
-           );
+            // From code
+            assert_eq!(
+                $code.digest($data).to_bytes(),
+                expected,
+                "{:?} encodes correctly (from code)", stringify!($alg)
+            );
 
-           // From incremental hashing
-           let mut hasher = <$alg>::default();
-           hasher.update($data);
-           assert_eq!(
-               $code.wrap(hasher.finalize()).unwrap().to_bytes(),
-               expected,
-               "{:?} encodes correctly (from hasher)", stringify!($alg)
-           );
-       )*
-   }
+            // From incremental hashing
+            let mut hasher = <$alg>::default();
+            hasher.update($data);
+            assert_eq!(
+                $code.wrap(hasher.finalize()).unwrap().to_bytes(),
+                expected,
+                "{:?} encodes correctly (from hasher)", stringify!($alg)
+            );
+
+            // Test `digest-io` compatibility to ensure `digest::Update` is
+            // properly implemented for all hashers
+            let mut hasher = digest_io::IoWrapper(<$alg>::default());
+            let mut reader = std::io::Cursor::new($data);
+            std::io::copy(&mut reader, &mut hasher).unwrap();
+            assert_eq!(
+                $code.wrap(hasher.0.finalize()).unwrap().to_bytes(),
+                expected,
+                "{:?} encodes correctly (from hasher)", stringify!($alg)
+            );
+        )*
+    }
 }
 
 #[allow(clippy::cognitive_complexity)]

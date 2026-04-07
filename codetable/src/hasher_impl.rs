@@ -61,6 +61,12 @@ macro_rules! derive_hasher_blake {
             }
         }
 
+        impl<const S: usize> ::digest::Update for $name<S> {
+            fn update(&mut self, data: &[u8]) {
+                ::multihash_derive::Hasher::update(self, data)
+            }
+        }
+
         derive_write!($name);
     };
 }
@@ -131,6 +137,12 @@ pub mod blake3 {
         }
     }
 
+    impl<const S: usize> ::digest::Update for Blake3Hasher<S> {
+        fn update(&mut self, data: &[u8]) {
+            ::multihash_derive::Hasher::update(self, data)
+        }
+    }
+
     derive_write!(Blake3Hasher);
 
     /// blake3-256 hasher.
@@ -192,6 +204,12 @@ macro_rules! derive_rustcrypto_hasher {
 
             fn flush(&mut self) -> core2::io::Result<()> {
                 Ok(())
+            }
+        }
+
+        impl ::digest::Update for $name {
+            fn update(&mut self, data: &[u8]) {
+                ::multihash_derive::Hasher::update(self, data)
             }
         }
     };
