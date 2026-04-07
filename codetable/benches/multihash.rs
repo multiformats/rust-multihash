@@ -1,7 +1,7 @@
 use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use rand::Rng;
+use rand::RngExt;
 
 use multihash_codetable::{
     Blake2b256, Blake2b512, Blake2s128, Blake2s256, Blake3_256, Keccak224, Keccak256, Keccak384,
