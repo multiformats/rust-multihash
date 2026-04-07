@@ -94,7 +94,12 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - run: cargo +"$MSRV" build --package multihash
+      # Only the multihash core crate is bound to the MSRV. Currently it's so old that the
+      # dependency resoluton doesn't quite work. Hence remove all other workspace members.
+      - name: Build
+        run: |
+          sed --in-place '/^members/d' Cargo.toml
+          cargo +"$MSRV" build --package multihash
 
   coverage:
     name: Code Coverage

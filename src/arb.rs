@@ -1,7 +1,7 @@
 use quickcheck::Gen;
 use rand::{
     distr::{weighted::WeightedIndex, Distribution},
-    Rng, RngCore, SeedableRng,
+    Rng, RngExt, SeedableRng,
 };
 
 use crate::Multihash;

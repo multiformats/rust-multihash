@@ -25,7 +25,7 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-#[cfg(any(test, feature = "arb"))]
+#[cfg(feature = "arb")]
 mod arb;
 mod error;
 mod multihash;
