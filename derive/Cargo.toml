@@ -13,7 +13,7 @@ std = ["multihash/std", "no_std_io2/std"]
 [dependencies]
 multihash-derive-impl = { version = "0.1.2", path = "../derive-impl" }
 multihash = { version = "0.19.2", path = "../", default-features = false }
-no_std_io2 = { version = "0.9", default-features = false }
+no_std_io2 = { version = "0.8.1", default-features = false }
 
 [dev-dependencies]
 trybuild = "1.0.80"
