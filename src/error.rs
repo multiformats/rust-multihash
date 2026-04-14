@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use core2::{error::Error as StdError, io};
+use no_std_io2::{error::Error as StdError, io};
 #[cfg(feature = "std")]
 use std::{error::Error as StdError, io};
 
@@ -90,7 +90,7 @@ impl StdError for Error {
         match &self.kind {
             Kind::Io(inner) => Some(inner),
             Kind::InvalidSize(_) => None,
-            Kind::Varint(_) => None, // FIXME: Does not implement `core2::Error`.
+            Kind::Varint(_) => None, // FIXME: Does not implement `no_std_io2::Error`.
         }
     }
 }

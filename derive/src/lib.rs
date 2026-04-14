@@ -78,7 +78,7 @@ impl fmt::Display for UnsupportedCode {
     }
 }
 
-impl core2::error::Error for UnsupportedCode {}
+impl no_std_io2::error::Error for UnsupportedCode {}
 
 /// Trait that implements hashing.
 ///
