@@ -1,4 +1,3 @@
-use core::error::Error as StdError;
 #[cfg(not(feature = "std"))]
 use no_std_io2::io;
 #[cfg(feature = "std")]
@@ -86,8 +85,8 @@ impl core::fmt::Display for Kind {
     }
 }
 
-impl StdError for Error {
-    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+impl core::error::Error for Error {
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
         match &self.kind {
             Kind::Io(inner) => Some(inner),
             Kind::InvalidSize(_) => None,

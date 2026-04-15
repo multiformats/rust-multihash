@@ -5,7 +5,6 @@ description = "Proc macro for deriving custom multihash tables."
 repository = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
-rust-version = { workspace = true }
 
 [features]
 default = ["std"]
