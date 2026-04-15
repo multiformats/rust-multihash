@@ -1,7 +1,8 @@
+use core::error::Error as StdError;
 #[cfg(not(feature = "std"))]
-use no_std_io2::{error::Error as StdError, io};
+use no_std_io2::io;
 #[cfg(feature = "std")]
-use std::{error::Error as StdError, io};
+use std::io;
 
 use unsigned_varint::decode;
 
@@ -56,7 +57,7 @@ pub(crate) fn unsigned_varint_to_multihash_error(err: unsigned_varint::io::ReadE
         unsigned_varint::io::ReadError::Decode(err) => Error {
             kind: Kind::Varint(err),
         },
-        other => io_to_multihash_error(io::Error::new(io::ErrorKind::Other, other)),
+        other => io_to_multihash_error(io::Error::other(other)),
     }
 }
 
