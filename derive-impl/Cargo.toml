@@ -6,6 +6,7 @@ description = "Internal proc-macro crate for the MultihashDigest derive"
 repository = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
+rust-version = "1.81"
 
 [lib]
 proc-macro = true
