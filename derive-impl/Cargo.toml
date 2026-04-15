@@ -2,10 +2,11 @@
 name = "multihash-derive-impl"
 version = "0.1.2"
 authors = ["David Craven <david@craven.ch>"]
-edition = "2018"
 description = "Internal proc-macro crate for the MultihashDigest derive"
-license = "MIT"
-repository = "https://github.com/multiformats/rust-multihash"
+repository = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+rust-version = "1.81"
 
 [lib]
 proc-macro = true

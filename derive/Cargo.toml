@@ -1,19 +1,19 @@
 [package]
 name = "multihash-derive"
 version = "0.9.2"
-edition = "2018"
 description = "Proc macro for deriving custom multihash tables."
-license = "MIT"
-repository = "https://github.com/multiformats/rust-multihash"
+repository = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+rust-version = "1.81"
 
 [features]
 default = ["std"]
-std = ["multihash/std", "no_std_io2/std"]
+std = ["multihash/std"]
 
 [dependencies]
 multihash-derive-impl = { version = "0.1.2", path = "../derive-impl" }
 multihash = { version = "0.19.2", path = "../", default-features = false }
-no_std_io2 = { version = "0.8.1", default-features = false }
 
 [dev-dependencies]
 trybuild = "1.0.80"
