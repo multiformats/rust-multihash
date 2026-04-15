@@ -21,7 +21,7 @@ all-features = true
 [features]
 default = ["std"]
 std = ["unsigned-varint/std", "alloc"]
-alloc = ["core2/alloc"]
+alloc = ["no_std_io2/alloc"]
 arb = ["dep:quickcheck", "dep:rand", "dep:arbitrary"]
 scale-codec = ["dep:parity-scale-codec"]
 serde-codec = ["serde"] # Deprecated, don't use.
@@ -35,7 +35,7 @@ serde = { version = "1.0.116", optional = true, default-features = false }
 unsigned-varint = { version = "0.8.0", default-features = false }
 arbitrary = { version = "1.1.0", optional = true }
 
-core2 = { version = "0.4.0", default-features = false }
+no_std_io2 = { version = "0.8.1", default-features = false }
 
 [dev-dependencies]
 hex = "0.4.2"

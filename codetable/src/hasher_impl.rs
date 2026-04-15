@@ -6,15 +6,15 @@
 ))]
 macro_rules! derive_write {
     ($name:ident) => {
-        impl<const S: usize> core2::io::Write for $name<S> {
-            fn write(&mut self, buf: &[u8]) -> core2::io::Result<usize> {
+        impl<const S: usize> no_std_io2::io::Write for $name<S> {
+            fn write(&mut self, buf: &[u8]) -> no_std_io2::io::Result<usize> {
                 use multihash_derive::Hasher as _;
 
                 self.update(buf);
                 Ok(buf.len())
             }
 
-            fn flush(&mut self) -> core2::io::Result<()> {
+            fn flush(&mut self) -> no_std_io2::io::Result<()> {
                 Ok(())
             }
         }
@@ -194,15 +194,15 @@ macro_rules! derive_rustcrypto_hasher {
             }
         }
 
-        impl core2::io::Write for $name {
-            fn write(&mut self, buf: &[u8]) -> core2::io::Result<usize> {
+        impl no_std_io2::io::Write for $name {
+            fn write(&mut self, buf: &[u8]) -> no_std_io2::io::Result<usize> {
                 use multihash_derive::Hasher as _;
 
                 self.update(buf);
                 Ok(buf.len())
             }
 
-            fn flush(&mut self) -> core2::io::Result<()> {
+            fn flush(&mut self) -> no_std_io2::io::Result<()> {
                 Ok(())
             }
         }
