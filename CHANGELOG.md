@@ -1,3 +1,15 @@
+## [0.19.4](https://github.com/multiformats/rust-multihash/compare/v0.19.3...v0.19.4) (2026-04-15)
+
+### Features
+
+* implement `digest:Update` for all hashers ([#405](https://github.com/multiformats/rust-multihash/issues/405)) ([08f8410](https://github.com/multiformats/rust-multihash/commit/08f841068cdf0201b4367a77cb88c2e6639195cb))
+
+
+### Bug Fixes
+
+* replace core2 with no_std_io2 ([#407](https://github.com/multiformats/rust-multihash/issues/407)) ([af177c0](https://github.com/multiformats/rust-multihash/commit/af177c0c64be4497a30dc2084615288fa13ebb19))
+
+
 ## [0.19.3](https://github.com/multiformats/rust-multihash/compare/v0.19.2...v0.19.3) (2024-12-06)
 
 ### Bug Fixes
