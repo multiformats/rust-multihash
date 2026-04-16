@@ -29,6 +29,8 @@ extern crate alloc;
 mod arb;
 mod error;
 mod multihash;
+#[cfg(not(feature = "std"))]
+pub mod no_std_io; // Make it public for downstream crates(e.g. `cid`).
 #[cfg(feature = "serde")]
 mod serde;
 

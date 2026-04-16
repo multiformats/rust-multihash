@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-use no_std_io2::io;
+use crate::no_std_io as io;
 #[cfg(feature = "std")]
 use std::io;
 

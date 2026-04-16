@@ -11,7 +11,7 @@ use unsigned_varint::encode as varint_encode;
 use std::io;
 
 #[cfg(not(feature = "std"))]
-use no_std_io2::io;
+use crate::no_std_io as io;
 
 /// A Multihash instance that only supports the basic functionality and no hashing.
 ///
