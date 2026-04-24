@@ -1,5 +1,3 @@
-//! Ported from <https://docs.rs/crate/core2/0.4.0/source/src/io/impls.rs>
-
 use super::error::{Error, ErrorKind, Result};
 use super::traits::{Read, Write};
 
@@ -22,6 +20,10 @@ impl<W: Write + ?Sized> Write for &mut W {
     }
 }
 
+/// Read is implemented for `&[u8]` by copying from the slice.
+///
+/// Note that reading updates the slice to point to the yet unread part.
+/// The slice will be empty when EOF is reached.
 impl Read for &[u8] {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
@@ -65,6 +67,11 @@ impl Read for &[u8] {
     }
 }
 
+/// Write is implemented for `&mut [u8]` by copying into the slice, overwriting
+/// its data.
+///
+/// Note that writing updates the slice to point to the yet unwritten part.
+/// The slice will be empty when it has been completely overwritten.
 impl Write for &mut [u8] {
     #[inline]
     fn write(&mut self, data: &[u8]) -> Result<usize> {
@@ -88,6 +95,8 @@ impl Write for &mut [u8] {
     }
 }
 
+/// Write is implemented for `Vec<u8>` by appending to the vector.
+/// The vector will grow as needed.
 #[cfg(feature = "alloc")]
 impl Write for alloc::vec::Vec<u8> {
     #[inline]

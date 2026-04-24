@@ -3,27 +3,13 @@ use core::{fmt, result};
 pub(super) type Result<T> = result::Result<T, Error>;
 
 /// A minimal backfill of the [`std::io::Error`] for `no_std` environments.
-pub struct Error {
-    repr: Repr,
-}
-
-impl core::error::Error for Error {}
-
-impl fmt::Debug for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&self.repr, f)
-    }
-}
-
-enum Repr {
-    Custom(Custom),
-}
-
 #[derive(Debug)]
-struct Custom {
+pub struct Error {
     kind: ErrorKind,
     error: &'static str,
 }
+
+impl core::error::Error for Error {}
 
 /// A list specifying general categories of I/O error.
 ///
@@ -66,35 +52,17 @@ impl Error {
     /// originate from the OS itself. The `error` argument is an arbitrary
     /// payload which will be contained in this [`Error`].
     pub(super) fn new(kind: ErrorKind, error: &'static str) -> Error {
-        Self::_new(kind, error)
-    }
-
-    fn _new(kind: ErrorKind, error: &'static str) -> Error {
-        Error {
-            repr: Repr::Custom(Custom { kind, error }),
-        }
+        Error { kind, error }
     }
 
     /// Returns the corresponding [`ErrorKind`] for this error.
     pub(super) fn kind(&self) -> ErrorKind {
-        match self.repr {
-            Repr::Custom(ref c) => c.kind,
-        }
-    }
-}
-
-impl fmt::Debug for Repr {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Repr::Custom(ref c) => fmt::Debug::fmt(&c, fmt),
-        }
+        self.kind
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.repr {
-            Repr::Custom(ref c) => c.error.fmt(fmt),
-        }
+        self.error.fmt(fmt)
     }
 }
