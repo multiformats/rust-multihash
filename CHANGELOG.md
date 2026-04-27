@@ -1,3 +1,11 @@
+## [0.19.5](https://github.com/multiformats/rust-multihash/compare/v0.19.4...v0.19.5) (2026-04-27)
+
+### Features
+
+* embed minimal required core2/no_std_io2 traits ([#411](https://github.com/multiformats/rust-multihash/issues/411)) ([90fab31](https://github.com/multiformats/rust-multihash/commit/90fab31ce86b5e87d281c6d718e053376852bf07))
+* Minimum supported Rust version (MSRV) is now 1.81, due to using `core::error::Error`.
+
+
 ## [0.19.4](https://github.com/multiformats/rust-multihash/compare/v0.19.3...v0.19.4) (2026-04-15)
 
 ### Features

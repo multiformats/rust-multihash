@@ -11,7 +11,7 @@ edition = "2021"
 name = "multihash"
 description = "Implementation of the multihash format"
 keywords = ["multihash", "ipfs"]
-version = "0.19.4"
+version = "0.19.5"
 authors = ["dignifiedquire <dignifiedquire@gmail.com>", "David Craven <david@craven.ch>", "Volker Mische <volker.mische@gmail.com>"]
 readme = "README.md"
 repository = { workspace = true }
