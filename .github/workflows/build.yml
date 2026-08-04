@@ -144,9 +144,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-deny
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-deny
+        run: cargo install cargo-deny --locked
 
       - name: Cargo Deny - Check
         run: cargo deny check
@@ -164,9 +162,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-hack
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-hack
+        run: cargo install cargo-hack --locked
 
       - name: Cargo Hack - Check each feature
         run: cargo hack check -p multihash-codetable --each-feature --exclude-features arb
