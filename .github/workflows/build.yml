@@ -147,8 +147,7 @@ jobs:
         run: cargo install cargo-deny --locked
 
       - name: Cargo Deny - Check
-        run: cargo deny check
-        shell: bash
+        run: cargo deny --workspace check
 
   # todo: run on all crates
   cargo-hack-codetable:
@@ -166,7 +165,6 @@ jobs:
 
       - name: Cargo Hack - Check each feature
         run: cargo hack check -p multihash-codetable --each-feature --exclude-features arb
-        shell: bash
         env:
           RUSTFLAGS: -D warnings
 

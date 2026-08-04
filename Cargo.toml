@@ -32,17 +32,18 @@ serde-codec = ["serde"] # Deprecated, don't use.
 serde = ["dep:serde"]
 
 [workspace.dependencies]
-no_std_io2 = { version = "0.9", default-features = false }
+hex = "0.4.2"
+unsigned-varint = { version = "0.8.0", default-features = false }
 
 [dependencies]
 parity-scale-codec = { version = "3.0.0", default-features = false, features = ["derive"], optional = true }
 quickcheck = { version = "1.0.3", optional = true }
 rand = { version = "0.10", default-features = false, features = ["alloc"], optional = true }
 serde = { version = "1.0.116", optional = true, default-features = false }
-unsigned-varint = { version = "0.8.0", default-features = false }
+unsigned-varint = { workspace = true }
 arbitrary = { version = "1.1.0", optional = true }
 
 [dev-dependencies]
-hex = "0.4.2"
+hex = { workspace = true }
 serde_json = "1.0.58"
 serde_test = "1.0.160"
