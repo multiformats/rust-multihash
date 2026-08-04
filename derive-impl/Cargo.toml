@@ -15,5 +15,5 @@ proc-macro = true
 proc-macro2 = { version = "1.0.24", features = ["span-locations"] }
 proc-macro-crate = "3.1.0"
 quote = "1.0.7"
-syn = "2.0.66"
-synstructure = "0.13.1"
+syn = "3.0.3"
+synstructure = "0.14.0"
